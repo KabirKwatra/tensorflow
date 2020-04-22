@@ -14,14 +14,18 @@
 # ==============================================================================
 """Keras image dataset loading utilities."""
 # pylint: disable=g-classes-have-attributes
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import multiprocessing
 import os
 
 import numpy as np
+
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.ops import array_ops, math_ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
 
 
 def index_directory(

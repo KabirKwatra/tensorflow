@@ -12,18 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 import threading
 
 from tensorflow.python.distribute.parallel_device import parallel_device
-from tensorflow.python.eager import backprop, context
-from tensorflow.python.framework import constant_op, ops
+from tensorflow.python.eager import backprop
+from tensorflow.python.eager import context
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import ops
 from tensorflow.python.module import module
-from tensorflow.python.ops import (array_ops, collective_ops, math_ops,
-                                   variables)
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import collective_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import variables
 from tensorflow.python.platform import test
 from tensorflow.python.training import checkpoint_management
 from tensorflow.python.training.tracking import util as tracking

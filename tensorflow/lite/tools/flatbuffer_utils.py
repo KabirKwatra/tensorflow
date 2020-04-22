@@ -20,13 +20,15 @@ Refer to the tensorflow lite flatbuffer schema here:
 tensorflow/lite/schema/schema.fbs
 
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 import random
 
 from flatbuffers.python import flatbuffers
+
 from tensorflow.lite.python import schema_py_generated as schema_fb
 
 TFLITE_FILE_IDENTIFIER = b"TFL3"

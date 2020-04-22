@@ -14,13 +14,17 @@
 # ==============================================================================
 """Keras image dataset loading utilities."""
 # pylint: disable=g-classes-have-attributes
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
+
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.keras.layers.preprocessing import image_preprocessing
 from tensorflow.python.keras.preprocessing import dataset_utils
-from tensorflow.python.ops import image_ops, io_ops
+from tensorflow.python.ops import image_ops
+from tensorflow.python.ops import io_ops
 from tensorflow.python.util.tf_export import keras_export
 
 WHITELIST_FORMATS = (".bmp", ".gif", ".jpeg", ".jpg", ".png")

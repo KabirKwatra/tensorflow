@@ -13,13 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for image_dataset."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 import shutil
 
 import numpy as np
+
 from tensorflow.python.compat import v2_compat
 from tensorflow.python.keras import keras_parameterized
 from tensorflow.python.keras.preprocessing import image as image_preproc
