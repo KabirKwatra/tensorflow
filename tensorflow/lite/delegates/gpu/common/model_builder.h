@@ -66,7 +66,7 @@ absl::Status BuildFinalModel(
 
 // Module-internal converter, exposed for unit testing purpose only.
 absl::Status ConvertTfLiteTensorToTensorRef(const TfLiteTensor& tflite_tensor,
-        TensorRef<BHWC>* tensor_ref);
+                                            TensorRef<BHWC>* tensor_ref);
 
 }  // namespace gpu
 }  // namespace tflite
