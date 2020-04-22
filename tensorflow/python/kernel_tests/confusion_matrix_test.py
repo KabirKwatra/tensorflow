@@ -31,27 +31,37 @@ from tensorflow.python.platform import test
 
 
 class ConfusionMatrixTest(test.TestCase):
-
     @test_util.run_in_graph_and_eager_modes
     def testExample(self):
         """This is a test of the example provided in pydoc."""
         with self.cached_session():
-            self.assertAllEqual([
-                [0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 1, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 1]
-            ], self.evaluate(confusion_matrix.confusion_matrix(
-                labels=[1, 2, 4], predictions=[2, 2, 4])))
+            self.assertAllEqual(
+                [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 1, 0, 0],
+                    [0, 0, 1, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1],
+                ],
+                self.evaluate(
+                    confusion_matrix.confusion_matrix(
+                        labels=[1, 2, 4], predictions=[2, 2, 4]
+                    )
+                ),
+            )
 
-    def _testConfMatrix(self, labels, predictions, truth, weights=None,
-                        num_classes=None):
+    def _testConfMatrix(
+        self, labels, predictions, truth, weights=None, num_classes=None
+    ):
         with self.cached_session():
             dtype = predictions.dtype
             ans = confusion_matrix.confusion_matrix(
-                labels, predictions, dtype=dtype, weights=weights,
-                num_classes=num_classes).eval()
+                labels,
+                predictions,
+                dtype=dtype,
+                weights=weights,
+                num_classes=num_classes,
+            ).eval()
             self.assertAllClose(truth, ans, atol=1e-10)
             self.assertEqual(ans.dtype, dtype)
 
@@ -60,15 +70,17 @@ class ConfusionMatrixTest(test.TestCase):
         predictions = np.arange(5, dtype=dtype)
 
         truth = np.asarray(
-            [[1, 0, 0, 0, 0],
-             [0, 1, 0, 0, 0],
-             [0, 0, 1, 0, 0],
-             [0, 0, 0, 1, 0],
-             [0, 0, 0, 0, 1]],
-            dtype=dtype)
+            [
+                [1, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0],
+                [0, 0, 1, 0, 0],
+                [0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 1],
+            ],
+            dtype=dtype,
+        )
 
-        self._testConfMatrix(
-            labels=labels, predictions=predictions, truth=truth)
+        self._testConfMatrix(labels=labels, predictions=predictions, truth=truth)
 
     @test_util.run_deprecated_v1
     def testInt32Basic(self):
@@ -85,26 +97,28 @@ class ConfusionMatrixTest(test.TestCase):
             s = array_ops.placeholder(dtype=dtypes.float32)
 
             neg = random_ops.random_normal(
-                [20], mean=m_neg, stddev=s, dtype=dtypes.float32)
+                [20], mean=m_neg, stddev=s, dtype=dtypes.float32
+            )
             pos = random_ops.random_normal(
-                [20], mean=m_pos, stddev=s, dtype=dtypes.float32)
+                [20], mean=m_pos, stddev=s, dtype=dtypes.float32
+            )
 
             data = array_ops.concat([neg, pos], 0)
             data = math_ops.cast(math_ops.round(data), tf_dtype)
             data = math_ops.minimum(math_ops.maximum(data, 0), 1)
             lab = array_ops.concat(
                 [
-                    array_ops.zeros(
-                        [20], dtype=tf_dtype), array_ops.ones(
-                            [20], dtype=tf_dtype)
+                    array_ops.zeros([20], dtype=tf_dtype),
+                    array_ops.ones([20], dtype=tf_dtype),
                 ],
-                0)
+                0,
+            )
 
             cm = confusion_matrix.confusion_matrix(
-                lab, data, dtype=tf_dtype, num_classes=2)
+                lab, data, dtype=tf_dtype, num_classes=2
+            )
 
-            d, l, cm_out = sess.run(
-                [data, lab, cm], {m_neg: 0.0, m_pos: 1.0, s: 1.0})
+            d, l, cm_out = sess.run([data, lab, cm], {m_neg: 0.0, m_pos: 1.0, s: 1.0})
 
             truth = np.zeros([2, 2], dtype=np_dtype)
             for i in xrange(len(d)):
@@ -126,17 +140,19 @@ class ConfusionMatrixTest(test.TestCase):
         predictions = np.asarray([1, 2, 3], dtype=dtype)
 
         truth = np.asarray(
-            [[0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 0],
-             [0, 1, 0, 0, 0, 0, 0],
-             [0, 0, 1, 0, 0, 0, 0],
-             [0, 0, 0, 1, 0, 0, 0]],
-            dtype=dtype)
+            [
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0],
+            ],
+            dtype=dtype,
+        )
 
-        self._testConfMatrix(
-            labels=labels, predictions=predictions, truth=truth)
+        self._testConfMatrix(labels=labels, predictions=predictions, truth=truth)
 
     @test_util.run_deprecated_v1
     def testInt32DifferentLabels(self, dtype=np.int32):
@@ -151,17 +167,19 @@ class ConfusionMatrixTest(test.TestCase):
         predictions = np.asarray([1, 1, 2, 3, 5, 6, 1, 2, 3, 4], dtype=dtype)
 
         truth = np.asarray(
-            [[0, 0, 0, 0, 0, 0, 0],
-             [0, 2, 0, 0, 1, 0, 1],
-             [0, 0, 1, 0, 0, 0, 0],
-             [0, 1, 0, 2, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 1, 0],
-             [0, 0, 1, 0, 0, 0, 0]],
-            dtype=dtype)
+            [
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 2, 0, 0, 1, 0, 1],
+                [0, 0, 1, 0, 0, 0, 0],
+                [0, 1, 0, 2, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 1, 0, 0, 0, 0],
+            ],
+            dtype=dtype,
+        )
 
-        self._testConfMatrix(
-            labels=labels, predictions=predictions, truth=truth)
+        self._testConfMatrix(labels=labels, predictions=predictions, truth=truth)
 
     @test_util.run_deprecated_v1
     def testInt32MultipleLabels(self, dtype=np.int32):
@@ -178,15 +196,19 @@ class ConfusionMatrixTest(test.TestCase):
         weights = np.arange(5, dtype=np.int32)
 
         truth = np.asarray(
-            [[0, 0, 0, 0, 0],
-             [0, 1, 0, 0, 0],
-             [0, 0, 2, 0, 0],
-             [0, 0, 0, 3, 0],
-             [0, 0, 0, 0, 4]],
-            dtype=np.int32)
+            [
+                [0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0],
+                [0, 0, 2, 0, 0],
+                [0, 0, 0, 3, 0],
+                [0, 0, 0, 0, 4],
+            ],
+            dtype=np.int32,
+        )
 
         self._testConfMatrix(
-            labels=labels, predictions=predictions, weights=weights, truth=truth)
+            labels=labels, predictions=predictions, weights=weights, truth=truth
+        )
 
     @test_util.run_deprecated_v1
     def testLabelsTooLarge(self):
@@ -194,14 +216,16 @@ class ConfusionMatrixTest(test.TestCase):
         predictions = np.asarray([2, 1, 0, 2, 2], dtype=np.int32)
         with self.assertRaisesOpError("`labels`.*out of bound"):
             self._testConfMatrix(
-                labels=labels, predictions=predictions, num_classes=3, truth=None)
+                labels=labels, predictions=predictions, num_classes=3, truth=None
+            )
 
     def testLabelsNegative(self):
         labels = np.asarray([1, 1, 0, -1, -1], dtype=np.int32)
         predictions = np.asarray([2, 1, 0, 2, 2], dtype=np.int32)
         with self.assertRaisesOpError("`labels`.*negative values"):
             self._testConfMatrix(
-                labels=labels, predictions=predictions, num_classes=3, truth=None)
+                labels=labels, predictions=predictions, num_classes=3, truth=None
+            )
 
     @test_util.run_deprecated_v1
     def testPredictionsTooLarge(self):
@@ -209,29 +233,36 @@ class ConfusionMatrixTest(test.TestCase):
         predictions = np.asarray([2, 1, 0, 3, 5], dtype=np.int32)
         with self.assertRaisesOpError("`predictions`.*out of bound"):
             self._testConfMatrix(
-                labels=labels, predictions=predictions, num_classes=3, truth=None)
+                labels=labels, predictions=predictions, num_classes=3, truth=None
+            )
 
     def testPredictionsNegative(self):
         labels = np.asarray([1, 1, 0, 2, 2], dtype=np.int32)
         predictions = np.asarray([2, 1, 0, -1, -1], dtype=np.int32)
         with self.assertRaisesOpError("`predictions`.*negative values"):
             self._testConfMatrix(
-                labels=labels, predictions=predictions, num_classes=3, truth=None)
+                labels=labels, predictions=predictions, num_classes=3, truth=None
+            )
 
     @test_util.run_deprecated_v1
     def testInputDifferentSize(self):
         labels = np.asarray([1, 2])
         predictions = np.asarray([1, 2, 3])
-        self.assertRaisesRegexp(ValueError, "must be equal",
-                                confusion_matrix.confusion_matrix, predictions,
-                                labels)
+        self.assertRaisesRegexp(
+            ValueError,
+            "must be equal",
+            confusion_matrix.confusion_matrix,
+            predictions,
+            labels,
+        )
 
     def testOutputIsInt32(self):
         labels = np.arange(2)
         predictions = np.arange(2)
         with self.cached_session():
             cm = confusion_matrix.confusion_matrix(
-                labels, predictions, dtype=dtypes.int32)
+                labels, predictions, dtype=dtypes.int32
+            )
             tf_cm = self.evaluate(cm)
         self.assertEqual(tf_cm.dtype, np.int32)
 
@@ -240,211 +271,250 @@ class ConfusionMatrixTest(test.TestCase):
         predictions = np.arange(2)
         with self.cached_session():
             cm = confusion_matrix.confusion_matrix(
-                labels, predictions, dtype=dtypes.int64)
+                labels, predictions, dtype=dtypes.int64
+            )
             tf_cm = self.evaluate(cm)
         self.assertEqual(tf_cm.dtype, np.int64)
 
 
 class RemoveSqueezableDimensionsTest(test.TestCase):
-
     @test_util.run_deprecated_v1
     def testBothScalarShape(self):
         label_values = 1.0
         prediction_values = 0.0
-        static_labels, static_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                label_values, prediction_values))
+        (
+            static_labels,
+            static_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            label_values, prediction_values
+        )
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.float32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.float32)
-        dynamic_labels, dynamic_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                labels_placeholder, predictions_placeholder))
+        (
+            dynamic_labels,
+            dynamic_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder
+        )
 
         with self.cached_session():
             self.assertAllEqual(label_values, self.evaluate(static_labels))
-            self.assertAllEqual(prediction_values,
-                                self.evaluate(static_predictions))
+            self.assertAllEqual(prediction_values, self.evaluate(static_predictions))
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
+            self.assertAllEqual(label_values, dynamic_labels.eval(feed_dict=feed_dict))
             self.assertAllEqual(
-                label_values, dynamic_labels.eval(feed_dict=feed_dict))
-            self.assertAllEqual(
-                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict))
+                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict)
+            )
 
     @test_util.run_deprecated_v1
     def testSameShape(self):
         label_values = np.ones(shape=(2, 3, 1))
         prediction_values = np.zeros_like(label_values)
-        static_labels, static_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                label_values, prediction_values))
+        (
+            static_labels,
+            static_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            label_values, prediction_values
+        )
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.int32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.int32)
-        dynamic_labels, dynamic_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                labels_placeholder, predictions_placeholder))
+        (
+            dynamic_labels,
+            dynamic_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder
+        )
 
         with self.cached_session():
             self.assertAllEqual(label_values, self.evaluate(static_labels))
-            self.assertAllEqual(prediction_values,
-                                self.evaluate(static_predictions))
+            self.assertAllEqual(prediction_values, self.evaluate(static_predictions))
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
+            self.assertAllEqual(label_values, dynamic_labels.eval(feed_dict=feed_dict))
             self.assertAllEqual(
-                label_values, dynamic_labels.eval(feed_dict=feed_dict))
-            self.assertAllEqual(
-                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict))
+                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict)
+            )
 
     @test_util.run_deprecated_v1
     def testSameShapeExpectedRankDiff0(self):
         label_values = np.ones(shape=(2, 3, 1))
         prediction_values = np.zeros_like(label_values)
-        static_labels, static_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                label_values, prediction_values, expected_rank_diff=0))
+        (
+            static_labels,
+            static_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            label_values, prediction_values, expected_rank_diff=0
+        )
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.int32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.int32)
-        dynamic_labels, dynamic_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                labels_placeholder, predictions_placeholder, expected_rank_diff=0))
+        (
+            dynamic_labels,
+            dynamic_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder, expected_rank_diff=0
+        )
 
         with self.cached_session():
             self.assertAllEqual(label_values, self.evaluate(static_labels))
-            self.assertAllEqual(prediction_values,
-                                self.evaluate(static_predictions))
+            self.assertAllEqual(prediction_values, self.evaluate(static_predictions))
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
+            self.assertAllEqual(label_values, dynamic_labels.eval(feed_dict=feed_dict))
             self.assertAllEqual(
-                label_values, dynamic_labels.eval(feed_dict=feed_dict))
-            self.assertAllEqual(
-                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict))
+                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict)
+            )
 
     @test_util.run_deprecated_v1
     def testSqueezableLabels(self):
         label_values = np.ones(shape=(2, 3, 1))
         prediction_values = np.zeros(shape=(2, 3))
-        static_labels, static_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                label_values, prediction_values))
+        (
+            static_labels,
+            static_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            label_values, prediction_values
+        )
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.int32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.int32)
-        dynamic_labels, dynamic_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                labels_placeholder, predictions_placeholder))
+        (
+            dynamic_labels,
+            dynamic_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder
+        )
 
         expected_label_values = np.reshape(label_values, newshape=(2, 3))
         with self.cached_session():
-            self.assertAllEqual(expected_label_values,
-                                self.evaluate(static_labels))
-            self.assertAllEqual(prediction_values,
-                                self.evaluate(static_predictions))
+            self.assertAllEqual(expected_label_values, self.evaluate(static_labels))
+            self.assertAllEqual(prediction_values, self.evaluate(static_predictions))
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
             self.assertAllEqual(
-                expected_label_values, dynamic_labels.eval(feed_dict=feed_dict))
+                expected_label_values, dynamic_labels.eval(feed_dict=feed_dict)
+            )
             self.assertAllEqual(
-                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict))
+                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict)
+            )
 
     @test_util.run_deprecated_v1
     def testSqueezableLabelsExpectedRankDiffPlus1(self):
         label_values = np.ones(shape=(2, 3, 1))
         prediction_values = np.zeros(shape=(2, 3, 5))
-        static_labels, static_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                label_values, prediction_values, expected_rank_diff=1))
+        (
+            static_labels,
+            static_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            label_values, prediction_values, expected_rank_diff=1
+        )
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.int32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.int32)
-        dynamic_labels, dynamic_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                labels_placeholder, predictions_placeholder, expected_rank_diff=1))
+        (
+            dynamic_labels,
+            dynamic_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder, expected_rank_diff=1
+        )
 
         expected_label_values = np.reshape(label_values, newshape=(2, 3))
         with self.cached_session():
-            self.assertAllEqual(expected_label_values,
-                                self.evaluate(static_labels))
-            self.assertAllEqual(prediction_values,
-                                self.evaluate(static_predictions))
+            self.assertAllEqual(expected_label_values, self.evaluate(static_labels))
+            self.assertAllEqual(prediction_values, self.evaluate(static_predictions))
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
             self.assertAllEqual(
-                expected_label_values, dynamic_labels.eval(feed_dict=feed_dict))
+                expected_label_values, dynamic_labels.eval(feed_dict=feed_dict)
+            )
             self.assertAllEqual(
-                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict))
+                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict)
+            )
 
     @test_util.run_deprecated_v1
     def testSqueezablePredictions(self):
         label_values = np.ones(shape=(2, 3))
         prediction_values = np.zeros(shape=(2, 3, 1))
-        static_labels, static_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                label_values, prediction_values))
+        (
+            static_labels,
+            static_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            label_values, prediction_values
+        )
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.int32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.int32)
-        dynamic_labels, dynamic_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                labels_placeholder, predictions_placeholder))
+        (
+            dynamic_labels,
+            dynamic_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder
+        )
 
-        expected_prediction_values = np.reshape(
-            prediction_values, newshape=(2, 3))
+        expected_prediction_values = np.reshape(prediction_values, newshape=(2, 3))
         with self.cached_session():
             self.assertAllEqual(label_values, self.evaluate(static_labels))
-            self.assertAllEqual(expected_prediction_values,
-                                self.evaluate(static_predictions))
+            self.assertAllEqual(
+                expected_prediction_values, self.evaluate(static_predictions)
+            )
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
-            self.assertAllEqual(
-                label_values, dynamic_labels.eval(feed_dict=feed_dict))
+            self.assertAllEqual(label_values, dynamic_labels.eval(feed_dict=feed_dict))
             self.assertAllEqual(
                 expected_prediction_values,
-                dynamic_predictions.eval(feed_dict=feed_dict))
+                dynamic_predictions.eval(feed_dict=feed_dict),
+            )
 
     @test_util.run_deprecated_v1
     def testSqueezablePredictionsExpectedRankDiffMinus1(self):
         label_values = np.ones(shape=(2, 3, 5))
         prediction_values = np.zeros(shape=(2, 3, 1))
-        static_labels, static_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                label_values, prediction_values, expected_rank_diff=-1))
+        (
+            static_labels,
+            static_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            label_values, prediction_values, expected_rank_diff=-1
+        )
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.int32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.int32)
-        dynamic_labels, dynamic_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(
-                labels_placeholder, predictions_placeholder, expected_rank_diff=-1))
+        (
+            dynamic_labels,
+            dynamic_predictions,
+        ) = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder, expected_rank_diff=-1
+        )
 
-        expected_prediction_values = np.reshape(
-            prediction_values, newshape=(2, 3))
+        expected_prediction_values = np.reshape(prediction_values, newshape=(2, 3))
         with self.cached_session():
             self.assertAllEqual(label_values, self.evaluate(static_labels))
-            self.assertAllEqual(expected_prediction_values,
-                                self.evaluate(static_predictions))
+            self.assertAllEqual(
+                expected_prediction_values, self.evaluate(static_predictions)
+            )
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
-            self.assertAllEqual(
-                label_values, dynamic_labels.eval(feed_dict=feed_dict))
+            self.assertAllEqual(label_values, dynamic_labels.eval(feed_dict=feed_dict))
             self.assertAllEqual(
                 expected_prediction_values,
-                dynamic_predictions.eval(feed_dict=feed_dict))
+                dynamic_predictions.eval(feed_dict=feed_dict),
+            )
 
     @test_util.run_deprecated_v1
     def testUnsqueezableLabels(self):
@@ -453,17 +523,18 @@ class RemoveSqueezableDimensionsTest(test.TestCase):
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.int32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.int32)
-        _, dynamic_predictions = (
-            confusion_matrix.remove_squeezable_dimensions(labels_placeholder,
-                                                          predictions_placeholder))
+        _, dynamic_predictions = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder
+        )
 
         with self.cached_session():
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
             self.assertAllEqual(
-                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict))
+                prediction_values, dynamic_predictions.eval(feed_dict=feed_dict)
+            )
 
     @test_util.run_deprecated_v1
     def testUnsqueezablePredictions(self):
@@ -472,17 +543,16 @@ class RemoveSqueezableDimensionsTest(test.TestCase):
 
         labels_placeholder = array_ops.placeholder(dtype=dtypes.int32)
         predictions_placeholder = array_ops.placeholder(dtype=dtypes.int32)
-        dynamic_labels, _ = (
-            confusion_matrix.remove_squeezable_dimensions(labels_placeholder,
-                                                          predictions_placeholder))
+        dynamic_labels, _ = confusion_matrix.remove_squeezable_dimensions(
+            labels_placeholder, predictions_placeholder
+        )
 
         with self.cached_session():
             feed_dict = {
                 labels_placeholder: label_values,
-                predictions_placeholder: prediction_values
+                predictions_placeholder: prediction_values,
             }
-            self.assertAllEqual(
-                label_values, dynamic_labels.eval(feed_dict=feed_dict))
+            self.assertAllEqual(label_values, dynamic_labels.eval(feed_dict=feed_dict))
 
 
 if __name__ == "__main__":
