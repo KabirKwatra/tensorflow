@@ -17,11 +17,11 @@ limitations under the License.
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
-#include "mlir/Dialect/Linalg/IR/LinalgOps.h"  // from @llvm-project
-#include "mlir/Dialect/LoopOps/LoopOps.h"  // from @llvm-project
-#include "mlir/Dialect/StandardOps/IR/Ops.h"  // from @llvm-project
-#include "mlir/IR/StandardTypes.h"  // from @llvm-project
-#include "mlir/Pass/Pass.h"  // from @llvm-project
+#include "mlir/Dialect/Linalg/IR/LinalgOps.h"   // from @llvm-project
+#include "mlir/Dialect/LoopOps/LoopOps.h"       // from @llvm-project
+#include "mlir/Dialect/StandardOps/IR/Ops.h"    // from @llvm-project
+#include "mlir/IR/StandardTypes.h"              // from @llvm-project
+#include "mlir/Pass/Pass.h"                     // from @llvm-project
 #include "mlir/Transforms/DialectConversion.h"  // from @llvm-project
 #include "tensorflow/compiler/mlir/xla/ir/lhlo_ops.h"
 
@@ -42,21 +42,21 @@ namespace {
 // `i1` type.
 Value ApplySingleResultLhloCode(Location loc, ValueRange operands,
                                 Block* lhlo_block, OpBuilder* b) {
-    SmallVector<Value, 2> arg_bufs;
-    for (auto arg_type : lhlo_block->getArgumentTypes()) {
-        arg_bufs.push_back(b->create<AllocOp>(loc, arg_type.cast<MemRefType>()));
-    }
-    for (auto operand : llvm::enumerate(operands)) {
-        b->create<StoreOp>(loc, operand.value(), arg_bufs[operand.index()]);
-    }
-    // Clone the ops from `lhlo_block`.
-    BlockAndValueMapping mapping;
-    mapping.map(lhlo_block->getArguments(), arg_bufs);
-    for (auto& nested : lhlo_block->without_terminator()) {
-        auto clone = b->clone(nested, mapping);
-        mapping.map(nested.getResults(), clone->getResults());
-    }
-    return b->create<LoadOp>(loc, arg_bufs.back());
+  SmallVector<Value, 2> arg_bufs;
+  for (auto arg_type : lhlo_block->getArgumentTypes()) {
+    arg_bufs.push_back(b->create<AllocOp>(loc, arg_type.cast<MemRefType>()));
+  }
+  for (auto operand : llvm::enumerate(operands)) {
+    b->create<StoreOp>(loc, operand.value(), arg_bufs[operand.index()]);
+  }
+  // Clone the ops from `lhlo_block`.
+  BlockAndValueMapping mapping;
+  mapping.map(lhlo_block->getArguments(), arg_bufs);
+  for (auto& nested : lhlo_block->without_terminator()) {
+    auto clone = b->clone(nested, mapping);
+    mapping.map(nested.getResults(), clone->getResults());
+  }
+  return b->create<LoadOp>(loc, arg_bufs.back());
 }
 
 // Converts a block with LHLO ops and with signature:
@@ -66,92 +66,92 @@ Value ApplySingleResultLhloCode(Location loc, ValueRange operands,
 // LHLO ops.
 void ConvertToReductionOperator(Location loc, loop::ReduceOp reduce_op,
                                 Block* lhlo_block, OpBuilder* b) {
-    Block& loop_reduce_op_body = reduce_op.reductionOperator().front();
-    OpBuilder::InsertionGuard guard(*b);
-    b->setInsertionPointToStart(&loop_reduce_op_body);
-    b->create<loop::ReduceReturnOp>(
-        loc, ApplySingleResultLhloCode(loc, loop_reduce_op_body.getArguments(),
-                                       lhlo_block, b));
+  Block& loop_reduce_op_body = reduce_op.reductionOperator().front();
+  OpBuilder::InsertionGuard guard(*b);
+  b->setInsertionPointToStart(&loop_reduce_op_body);
+  b->create<loop::ReduceReturnOp>(
+      loc, ApplySingleResultLhloCode(loc, loop_reduce_op_body.getArguments(),
+                                     lhlo_block, b));
 }
 
 // Returns result of ConstantOp if `dim` is static, otherwise uses DimOp to
 // extract dimension at runtime.
 Value GetStaticOrDynamicDim(mlir::Location loc, Value shaped_value,
                             size_t dim_index, int64_t dim, OpBuilder* b) {
-    return dim == ShapedType::kDynamicSize
-           ? b->create<DimOp>(loc, shaped_value, dim_index).getResult()
-           : b->create<ConstantIndexOp>(loc, dim);
+  return dim == ShapedType::kDynamicSize
+             ? b->create<DimOp>(loc, shaped_value, dim_index).getResult()
+             : b->create<ConstantIndexOp>(loc, dim);
 }
 
 struct MappedIvs {
-    // False if the mapped indices are in the padding area, true otherwise.
-    Value in_bounds;
-    // Mapped indices.
-    SmallVector<Value, 2> ivs;
+  // False if the mapped indices are in the padding area, true otherwise.
+  Value in_bounds;
+  // Mapped indices.
+  SmallVector<Value, 2> ivs;
 };
 
 template <typename OpTy>
 MappedIvs MapWindowIvsToInput(OpTy op, ValueRange ivs, ValueRange window_ivs,
                               OpBuilder* b) {
-    MappedIvs mapped_ivs;
+  MappedIvs mapped_ivs;
 
-    if (!op.window_strides().hasValue()) {
-        op.emitOpError("No window strides specified.");
-    }
-    auto window_strides = op.window_strides().getValue();
+  if (!op.window_strides().hasValue()) {
+    op.emitOpError("No window strides specified.");
+  }
+  auto window_strides = op.window_strides().getValue();
 
-    if (!op.padding().hasValue()) {
-        op.emitOpError("No padding specified.");
-    }
-    auto padding = op.padding().getValue();
+  if (!op.padding().hasValue()) {
+    op.emitOpError("No padding specified.");
+  }
+  auto padding = op.padding().getValue();
 
-    auto loc = op.getLoc();
-    auto operand = op.operand();
-    auto operand_shape = operand.getType().template cast<MemRefType>().getShape();
+  auto loc = op.getLoc();
+  auto operand = op.operand();
+  auto operand_shape = operand.getType().template cast<MemRefType>().getShape();
 
-    // `in_bounds` is false when the mapped indices are in the padding area.
-    mapped_ivs.in_bounds = b->create<mlir::ConstantOp>(
-                               loc, b->getI1Type(), b->getIntegerAttr(b->getI1Type(), 1));
-    for (unsigned i = 0, e = ivs.size(); i < e; ++i) {
-        auto stride = window_strides.template getValue<llvm::APInt>(i);
-        auto pad_low = padding.template getValue<llvm::APInt>({i, 0});
+  // `in_bounds` is false when the mapped indices are in the padding area.
+  mapped_ivs.in_bounds = b->create<mlir::ConstantOp>(
+      loc, b->getI1Type(), b->getIntegerAttr(b->getI1Type(), 1));
+  for (unsigned i = 0, e = ivs.size(); i < e; ++i) {
+    auto stride = window_strides.template getValue<llvm::APInt>(i);
+    auto pad_low = padding.template getValue<llvm::APInt>({i, 0});
 
-        Value stride_val = b->create<ConstantIndexOp>(loc, stride.getSExtValue());
-        Value pad_low_val = b->create<ConstantIndexOp>(loc, pad_low.getSExtValue());
+    Value stride_val = b->create<ConstantIndexOp>(loc, stride.getSExtValue());
+    Value pad_low_val = b->create<ConstantIndexOp>(loc, pad_low.getSExtValue());
 
-        Value center = b->create<MulIOp>(loc, ivs[i], stride_val);
-        Value offset = b->create<SubIOp>(loc, window_ivs[i], pad_low_val);
-        Value index = b->create<AddIOp>(loc, center, offset);
-        Value upper_bound =
-            GetStaticOrDynamicDim(loc, operand, i, operand_shape[i], b);
-        // We must check whether 0 <= index_i < shape_i, as otherwise we are in
-        // the pad and then we have to use the neutral element for reduction.
-        // Equivalently, it can be computed as the unsigned comparison index_i <
-        // shape_i, since a negative value wraps to a large positive value.
-        mapped_ivs.in_bounds = b->create<mlir::AndOp>(
-                                   loc, mapped_ivs.in_bounds,
-                                   b->create<CmpIOp>(loc, CmpIPredicate::ult, index, upper_bound));
-        mapped_ivs.ivs.push_back(index);
-    }
-    return mapped_ivs;
+    Value center = b->create<MulIOp>(loc, ivs[i], stride_val);
+    Value offset = b->create<SubIOp>(loc, window_ivs[i], pad_low_val);
+    Value index = b->create<AddIOp>(loc, center, offset);
+    Value upper_bound =
+        GetStaticOrDynamicDim(loc, operand, i, operand_shape[i], b);
+    // We must check whether 0 <= index_i < shape_i, as otherwise we are in
+    // the pad and then we have to use the neutral element for reduction.
+    // Equivalently, it can be computed as the unsigned comparison index_i <
+    // shape_i, since a negative value wraps to a large positive value.
+    mapped_ivs.in_bounds = b->create<mlir::AndOp>(
+        loc, mapped_ivs.in_bounds,
+        b->create<CmpIOp>(loc, CmpIPredicate::ult, index, upper_bound));
+    mapped_ivs.ivs.push_back(index);
+  }
+  return mapped_ivs;
 }
 
 // Returns loop::Parallel over a shaped value with static or dynamic shape.
 loop::ParallelOp MakeLoopOverShape(Location loc, Value shaped_value,
                                    OpBuilder* b) {
-    Value zero = b->create<ConstantIndexOp>(loc, 0);
-    Value one = b->create<ConstantIndexOp>(loc, 1);
+  Value zero = b->create<ConstantIndexOp>(loc, 0);
+  Value one = b->create<ConstantIndexOp>(loc, 1);
 
-    ArrayRef<int64_t> shape =
-        shaped_value.getType().cast<ShapedType>().getShape();
-    SmallVector<Value, 2> lower, upper, step;
-    for (auto dim : llvm::enumerate(shape)) {
-        upper.push_back(
-            GetStaticOrDynamicDim(loc, shaped_value, dim.index(), dim.value(), b));
-        lower.push_back(zero);
-        step.push_back(one);
-    }
-    return b->create<loop::ParallelOp>(loc, lower, upper, step);
+  ArrayRef<int64_t> shape =
+      shaped_value.getType().cast<ShapedType>().getShape();
+  SmallVector<Value, 2> lower, upper, step;
+  for (auto dim : llvm::enumerate(shape)) {
+    upper.push_back(
+        GetStaticOrDynamicDim(loc, shaped_value, dim.index(), dim.value(), b));
+    lower.push_back(zero);
+    step.push_back(one);
+  }
+  return b->create<loop::ParallelOp>(loc, lower, upper, step);
 }
 
 // Converts `xla_lhlo.ReduceOp` into two loop::ParallelOp and a loop::ReduceOp.
@@ -188,115 +188,114 @@ loop::ParallelOp MakeLoopOverShape(Location loc, Value shaped_value,
 //    loop.yield
 //  }
 class ReduceOpConverter : public OpConversionPattern<xla_lhlo::ReduceOp> {
-public:
-    using OpConversionPattern<xla_lhlo::ReduceOp>::OpConversionPattern;
+ public:
+  using OpConversionPattern<xla_lhlo::ReduceOp>::OpConversionPattern;
 
-    LogicalResult matchAndRewrite(
-        xla_lhlo::ReduceOp xla_reduce_op, ArrayRef<Value> /*args*/,
-        ConversionPatternRewriter& rewriter) const final {
-        // TODO(b/137624192) Implement variadic reduce.
-        if (xla_reduce_op.out().size() != 1) return failure();
+  LogicalResult matchAndRewrite(
+      xla_lhlo::ReduceOp xla_reduce_op, ArrayRef<Value> /*args*/,
+      ConversionPatternRewriter& rewriter) const final {
+    // TODO(b/137624192) Implement variadic reduce.
+    if (xla_reduce_op.out().size() != 1) return failure();
 
-        loop::ReduceOp reduce_op =
-            CreateReduceOpInNestedParallelLoops(xla_reduce_op, &rewriter);
-        ConvertToReductionOperator(xla_reduce_op.getLoc(), reduce_op,
-                                   &xla_reduce_op.body().front(), &rewriter);
-        rewriter.replaceOp(xla_reduce_op, llvm::None);
-        return success();
+    loop::ReduceOp reduce_op =
+        CreateReduceOpInNestedParallelLoops(xla_reduce_op, &rewriter);
+    ConvertToReductionOperator(xla_reduce_op.getLoc(), reduce_op,
+                               &xla_reduce_op.body().front(), &rewriter);
+    rewriter.replaceOp(xla_reduce_op, llvm::None);
+    return success();
+  }
+
+ private:
+  // Creates nested `loop.parallel` ops with `loop.reduce`. The outer ParallelOp
+  // refers to the parallel dimensions of `xla_reduce_op` if any and the inner
+  // ParallelOp refers to the reduction dimensions. The loop.reduce op is
+  // returned.
+  //
+  // If the reduction argument is a memref<100x10x5xf32> and the
+  // reduction is performed along dimension 1 then this method will generate
+  //
+  //  %init = load %init_buf[] : memref<f32>
+  //  loop.parallel (%i, %k) = (%c0, %c0) to (%c100, %c5) step (%c1, %c1) {
+  //    %result = loop.parallel (%j) = (%c0) to (%c10) step (%c1) init (%init) {
+  //      %elem_to_reduce = load %buffer[%i, %j, %k] : memref<100x10x5xf32>
+  //      loop.reduce(%elem_to_reduce)  {
+  //        <THE BLOCK PTR TO BE RETURNED>
+  //      } : f32
+  //      loop.yield
+  //    } : f32
+  //    loop.yield
+  //  }
+  loop::ReduceOp CreateReduceOpInNestedParallelLoops(
+      xla_lhlo::ReduceOp xla_reduce_op,
+      ConversionPatternRewriter* rewriter) const {
+    auto loc = xla_reduce_op.getLoc();
+    DenseSet<int> reducing_dims;
+    for (const auto& rdim : xla_reduce_op.dimensions().getIntValues()) {
+      reducing_dims.insert(rdim.getSExtValue());
     }
 
-private:
-    // Creates nested `loop.parallel` ops with `loop.reduce`. The outer ParallelOp
-    // refers to the parallel dimensions of `xla_reduce_op` if any and the inner
-    // ParallelOp refers to the reduction dimensions. The loop.reduce op is
-    // returned.
-    //
-    // If the reduction argument is a memref<100x10x5xf32> and the
-    // reduction is performed along dimension 1 then this method will generate
-    //
-    //  %init = load %init_buf[] : memref<f32>
-    //  loop.parallel (%i, %k) = (%c0, %c0) to (%c100, %c5) step (%c1, %c1) {
-    //    %result = loop.parallel (%j) = (%c0) to (%c10) step (%c1) init (%init) {
-    //      %elem_to_reduce = load %buffer[%i, %j, %k] : memref<100x10x5xf32>
-    //      loop.reduce(%elem_to_reduce)  {
-    //        <THE BLOCK PTR TO BE RETURNED>
-    //      } : f32
-    //      loop.yield
-    //    } : f32
-    //    loop.yield
-    //  }
-    loop::ReduceOp CreateReduceOpInNestedParallelLoops(
-        xla_lhlo::ReduceOp xla_reduce_op,
-        ConversionPatternRewriter* rewriter) const {
-        auto loc = xla_reduce_op.getLoc();
-        DenseSet<int> reducing_dims;
-        for (const auto& rdim : xla_reduce_op.dimensions().getIntValues()) {
-            reducing_dims.insert(rdim.getSExtValue());
-        }
+    Value operand = *xla_reduce_op.operands().begin();
+    Value out = *xla_reduce_op.out().begin();
+    SmallVector<Value, 2> parallel_lower, parallel_upper, parallel_step;
+    SmallVector<Value, 2> reduce_lower, reduce_upper, reduce_step;
+    auto operand_shape = operand.getType().cast<MemRefType>().getShape();
+    for (auto dim : llvm::enumerate(operand_shape)) {
+      const bool is_reducing_dim = reducing_dims.count(dim.index());
 
-        Value operand = *xla_reduce_op.operands().begin();
-        Value out = *xla_reduce_op.out().begin();
-        SmallVector<Value, 2> parallel_lower, parallel_upper, parallel_step;
-        SmallVector<Value, 2> reduce_lower, reduce_upper, reduce_step;
-        auto operand_shape = operand.getType().cast<MemRefType>().getShape();
-        for (auto dim : llvm::enumerate(operand_shape)) {
-            const bool is_reducing_dim = reducing_dims.count(dim.index());
-
-            Value ub = GetStaticOrDynamicDim(loc, operand, dim.index(), dim.value(),
-                                             rewriter);
-            Value lb = rewriter->create<ConstantIndexOp>(loc, 0);
-            Value step = rewriter->create<ConstantIndexOp>(loc, 1);
-            (is_reducing_dim ? reduce_lower : parallel_lower).push_back(lb);
-            (is_reducing_dim ? reduce_upper : parallel_upper).push_back(ub);
-            (is_reducing_dim ? reduce_step : parallel_step).push_back(step);
-        }
-        // Load initial value from memref<element_type>.
-        SmallVector<Value, 1> init_value = {
-            rewriter->create<LoadOp>(loc, *xla_reduce_op.init_values().begin())
-        };
-        // Outer ParallelOp is not needed if it is a reduction across all dims.
-        loop::ParallelOp outer;
-        if (!parallel_lower.empty()) {
-            outer = rewriter->create<loop::ParallelOp>(loc, parallel_lower,
-                    parallel_upper, parallel_step);
-            rewriter->setInsertionPointToStart(outer.getBody());
-        }
-        loop::ParallelOp inner = rewriter->create<loop::ParallelOp>(
-                                     loc, reduce_lower, reduce_upper, reduce_step, init_value);
-        Value reduction_result = *inner.getResults().begin();
-
-        SmallVector<Value, 1> out_indices;
-        if (outer != nullptr) {
-            out_indices.reserve(outer.getNumLoops());
-            for (Value iv : outer.getInductionVars()) {
-                out_indices.push_back(iv);
-            }
-        } else {
-            out_indices.push_back(rewriter->create<ConstantIndexOp>(loc, 0));
-        }
-
-        rewriter->create<StoreOp>(loc, reduction_result, out, out_indices);
-
-        // Load the element to reduce.
-        SmallVector<Value, 2> indices;
-        indices.reserve(operand_shape.size());
-
-        if (outer) {
-            auto inner_ivs_it = inner.getInductionVars().begin();
-            auto outer_ivs_it = outer.getInductionVars().begin();
-            for (unsigned i = 0, e = operand_shape.size(); i < e; ++i) {
-                indices.push_back(reducing_dims.count(i) ? *inner_ivs_it++
-                                  : *outer_ivs_it++);
-            }
-        } else {
-            indices = inner.getInductionVars();
-        }
-
-        rewriter->setInsertionPointToStart(inner.getBody());
-        Value elem = rewriter->create<mlir::LoadOp>(
-                         loc, *xla_reduce_op.operands().begin(), indices);
-        return rewriter->create<loop::ReduceOp>(loc, elem);
+      Value ub = GetStaticOrDynamicDim(loc, operand, dim.index(), dim.value(),
+                                       rewriter);
+      Value lb = rewriter->create<ConstantIndexOp>(loc, 0);
+      Value step = rewriter->create<ConstantIndexOp>(loc, 1);
+      (is_reducing_dim ? reduce_lower : parallel_lower).push_back(lb);
+      (is_reducing_dim ? reduce_upper : parallel_upper).push_back(ub);
+      (is_reducing_dim ? reduce_step : parallel_step).push_back(step);
     }
+    // Load initial value from memref<element_type>.
+    SmallVector<Value, 1> init_value = {
+        rewriter->create<LoadOp>(loc, *xla_reduce_op.init_values().begin())};
+    // Outer ParallelOp is not needed if it is a reduction across all dims.
+    loop::ParallelOp outer;
+    if (!parallel_lower.empty()) {
+      outer = rewriter->create<loop::ParallelOp>(loc, parallel_lower,
+                                                 parallel_upper, parallel_step);
+      rewriter->setInsertionPointToStart(outer.getBody());
+    }
+    loop::ParallelOp inner = rewriter->create<loop::ParallelOp>(
+        loc, reduce_lower, reduce_upper, reduce_step, init_value);
+    Value reduction_result = *inner.getResults().begin();
+
+    SmallVector<Value, 1> out_indices;
+    if (outer != nullptr) {
+      out_indices.reserve(outer.getNumLoops());
+      for (Value iv : outer.getInductionVars()) {
+        out_indices.push_back(iv);
+      }
+    } else {
+      out_indices.push_back(rewriter->create<ConstantIndexOp>(loc, 0));
+    }
+
+    rewriter->create<StoreOp>(loc, reduction_result, out, out_indices);
+
+    // Load the element to reduce.
+    SmallVector<Value, 2> indices;
+    indices.reserve(operand_shape.size());
+
+    if (outer) {
+      auto inner_ivs_it = inner.getInductionVars().begin();
+      auto outer_ivs_it = outer.getInductionVars().begin();
+      for (unsigned i = 0, e = operand_shape.size(); i < e; ++i) {
+        indices.push_back(reducing_dims.count(i) ? *inner_ivs_it++
+                                                 : *outer_ivs_it++);
+      }
+    } else {
+      indices = inner.getInductionVars();
+    }
+
+    rewriter->setInsertionPointToStart(inner.getBody());
+    Value elem = rewriter->create<mlir::LoadOp>(
+        loc, *xla_reduce_op.operands().begin(), indices);
+    return rewriter->create<loop::ReduceOp>(loc, elem);
+  }
 };
 
 // Pseudocode:
@@ -361,97 +360,97 @@ private:
 //  }
 class ReduceWindowOpConverter
     : public OpConversionPattern<xla_lhlo::ReduceWindowOp> {
-public:
-    using OpConversionPattern<xla_lhlo::ReduceWindowOp>::OpConversionPattern;
+ public:
+  using OpConversionPattern<xla_lhlo::ReduceWindowOp>::OpConversionPattern;
 
-    LogicalResult matchAndRewrite(
-        xla_lhlo::ReduceWindowOp xla_reduce_window_op, ArrayRef<Value> /*args*/,
-        ConversionPatternRewriter& rewriter) const final {
-        loop::ParallelOp output_loop, window_loop;
-        std::tie(output_loop, window_loop) =
-            CreateParallelLoopsToTraverseOutputAndWindow(xla_reduce_window_op,
-                    &rewriter);
+  LogicalResult matchAndRewrite(
+      xla_lhlo::ReduceWindowOp xla_reduce_window_op, ArrayRef<Value> /*args*/,
+      ConversionPatternRewriter& rewriter) const final {
+    loop::ParallelOp output_loop, window_loop;
+    std::tie(output_loop, window_loop) =
+        CreateParallelLoopsToTraverseOutputAndWindow(xla_reduce_window_op,
+                                                     &rewriter);
 
-        loop::ReduceOp reduce_op = CreateReduceOpInNestedParallelLoops(
-                                       xla_reduce_window_op, output_loop, window_loop, &rewriter);
+    loop::ReduceOp reduce_op = CreateReduceOpInNestedParallelLoops(
+        xla_reduce_window_op, output_loop, window_loop, &rewriter);
 
-        ConvertToReductionOperator(xla_reduce_window_op.getLoc(), reduce_op,
-                                   &xla_reduce_window_op.body().front(), &rewriter);
-        rewriter.replaceOp(xla_reduce_window_op, llvm::None);
-        return success();
+    ConvertToReductionOperator(xla_reduce_window_op.getLoc(), reduce_op,
+                               &xla_reduce_window_op.body().front(), &rewriter);
+    rewriter.replaceOp(xla_reduce_window_op, llvm::None);
+    return success();
+  }
+
+ private:
+  std::pair<loop::ParallelOp, loop::ParallelOp>
+  CreateParallelLoopsToTraverseOutputAndWindow(
+      xla_lhlo::ReduceWindowOp xla_reduce_window_op,
+      ConversionPatternRewriter* rewriter) const {
+    auto loc = xla_reduce_window_op.getLoc();
+    Value init_value =
+        rewriter->create<LoadOp>(loc, xla_reduce_window_op.init_value());
+
+    Value zero = rewriter->create<ConstantIndexOp>(loc, 0);
+    Value one = rewriter->create<ConstantIndexOp>(loc, 1);
+
+    // Create an outer parallel loop that spans the output of ReduceWindowOp.
+    Value xla_output = xla_reduce_window_op.out();
+    auto output_loop = MakeLoopOverShape(loc, xla_output, rewriter);
+
+    // Create a nested loop that traverses the window.
+    SmallVector<Value, 2> window_lower, window_upper, window_step;
+    rewriter->setInsertionPointToStart(output_loop.getBody());
+    for (const auto& window_dim : xla_reduce_window_op.window_dimensions()) {
+      window_step.push_back(one);
+      window_lower.push_back(zero);
+      window_upper.push_back(
+          rewriter->create<ConstantIndexOp>(loc, window_dim.getSExtValue()));
+    }
+    auto window_loop = rewriter->create<loop::ParallelOp>(
+        loc, window_lower, window_upper, window_step, init_value);
+
+    Value reduction_result = *window_loop.getResults().begin();
+    auto output_ivs = output_loop.getInductionVars();
+    rewriter->create<StoreOp>(loc, reduction_result, xla_output, output_ivs);
+    return std::make_pair(output_loop, window_loop);
+  }
+
+  loop::ReduceOp CreateReduceOpInNestedParallelLoops(
+      xla_lhlo::ReduceWindowOp xla_reduce_window_op,
+      loop::ParallelOp output_loop, loop::ParallelOp window_loop,
+      ConversionPatternRewriter* rewriter) const {
+    rewriter->setInsertionPointToStart(window_loop.getBody());
+    auto loc = xla_reduce_window_op.getLoc();
+
+    if (xla_reduce_window_op.base_dilations().hasValue() ||
+        xla_reduce_window_op.window_dilations().hasValue()) {
+      xla_reduce_window_op.emitRemark(
+          "Lowering to parallel loops does not support `base_dilations` or "
+          "`window_dilations` attributes yet. The attributes will be ignored.");
     }
 
-private:
-    std::pair<loop::ParallelOp, loop::ParallelOp>
-    CreateParallelLoopsToTraverseOutputAndWindow(
-        xla_lhlo::ReduceWindowOp xla_reduce_window_op,
-        ConversionPatternRewriter* rewriter) const {
-        auto loc = xla_reduce_window_op.getLoc();
-        Value init_value =
-            rewriter->create<LoadOp>(loc, xla_reduce_window_op.init_value());
+    Value xla_operand = xla_reduce_window_op.operand();
+    auto xla_operand_type = xla_operand.getType().cast<MemRefType>();
 
-        Value zero = rewriter->create<ConstantIndexOp>(loc, 0);
-        Value one = rewriter->create<ConstantIndexOp>(loc, 1);
+    // Compute ivs in 'arg' buffer and whether these ivs are in pad area or not.
+    MappedIvs mapped_ivs = MapWindowIvsToInput(
+        xla_reduce_window_op, output_loop.getInductionVars(),
+        window_loop.getInductionVars(), rewriter);
 
-        // Create an outer parallel loop that spans the output of ReduceWindowOp.
-        Value xla_output = xla_reduce_window_op.out();
-        auto output_loop = MakeLoopOverShape(loc, xla_output, rewriter);
+    auto elem_or_init = rewriter->create<loop::IfOp>(
+        loc, xla_operand_type.getElementType(), mapped_ivs.in_bounds,
+        /*withElseRegion=*/true);
 
-        // Create a nested loop that traverses the window.
-        SmallVector<Value, 2> window_lower, window_upper, window_step;
-        rewriter->setInsertionPointToStart(output_loop.getBody());
-        for (const auto& window_dim : xla_reduce_window_op.window_dimensions()) {
-            window_step.push_back(one);
-            window_lower.push_back(zero);
-            window_upper.push_back(
-                rewriter->create<ConstantIndexOp>(loc, window_dim.getSExtValue()));
-        }
-        auto window_loop = rewriter->create<loop::ParallelOp>(
-                               loc, window_lower, window_upper, window_step, init_value);
+    OpBuilder then_builder = elem_or_init.getThenBodyBuilder();
+    Value elem = then_builder.create<mlir::LoadOp>(
+        loc, xla_reduce_window_op.operand(), mapped_ivs.ivs);
+    then_builder.create<loop::YieldOp>(loc, elem);
 
-        Value reduction_result = *window_loop.getResults().begin();
-        auto output_ivs = output_loop.getInductionVars();
-        rewriter->create<StoreOp>(loc, reduction_result, xla_output, output_ivs);
-        return std::make_pair(output_loop, window_loop);
-    }
+    OpBuilder else_builder = elem_or_init.getElseBodyBuilder();
+    else_builder.create<loop::YieldOp>(loc, *window_loop.initVals().begin());
 
-    loop::ReduceOp CreateReduceOpInNestedParallelLoops(
-        xla_lhlo::ReduceWindowOp xla_reduce_window_op,
-        loop::ParallelOp output_loop, loop::ParallelOp window_loop,
-        ConversionPatternRewriter* rewriter) const {
-        rewriter->setInsertionPointToStart(window_loop.getBody());
-        auto loc = xla_reduce_window_op.getLoc();
-
-        if (xla_reduce_window_op.base_dilations().hasValue() ||
-                xla_reduce_window_op.window_dilations().hasValue()) {
-            xla_reduce_window_op.emitRemark(
-                "Lowering to parallel loops does not support `base_dilations` or "
-                "`window_dilations` attributes yet. The attributes will be ignored.");
-        }
-
-        Value xla_operand = xla_reduce_window_op.operand();
-        auto xla_operand_type = xla_operand.getType().cast<MemRefType>();
-
-        // Compute ivs in 'arg' buffer and whether these ivs are in pad area or not.
-        MappedIvs mapped_ivs = MapWindowIvsToInput(
-                                   xla_reduce_window_op, output_loop.getInductionVars(),
-                                   window_loop.getInductionVars(), rewriter);
-
-        auto elem_or_init = rewriter->create<loop::IfOp>(
-                                loc, xla_operand_type.getElementType(), mapped_ivs.in_bounds,
-                                /*withElseRegion=*/true);
-
-        OpBuilder then_builder = elem_or_init.getThenBodyBuilder();
-        Value elem = then_builder.create<mlir::LoadOp>(
-                         loc, xla_reduce_window_op.operand(), mapped_ivs.ivs);
-        then_builder.create<loop::YieldOp>(loc, elem);
-
-        OpBuilder else_builder = elem_or_init.getElseBodyBuilder();
-        else_builder.create<loop::YieldOp>(loc, *window_loop.initVals().begin());
-
-        return rewriter->create<loop::ReduceOp>(loc,
-                                                *elem_or_init.results().begin());
-    }
+    return rewriter->create<loop::ReduceOp>(loc,
+                                            *elem_or_init.results().begin());
+  }
 };
 
 // See the operation semantics in
@@ -483,253 +482,245 @@ private:
 //    output(selected_index) = scatter(output(selected_index), source(S))
 class SelectAndScatterOpConverter
     : public OpConversionPattern<xla_lhlo::SelectAndScatterOp> {
-public:
-    using OpConversionPattern<xla_lhlo::SelectAndScatterOp>::OpConversionPattern;
+ public:
+  using OpConversionPattern<xla_lhlo::SelectAndScatterOp>::OpConversionPattern;
 
-    LogicalResult matchAndRewrite(
-        xla_lhlo::SelectAndScatterOp s_and_s_op, ArrayRef<Value> /*args*/,
-        ConversionPatternRewriter& rewriter) const final {
-        auto loc = s_and_s_op.getLoc();
-        InitializeOutput(s_and_s_op, &rewriter);
-        loop::ParallelOp loop_over_src =
-            MakeLoopOverShape(loc, s_and_s_op.source(), &rewriter);
-        rewriter.setInsertionPointToStart(loop_over_src.getBody());
+  LogicalResult matchAndRewrite(
+      xla_lhlo::SelectAndScatterOp s_and_s_op, ArrayRef<Value> /*args*/,
+      ConversionPatternRewriter& rewriter) const final {
+    auto loc = s_and_s_op.getLoc();
+    InitializeOutput(s_and_s_op, &rewriter);
+    loop::ParallelOp loop_over_src =
+        MakeLoopOverShape(loc, s_and_s_op.source(), &rewriter);
+    rewriter.setInsertionPointToStart(loop_over_src.getBody());
 
-        // Compute indices of the selected element in the window.
-        auto selected_ivs = SelectIvs(s_and_s_op, loop_over_src, &rewriter);
+    // Compute indices of the selected element in the window.
+    auto selected_ivs = SelectIvs(s_and_s_op, loop_over_src, &rewriter);
 
-        // Load `source[selected_ivs]`.
-        auto src_elem = rewriter.create<LoadOp>(loc, s_and_s_op.source(),
-                                                loop_over_src.getInductionVars());
+    // Load `source[selected_ivs]`.
+    auto src_elem = rewriter.create<LoadOp>(loc, s_and_s_op.source(),
+                                            loop_over_src.getInductionVars());
 
-        // Compute `out[selected_ivs]` = scatter(out[selected_ivs], src_element)`.
-        auto rmw = rewriter.create<GenericAtomicRMWOp>(loc, s_and_s_op.out(),
-                   selected_ivs);
-        OpBuilder rmw_builder = rmw.getBodyBuilder();
-        auto acc_result =
-            ApplySingleResultLhloCode(loc, {src_elem, rmw.getCurrentValue()},
-                                      &s_and_s_op.scatter().front(), &rmw_builder);
-        rmw_builder.create<AtomicYieldOp>(loc, acc_result);
+    // Compute `out[selected_ivs]` = scatter(out[selected_ivs], src_element)`.
+    auto rmw = rewriter.create<GenericAtomicRMWOp>(loc, s_and_s_op.out(),
+                                                   selected_ivs);
+    OpBuilder rmw_builder = rmw.getBodyBuilder();
+    auto acc_result =
+        ApplySingleResultLhloCode(loc, {src_elem, rmw.getCurrentValue()},
+                                  &s_and_s_op.scatter().front(), &rmw_builder);
+    rmw_builder.create<AtomicYieldOp>(loc, acc_result);
 
-        rewriter.replaceOp(s_and_s_op, llvm::None);
-        return success();
+    rewriter.replaceOp(s_and_s_op, llvm::None);
+    return success();
+  }
+
+ private:
+  void InitializeOutput(xla_lhlo::SelectAndScatterOp s_and_s_op,
+                        OpBuilder* b) const {
+    auto loc = s_and_s_op.getLoc();
+    Value init_value = b->create<LoadOp>(loc, s_and_s_op.init_value());
+
+    loop::ParallelOp loop_over_output =
+        MakeLoopOverShape(loc, s_and_s_op.out(), b);
+    OpBuilder::InsertionGuard guard(*b);
+    b->setInsertionPointToStart(loop_over_output.getBody());
+    b->create<StoreOp>(loc, init_value, s_and_s_op.out(),
+                       loop_over_output.getInductionVars());
+  }
+
+  struct WindowLoops {
+    SmallVector<Value, 2> selected_ivs;
+    SmallVector<Value, 2> window_ivs;
+    loop::ForOp inner_loop;
+  };
+  WindowLoops InsertWindowLoops(xla_lhlo::SelectAndScatterOp s_and_s_op,
+                                loop::ParallelOp loop_over_src,
+                                OpBuilder* b) const {
+    auto loc = s_and_s_op.getLoc();
+    Value zero = b->create<ConstantIndexOp>(loc, 0);
+    Value one = b->create<ConstantIndexOp>(loc, 1);
+
+    auto element_type =
+        s_and_s_op.out().getType().cast<MemRefType>().getElementType();
+    auto rank = loop_over_src.getNumLoops();
+
+    // `iter_args` = [iv_1, ..., iv_N, selected_value, is_initialized]
+    SmallVector<Value, 4> iter_args(rank, zero);
+    iter_args.push_back(b->create<mlir::ConstantOp>(
+        loc, element_type, b->getFloatAttr(element_type, 0)));
+    iter_args.push_back(b->create<mlir::ConstantOp>(
+        loc, b->getI1Type(), b->getIntegerAttr(b->getI1Type(), 0)));
+
+    // Create a nested loop that traverses the window.
+    OpBuilder::InsertPoint ip;
+    WindowLoops result;
+    for (const auto& window_dim :
+         s_and_s_op.window_dimensions()->getIntValues()) {
+      Value upper = b->create<ConstantIndexOp>(loc, window_dim.getSExtValue());
+      result.inner_loop =
+          b->create<loop::ForOp>(loc, zero, upper, one, iter_args);
+      if (b->getInsertionBlock() == loop_over_src.getBody()) {
+        ip = b->saveInsertionPoint();
+        result.selected_ivs = result.inner_loop.getResults().take_front(rank);
+      } else {
+        b->create<loop::YieldOp>(loc, result.inner_loop.getResults());
+      }
+      b->setInsertionPointToStart(result.inner_loop.getBody());
+      iter_args = ValueRange{result.inner_loop.getRegionIterArgs()};
+      result.window_ivs.push_back(result.inner_loop.getInductionVar());
+    }
+    b->restoreInsertionPoint(ip);
+    return result;
+  }
+
+  // Adapter to store iteration arguments of sequential loops that perform
+  // select in a window.
+  class IterArgs {
+   public:
+    explicit IterArgs(ValueRange ivs_val_flag) : ivs_val_flag_(ivs_val_flag) {}
+    IterArgs(ValueRange ivs, Value value, Value flag) {
+      ivs_val_flag_ = ivs;
+      ivs_val_flag_.push_back(value);
+      ivs_val_flag_.push_back(flag);
     }
 
-private:
-    void InitializeOutput(xla_lhlo::SelectAndScatterOp s_and_s_op,
-                          OpBuilder* b) const {
-        auto loc = s_and_s_op.getLoc();
-        Value init_value = b->create<LoadOp>(loc, s_and_s_op.init_value());
+    ArrayRef<Value> to_vector() const { return ivs_val_flag_; }
 
-        loop::ParallelOp loop_over_output =
-            MakeLoopOverShape(loc, s_and_s_op.out(), b);
-        OpBuilder::InsertionGuard guard(*b);
-        b->setInsertionPointToStart(loop_over_output.getBody());
-        b->create<StoreOp>(loc, init_value, s_and_s_op.out(),
-                           loop_over_output.getInductionVars());
-    }
+    // Indices of the currently selected value.
+    ArrayRef<Value> ivs() const { return to_vector().drop_back(2); }
+    // Currently selected value w.r.t. select() function.
+    Value value() const { return ivs_val_flag_.end()[-2]; }
+    // i1 flag if value() and ivs() were initialized.
+    Value is_init() const { return ivs_val_flag_.back(); }
 
-    struct WindowLoops {
-        SmallVector<Value, 2> selected_ivs;
-        SmallVector<Value, 2> window_ivs;
-        loop::ForOp inner_loop;
-    };
-    WindowLoops InsertWindowLoops(xla_lhlo::SelectAndScatterOp s_and_s_op,
+   private:
+    // Vector that stores iv_1, ..., iv_N, value, init.
+    SmallVector<Value, 4> ivs_val_flag_;
+  };
+
+  SmallVector<Value, 2> SelectIvs(xla_lhlo::SelectAndScatterOp s_and_s_op,
                                   loop::ParallelOp loop_over_src,
                                   OpBuilder* b) const {
-        auto loc = s_and_s_op.getLoc();
-        Value zero = b->create<ConstantIndexOp>(loc, 0);
-        Value one = b->create<ConstantIndexOp>(loc, 1);
+    auto loc = s_and_s_op.getLoc();
 
-        auto element_type =
-            s_and_s_op.out().getType().cast<MemRefType>().getElementType();
-        auto rank = loop_over_src.getNumLoops();
+    WindowLoops window_loops = InsertWindowLoops(s_and_s_op, loop_over_src, b);
+    OpBuilder inner_loop_b = window_loops.inner_loop.getBodyBuilder();
 
-        // `iter_args` = [iv_1, ..., iv_N, selected_value, is_initialized]
-        SmallVector<Value, 4> iter_args(rank, zero);
-        iter_args.push_back(b->create<mlir::ConstantOp>(
-                                loc, element_type, b->getFloatAttr(element_type, 0)));
-        iter_args.push_back(b->create<mlir::ConstantOp>(
-                                loc, b->getI1Type(), b->getIntegerAttr(b->getI1Type(), 0)));
+    // Compute ivs in 'arg' buffer and whether these ivs are in the pad area.
+    MappedIvs mapped_ivs =
+        MapWindowIvsToInput(s_and_s_op, loop_over_src.getInductionVars(),
+                            window_loops.window_ivs, &inner_loop_b);
 
-        // Create a nested loop that traverses the window.
-        OpBuilder::InsertPoint ip;
-        WindowLoops result;
-        for (const auto& window_dim :
-                s_and_s_op.window_dimensions()->getIntValues()) {
-            Value upper = b->create<ConstantIndexOp>(loc, window_dim.getSExtValue());
-            result.inner_loop =
-                b->create<loop::ForOp>(loc, zero, upper, one, iter_args);
-            if (b->getInsertionBlock() == loop_over_src.getBody()) {
-                ip = b->saveInsertionPoint();
-                result.selected_ivs = result.inner_loop.getResults().take_front(rank);
-            } else {
-                b->create<loop::YieldOp>(loc, result.inner_loop.getResults());
-            }
-            b->setInsertionPointToStart(result.inner_loop.getBody());
-            iter_args = ValueRange{result.inner_loop.getRegionIterArgs()};
-            result.window_ivs.push_back(result.inner_loop.getInductionVar());
-        }
-        b->restoreInsertionPoint(ip);
-        return result;
+    IterArgs ivs_val_flag(window_loops.inner_loop.getRegionIterArgs());
+
+    auto if_in_bounds = inner_loop_b.create<loop::IfOp>(
+        loc, window_loops.inner_loop.getResultTypes(), mapped_ivs.in_bounds,
+        /*withElseRegion=*/true);
+
+    // Case when we are inside boundaries of 'arg' and not in the pad area.
+    {
+      OpBuilder in_bounds_then_b = if_in_bounds.getThenBodyBuilder();
+      auto select_or_init_results = SelectOrInitialize(
+          s_and_s_op, mapped_ivs.ivs, &ivs_val_flag, &in_bounds_then_b);
+      in_bounds_then_b.create<loop::YieldOp>(loc, select_or_init_results);
     }
 
-    // Adapter to store iteration arguments of sequential loops that perform
-    // select in a window.
-    class IterArgs {
-    public:
-        explicit IterArgs(ValueRange ivs_val_flag) : ivs_val_flag_(ivs_val_flag) {}
-        IterArgs(ValueRange ivs, Value value, Value flag) {
-            ivs_val_flag_ = ivs;
-            ivs_val_flag_.push_back(value);
-            ivs_val_flag_.push_back(flag);
-        }
-
-        ArrayRef<Value> to_vector() const {
-            return ivs_val_flag_;
-        }
-
-        // Indices of the currently selected value.
-        ArrayRef<Value> ivs() const {
-            return to_vector().drop_back(2);
-        }
-        // Currently selected value w.r.t. select() function.
-        Value value() const {
-            return ivs_val_flag_.end()[-2];
-        }
-        // i1 flag if value() and ivs() were initialized.
-        Value is_init() const {
-            return ivs_val_flag_.back();
-        }
-
-    private:
-        // Vector that stores iv_1, ..., iv_N, value, init.
-        SmallVector<Value, 4> ivs_val_flag_;
-    };
-
-    SmallVector<Value, 2> SelectIvs(xla_lhlo::SelectAndScatterOp s_and_s_op,
-                                    loop::ParallelOp loop_over_src,
-                                    OpBuilder* b) const {
-        auto loc = s_and_s_op.getLoc();
-
-        WindowLoops window_loops = InsertWindowLoops(s_and_s_op, loop_over_src, b);
-        OpBuilder inner_loop_b = window_loops.inner_loop.getBodyBuilder();
-
-        // Compute ivs in 'arg' buffer and whether these ivs are in the pad area.
-        MappedIvs mapped_ivs =
-            MapWindowIvsToInput(s_and_s_op, loop_over_src.getInductionVars(),
-                                window_loops.window_ivs, &inner_loop_b);
-
-        IterArgs ivs_val_flag(window_loops.inner_loop.getRegionIterArgs());
-
-        auto if_in_bounds = inner_loop_b.create<loop::IfOp>(
-                                loc, window_loops.inner_loop.getResultTypes(), mapped_ivs.in_bounds,
-                                /*withElseRegion=*/true);
-
-        // Case when we are inside boundaries of 'arg' and not in the pad area.
-        {
-            OpBuilder in_bounds_then_b = if_in_bounds.getThenBodyBuilder();
-            auto select_or_init_results = SelectOrInitialize(
-                                              s_and_s_op, mapped_ivs.ivs, &ivs_val_flag, &in_bounds_then_b);
-            in_bounds_then_b.create<loop::YieldOp>(loc, select_or_init_results);
-        }
-
-        // Case when we are in the pad.
-        {
-            OpBuilder in_bounds_else_b = if_in_bounds.getElseBodyBuilder();
-            in_bounds_else_b.create<loop::YieldOp>(loc, ivs_val_flag.to_vector());
-        }
-
-        inner_loop_b.create<loop::YieldOp>(loc, if_in_bounds.getResults());
-        return window_loops.selected_ivs;
+    // Case when we are in the pad.
+    {
+      OpBuilder in_bounds_else_b = if_in_bounds.getElseBodyBuilder();
+      in_bounds_else_b.create<loop::YieldOp>(loc, ivs_val_flag.to_vector());
     }
 
-    SmallVector<Value, 4> SelectOrInitialize(
-        xla_lhlo::SelectAndScatterOp s_and_s_op, ArrayRef<Value> operand_ivs,
-        IterArgs* ivs_val_flag, OpBuilder* b) const {
-        auto loc = s_and_s_op.getLoc();
-        Value true_i1 = b->create<mlir::ConstantOp>(
-                            loc, b->getI1Type(), b->getIntegerAttr(b->getI1Type(), 1));
+    inner_loop_b.create<loop::YieldOp>(loc, if_in_bounds.getResults());
+    return window_loops.selected_ivs;
+  }
 
-        TypeRange iter_arg_types{ivs_val_flag->to_vector()};
-        Value operand_elem =
-            b->create<LoadOp>(loc, s_and_s_op.operand(), operand_ivs);
-        auto if_init =
-            b->create<loop::IfOp>(loc, iter_arg_types, ivs_val_flag->is_init(),
-                                  /*withElseRegion=*/true);
-        // Init == true, i.e. iter args are already initialized with a selected
-        // element in boundaries of the operand. Select function has to be computed
-        // here.
-        {
-            OpBuilder if_init_then_b = if_init.getThenBodyBuilder();
+  SmallVector<Value, 4> SelectOrInitialize(
+      xla_lhlo::SelectAndScatterOp s_and_s_op, ArrayRef<Value> operand_ivs,
+      IterArgs* ivs_val_flag, OpBuilder* b) const {
+    auto loc = s_and_s_op.getLoc();
+    Value true_i1 = b->create<mlir::ConstantOp>(
+        loc, b->getI1Type(), b->getIntegerAttr(b->getI1Type(), 1));
 
-            auto& lhlo_select = s_and_s_op.select().front();
-            Value pred =
-                ApplySingleResultLhloCode(loc, {operand_elem, ivs_val_flag->value()},
-                                          &lhlo_select, &if_init_then_b);
+    TypeRange iter_arg_types{ivs_val_flag->to_vector()};
+    Value operand_elem =
+        b->create<LoadOp>(loc, s_and_s_op.operand(), operand_ivs);
+    auto if_init =
+        b->create<loop::IfOp>(loc, iter_arg_types, ivs_val_flag->is_init(),
+                              /*withElseRegion=*/true);
+    // Init == true, i.e. iter args are already initialized with a selected
+    // element in boundaries of the operand. Select function has to be computed
+    // here.
+    {
+      OpBuilder if_init_then_b = if_init.getThenBodyBuilder();
 
-            auto if_pred =
-                if_init_then_b.create<loop::IfOp>(loc, iter_arg_types, pred,
-                                                  /*withElseRegion=*/true);
+      auto& lhlo_select = s_and_s_op.select().front();
+      Value pred =
+          ApplySingleResultLhloCode(loc, {operand_elem, ivs_val_flag->value()},
+                                    &lhlo_select, &if_init_then_b);
 
-            // Pred == true, therefore pack newly selected ivs, val and init flag back
-            // to iter_args and return.
-            {
-                OpBuilder if_pred_then_b = if_pred.getThenBodyBuilder();
-                if_pred_then_b.create<loop::YieldOp>(
-                    loc, IterArgs{operand_ivs, operand_elem, true_i1}.to_vector());
-            }
+      auto if_pred =
+          if_init_then_b.create<loop::IfOp>(loc, iter_arg_types, pred,
+                                            /*withElseRegion=*/true);
 
-            // Pred == false, therefore return old iter_args.
-            {
-                OpBuilder if_pred_else_b = if_pred.getElseBodyBuilder();
-                if_pred_else_b.create<loop::YieldOp>(loc, ivs_val_flag->to_vector());
-            }
+      // Pred == true, therefore pack newly selected ivs, val and init flag back
+      // to iter_args and return.
+      {
+        OpBuilder if_pred_then_b = if_pred.getThenBodyBuilder();
+        if_pred_then_b.create<loop::YieldOp>(
+            loc, IterArgs{operand_ivs, operand_elem, true_i1}.to_vector());
+      }
 
-            if_init_then_b.create<loop::YieldOp>(loc, if_pred.getResults());
-        }
-        // Init == false, i.e. only pad was visited before and this is the first
-        // element in the boundaries of the operand.
-        {
-            OpBuilder if_init_else_b = if_init.getElseBodyBuilder();
+      // Pred == false, therefore return old iter_args.
+      {
+        OpBuilder if_pred_else_b = if_pred.getElseBodyBuilder();
+        if_pred_else_b.create<loop::YieldOp>(loc, ivs_val_flag->to_vector());
+      }
 
-            if_init_else_b.create<loop::YieldOp>(
-                loc, IterArgs{operand_ivs, operand_elem, true_i1}.to_vector());
-        }
-        return if_init.getResults();
+      if_init_then_b.create<loop::YieldOp>(loc, if_pred.getResults());
     }
+    // Init == false, i.e. only pad was visited before and this is the first
+    // element in the boundaries of the operand.
+    {
+      OpBuilder if_init_else_b = if_init.getElseBodyBuilder();
+
+      if_init_else_b.create<loop::YieldOp>(
+          loc, IterArgs{operand_ivs, operand_elem, true_i1}.to_vector());
+    }
+    return if_init.getResults();
+  }
 };
 
 struct LhloLegalizeToParallelLoops
     : public PassWrapper<LhloLegalizeToParallelLoops, FunctionPass> {
-    void runOnFunction() override {
-        auto func = getFunction();
+  void runOnFunction() override {
+    auto func = getFunction();
 
-        OwningRewritePatternList patterns;
-        // clang-format off
+    OwningRewritePatternList patterns;
+    // clang-format off
         patterns.insert<
         ReduceOpConverter,
         ReduceWindowOpConverter,
         SelectAndScatterOpConverter
         >(func.getContext());
-        // clang-format on
+    // clang-format on
 
-        ConversionTarget target(getContext());
-        target.addLegalDialect<linalg::LinalgDialect, StandardOpsDialect,
-                               loop::LoopOpsDialect, XlaLhloDialect>();
-        target.addIllegalOp<xla_lhlo::ReduceOp, xla_lhlo::ReduceWindowOp,
-                            xla_lhlo::SelectAndScatterOp>();
+    ConversionTarget target(getContext());
+    target.addLegalDialect<linalg::LinalgDialect, StandardOpsDialect,
+                           loop::LoopOpsDialect, XlaLhloDialect>();
+    target.addIllegalOp<xla_lhlo::ReduceOp, xla_lhlo::ReduceWindowOp,
+                        xla_lhlo::SelectAndScatterOp>();
 
-        if (failed(applyPartialConversion(func, target, patterns, nullptr))) {
-            signalPassFailure();
-        }
+    if (failed(applyPartialConversion(func, target, patterns, nullptr))) {
+      signalPassFailure();
     }
+  }
 };
 
 }  // namespace
 
 std::unique_ptr<OperationPass<FuncOp>> createLegalizeLhloToParallelLoopsPass() {
-    return absl::make_unique<LhloLegalizeToParallelLoops>();
+  return absl::make_unique<LhloLegalizeToParallelLoops>();
 }
 
 static PassRegistration<LhloLegalizeToParallelLoops> legalize_lhlo_pass(
