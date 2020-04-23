@@ -28,8 +28,8 @@ set -e
 patch_am_sdk() {
   local am_dir="${1}"
   if [ ! -f "$am_dir"/VERSION.txt ]; then
-    echo "Could not find $am_dir, skipping AmbiqMicro SDK patch";
-    return;
+    echo "Could not find $am_dir, skipping AmbiqMicro SDK patch"
+    return
   fi
 
   local src_dir="$am_dir"/boards/apollo3_evb/examples/hello_world/gcc
@@ -93,30 +93,28 @@ download_and_extract() {
   local expected_md5="${2:?${usage}}"
   local dir="${3:?${usage}}"
   local action="${4}"
-  local action_param1="${5}"  # optional action parameter
+  local action_param1="${5}" # optional action parameter
   local tempdir="$(mktemp -d)"
   local tempdir2="$(mktemp -d)"
   local tempfile="$tempdir"/temp_file
   local curl_retries=3
 
   command -v curl >/dev/null 2>&1 || {
-    echo >&2 "The required 'curl' tool isn't installed. Try 'apt-get install curl'."; exit 1;
+    echo >&2 "The required 'curl' tool isn't installed. Try 'apt-get install curl'."
+    exit 1
   }
 
   echo "downloading $url" >&2
   mkdir -p "$dir"
   # We've been seeing occasional 56 errors from valid URLs, so set up a retry
   # loop to attempt to recover from them.
-  for (( i=1; i<="$curl_retries"; ++i ))
-  do
-    curl -Ls --fail --retry 5 "$url" > "$tempfile"
+  for ((i = 1; i <= "$curl_retries"; ++i)); do
+    curl -Ls --fail --retry 5 "$url" >"$tempfile"
     CURL_RESULT=$?
-    if [[ $CURL_RESULT -eq 0 ]]
-    then
+    if [[ $CURL_RESULT -eq 0 ]]; then
       break
     fi
-    if [[ ( $CURL_RESULT -ne 56 ) || ( $i -eq $curl_retries ) ]]
-    then
+    if [[ ($CURL_RESULT -ne 56) || ($i -eq $curl_retries) ]]; then
       echo "Error $CURL_RESULT downloading '$url'"
       exit 1
     fi
@@ -135,7 +133,7 @@ download_and_extract() {
   elif [[ "${url}" == *tar.xz ]]; then
     tar -C "$dir" --strip-components=1 -xf "$tempfile"
   elif [[ "${url}" == *bz2 ]]; then
-    curl -Ls "$url" > "$tempdir"/tarred.bz2
+    curl -Ls "$url" >"$tempdir"/tarred.bz2
     tar -C "$dir" --strip-components=1 -xjf "$tempfile"
   elif [[ "${url}" == *zip ]]; then
     unzip "$tempfile" -d "$tempdir2" 2>&1 1>/dev/null
