@@ -20,8 +20,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR=${SCRIPT_DIR}/../../../../..
-cd "${ROOT_DIR}"
+ROOT_DIR=$SCRIPT_DIR/../../../../..
+cd "$ROOT_DIR"
 
 source tensorflow/lite/micro/tools/ci_build/helper_functions.sh
 
@@ -30,7 +30,7 @@ readable_run make -f tensorflow/lite/micro/tools/make/Makefile clean
 TARGET_ARCH=arc
 
 # TODO(b/143715361): downloading first to allow for parallel builds.
-readable_run make -f tensorflow/lite/micro/tools/make/Makefile TARGET_ARCH=${TARGET_ARCH} third_party_downloads
-readable_run make -j8 -f tensorflow/lite/micro/tools/make/Makefile TARGET_ARCH=${TARGET_ARCH} generate_hello_world_test_make_project
-readable_run make -j8 -f tensorflow/lite/micro/tools/make/Makefile TARGET_ARCH=${TARGET_ARCH} generate_person_detection_test_make_project
-readable_run make -j8 -f tensorflow/lite/micro/tools/make/Makefile TARGET_ARCH=${TARGET_ARCH} hello_world_test
+readable_run make -f tensorflow/lite/micro/tools/make/Makefile TARGET_ARCH="$TARGET_ARCH" third_party_downloads
+readable_run make -j8 -f tensorflow/lite/micro/tools/make/Makefile TARGET_ARCH="$TARGET_ARCH" generate_hello_world_test_make_project
+readable_run make -j8 -f tensorflow/lite/micro/tools/make/Makefile TARGET_ARCH="$TARGET_ARCH" generate_person_detection_test_make_project
+readable_run make -j8 -f tensorflow/lite/micro/tools/make/Makefile TARGET_ARCH="$TARGET_ARCH" hello_world_test

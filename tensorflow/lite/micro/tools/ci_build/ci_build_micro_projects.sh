@@ -25,12 +25,12 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR=${SCRIPT_DIR}/../../../../..
-cd "${ROOT_DIR}"
+ROOT_DIR=$SCRIPT_DIR/../../../../..
+cd "$ROOT_DIR"
 pwd
 
 make -f tensorflow/lite/micro/tools/make/Makefile \
-  TARGET=${1} \
+  TARGET="${1}" \
   TAGS="${2}" \
   generate_projects
 

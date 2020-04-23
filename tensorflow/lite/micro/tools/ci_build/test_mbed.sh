@@ -28,8 +28,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR=${SCRIPT_DIR}/../../../../..
-cd "${ROOT_DIR}"
+ROOT_DIR=$SCRIPT_DIR/../../../../..
+cd "$ROOT_DIR"
 pwd
 
 source tensorflow/lite/micro/tools/ci_build/helper_functions.sh
@@ -48,22 +48,22 @@ else
 fi
 
 make -f tensorflow/lite/micro/tools/make/Makefile \
-  TARGET=${TARGET} \
+  TARGET="$TARGET" \
   TAGS="portable_optimized disco_f746ng" \
-  ${PROJECTS}
+  "$PROJECTS"
 
 readable_run tensorflow/lite/micro/tools/ci_build/install_mbed_cli.sh
 
 for PROJECT_PATH in tensorflow/lite/micro/tools/make/gen/mbed_*/prj/*/mbed; do
-  PROJECT_PARENT_DIR=$(dirname ${PROJECT_PATH})
-  PROJECT_NAME=$(basename ${PROJECT_PARENT_DIR})
+  PROJECT_PARENT_DIR=$(dirname "$PROJECT_PATH")
+  PROJECT_NAME=$(basename "$PROJECT_PARENT_DIR")
   # Don't try to build and package up test projects, because there are too many.
   if [[ ${PROJECT_NAME} == *"_test" ]]; then
     continue
   fi
-  cp -r ${PROJECT_PATH} ${PROJECT_PARENT_DIR}/${PROJECT_NAME}
-  pushd ${PROJECT_PARENT_DIR}
-  zip -q -r ${PROJECT_NAME}.zip ${PROJECT_NAME}
+  cp -r "$PROJECT_PATH" "$PROJECT_PARENT_DIR/$PROJECT_NAME"
+  pushd "$PROJECT_PARENT_DIR"
+  zip -q -r "$PROJECT_NAME".zip "$PROJECT_NAME"
   popd
-  readable_run tensorflow/lite/micro/tools/ci_build/test_mbed_library.sh ${PROJECT_PATH}
+  readable_run tensorflow/lite/micro/tools/ci_build/test_mbed_library.sh "$PROJECT_PATH"
 done
