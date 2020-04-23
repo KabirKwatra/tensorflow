@@ -78,15 +78,11 @@ tf.contrib.lookup.MutableDenseHashTable
   </tr>
 </table>
 
-
-
 ## Python Sample code
 
 Here, you can find the Python sample code:
 
-
-
-*   Static hash table (string → int64)
+- Static hash table (string → int64)
 
 ```
 int64_values = tf.constant([1, 2, 3], dtype=tf.int64)
@@ -100,7 +96,7 @@ with tf.control_dependencies([tf.initializers.tables_initializer()]):
   out_int64_tensor = table.lookup(input_string_tensor)
 ```
 
-*   Static hash table, initialized from a file (string → int64)
+- Static hash table, initialized from a file (string → int64)
 
 ```
 with open('/tmp/vocab.file', 'r') as f:
@@ -116,7 +112,7 @@ with tf.control_dependencies([tf.initializers.tables_initializer()]):
   out_int64_tensor = table.lookup(input_string_tensor)
 ```
 
-*   Index table (string → int64)
+- Index table (string → int64)
 
 ```
 UNK_ID = -1
@@ -129,7 +125,7 @@ with tf.control_dependencies([tf.initializers.tables_initializer()]):
   out_tensor = vocab_table.lookup(input_tensor)
 ```
 
-*   Index table, initialized from a file (string → int64)
+- Index table, initialized from a file (string → int64)
 
 ```
 with open('/tmp/vocab.file', 'r') as f:
@@ -145,7 +141,7 @@ with tf.control_dependencies([tf.initializers.tables_initializer()]):
   out_tensor = vocab_table.lookup(input_tensor)
 ```
 
-*   Index to string table (int64 → string)
+- Index to string table (int64 → string)
 
 ```
 UNK_WORD = "unknown"
@@ -158,7 +154,7 @@ with tf.control_dependencies([tf.initializers.tables_initializer()]):
   out_tensor = vocab_table.lookup(input_tensor)
 ```
 
-*   Index to string table, initialized from a file (int64 → string)
+- Index to string table, initialized from a file (int64 → string)
 
 ```
 with open('/tmp/vocab.file', 'r') as f:
@@ -182,7 +178,6 @@ hashtable ops manually by including the following dependency:
 `"//tensorflow/lite/kernels/hashtable:hashtable_op_kernels"`
 
 And then, your op resolver should add them like the following statements:
-
 
 ```
   // Add hashtable op handlers.
