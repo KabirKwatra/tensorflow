@@ -29,25 +29,25 @@ namespace xla {
     tensorflow::LINKER_INITIALIZED);
 
 StatusOr<
-std::tuple<std::unique_ptr<HloModule>, std::unique_ptr<BufferAssignment>>>
+    std::tuple<std::unique_ptr<HloModule>, std::unique_ptr<BufferAssignment>>>
 Compiler::RunHloPassesAndBufferAssignement(
     std::unique_ptr<HloModule> module, se::StreamExecutor* executor,
     se::DeviceMemoryAllocator* device_allocator) {
-    return Unimplemented("This compiler does not support this method");
+  return Unimplemented("This compiler does not support this method");
 }
 
 std::vector<std::unique_ptr<tensorflow::protobuf::Message>>
-        Compiler::ComputeBackendConfigs(const HloInstruction& hlo,
-se::StreamExecutor* executor) const {
-    CHECK(executor != nullptr);
-    return {};
+Compiler::ComputeBackendConfigs(const HloInstruction& hlo,
+                                se::StreamExecutor* executor) const {
+  CHECK(executor != nullptr);
+  return {};
 }
 
 std::unique_ptr<tensorflow::protobuf::Message>
 Compiler::ComputeDefaultBackendConfig(const HloInstruction& hlo,
                                       se::StreamExecutor* executor) const {
-    CHECK(executor != nullptr);
-    return nullptr;
+  CHECK(executor != nullptr);
+  return nullptr;
 }
 
 // Define a default version where metadata is not used.
@@ -56,72 +56,72 @@ Compiler::CompileAheadOfTime(
     std::unique_ptr<HloModuleGroup> module_group,
     const AotCompilationOptions& options,
     std::unique_ptr<AotCompilationMetadata>* metadata) {
-    if (metadata != nullptr) {
-        return Unimplemented(
-                   "Populating AotCompilationMetadata is not implemented on this "
-                   "compiler.");
-    }
-    return CompileAheadOfTime(std::move(module_group), options);
+  if (metadata != nullptr) {
+    return Unimplemented(
+        "Populating AotCompilationMetadata is not implemented on this "
+        "compiler.");
+  }
+  return CompileAheadOfTime(std::move(module_group), options);
 }
 
 /* static */ std::map<se::Platform::Id, Compiler::CompilerFactory>*
 Compiler::GetPlatformCompilerFactories() {
-    static auto* r = new std::map<se::Platform::Id, CompilerFactory>;
-    return r;
+  static auto* r = new std::map<se::Platform::Id, CompilerFactory>;
+  return r;
 }
 
 /* static */
 std::map<se::Platform::Id, std::unique_ptr<Compiler>>*
 Compiler::GetPlatformCompilers() {
-    static auto* r = new std::map<se::Platform::Id, std::unique_ptr<Compiler>>;
-    return r;
+  static auto* r = new std::map<se::Platform::Id, std::unique_ptr<Compiler>>;
+  return r;
 }
 
 /* static */ void Compiler::RegisterCompilerFactory(
     se::Platform::Id platform_id,
     std::function<std::unique_ptr<Compiler>()> compiler_factory) {
-    tensorflow::mutex_lock lock(platform_compiler_mutex_);
-    auto* factories = GetPlatformCompilerFactories();
-    CHECK(factories->find(platform_id) == factories->end())
-            << "Compiler factory already registered for platform";
-    (*factories)[platform_id] = std::move(compiler_factory);
+  tensorflow::mutex_lock lock(platform_compiler_mutex_);
+  auto* factories = GetPlatformCompilerFactories();
+  CHECK(factories->find(platform_id) == factories->end())
+      << "Compiler factory already registered for platform";
+  (*factories)[platform_id] = std::move(compiler_factory);
 }
 
 /* static */ StatusOr<Compiler*> Compiler::GetForPlatform(
     const se::Platform* platform) {
-    tensorflow::mutex_lock lock(platform_compiler_mutex_);
+  tensorflow::mutex_lock lock(platform_compiler_mutex_);
 
-    auto* compilers = GetPlatformCompilers();
-    // See if we already instantiated a compiler for this platform.
-    {
-        auto it = compilers->find(platform->id());
-        if (it != compilers->end()) {
-            return it->second.get();
-        }
-
-        // If not, we just fall through to try to create one with a registered
-        // factory.
+  auto* compilers = GetPlatformCompilers();
+  // See if we already instantiated a compiler for this platform.
+  {
+    auto it = compilers->find(platform->id());
+    if (it != compilers->end()) {
+      return it->second.get();
     }
 
-    auto* factories = GetPlatformCompilerFactories();
-    auto it = factories->find(platform->id());
-    if (it == factories->end()) {
-        string hint;
-        if (platform->Name() == "Host") {
-            hint = " (hint: try linking in tensorflow/compiler/jit:xla_cpu_jit)";
-        } else if (platform->Name() == "CUDA") {
-            hint = " (hint: try linking in tensorflow/compiler/jit:xla_gpu_jit)";
-        }
+    // If not, we just fall through to try to create one with a registered
+    // factory.
+  }
 
-        return NotFound(
-                   "could not find registered compiler for platform %s -- check "
-                   "target linkage%s",
-                   platform->Name(), hint);
+  auto* factories = GetPlatformCompilerFactories();
+  auto it = factories->find(platform->id());
+  if (it == factories->end()) {
+    string hint;
+    if (platform->Name() == "Host") {
+      hint = " (hint: try linking in tensorflow/compiler/jit:xla_cpu_jit)";
+    } else if (platform->Name() == "CUDA") {
+      hint = " (hint: try linking in tensorflow/compiler/jit:xla_gpu_jit)";
     }
 
-    // And then we invoke the factory, placing the result into the mapping.
-    compilers->insert(std::make_pair(platform->id(), it->second()));
-    return compilers->at(platform->id()).get();
+    return NotFound(
+        "could not find registered compiler for platform %s -- check "
+        "target linkage%s",
+        platform->Name(), hint);
+  }
+
+  // And then we invoke the factory, placing the result into the mapping.
+  compilers->insert(std::make_pair(platform->id(), it->second()));
+  return compilers->at(platform->id()).get();
 }
 
 AotCompilationOptions::AotCompilationOptions()
