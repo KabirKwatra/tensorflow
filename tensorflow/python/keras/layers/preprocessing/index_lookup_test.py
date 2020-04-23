@@ -14,37 +14,27 @@
 # ==============================================================================
 """Tests for Keras text vectorization preprocessing layer."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import itertools
 import os
 import random
 import string
 
-from absl.testing import parameterized
 import numpy as np
-
-from tensorflow.python import keras
-from tensorflow.python import tf2
-
+from absl.testing import parameterized
+from tensorflow.python import keras, tf2
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.distribute import one_device_strategy
 from tensorflow.python.eager import context
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras import testing_utils
-from tensorflow.python.keras.layers.preprocessing import index_lookup
-from tensorflow.python.keras.layers.preprocessing import index_lookup_v1
-from tensorflow.python.keras.layers.preprocessing import preprocessing_test_utils
+from tensorflow.python.framework import dtypes, sparse_tensor, tensor_shape
+from tensorflow.python.keras import keras_parameterized, testing_utils
+from tensorflow.python.keras.layers.preprocessing import (
+    index_lookup, index_lookup_v1, preprocessing_test_utils)
 from tensorflow.python.keras.saving import save
 from tensorflow.python.keras.utils.generic_utils import CustomObjectScope
 from tensorflow.python.ops.ragged import ragged_factory_ops
-from tensorflow.python.platform import gfile
-from tensorflow.python.platform import test
+from tensorflow.python.platform import gfile, test
 
 
 def get_layer_class():

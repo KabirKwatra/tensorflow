@@ -14,27 +14,18 @@
 # ==============================================================================
 """Tests for py_builtins module."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import sys
 
 import six
-
-from tensorflow.python.autograph.core import converter
-from tensorflow.python.autograph.core import function_wrappers
-from tensorflow.python.autograph.operators import data_structures
-from tensorflow.python.autograph.operators import py_builtins
+from tensorflow.python.autograph.core import converter, function_wrappers
+from tensorflow.python.autograph.operators import data_structures, py_builtins
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import def_function
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors_impl
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.framework import (constant_op, dtypes, errors_impl,
+                                         test_util)
+from tensorflow.python.ops import array_ops, math_ops, tensor_array_ops
 from tensorflow.python.platform import test
 
 

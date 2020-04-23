@@ -14,20 +14,16 @@
 # ==============================================================================
 """Tests for keras.layers.preprocessing.normalization."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
-
 from tensorflow.python import keras
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.framework import config
-from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import config, dtypes
 from tensorflow.python.keras import keras_parameterized
 from tensorflow.python.keras.distribute import tpu_strategy_test_utils
-from tensorflow.python.keras.layers.preprocessing import preprocessing_test_utils
-from tensorflow.python.keras.layers.preprocessing import text_vectorization
+from tensorflow.python.keras.layers.preprocessing import (
+    preprocessing_test_utils, text_vectorization)
 from tensorflow.python.platform import test
 
 

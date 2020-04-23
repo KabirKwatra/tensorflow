@@ -14,18 +14,13 @@
 # ==============================================================================
 """A node transformer that includes utilities for SCT."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 
 import gast
-
-from tensorflow.python.autograph.pyct import anno
-from tensorflow.python.autograph.pyct import parser
-from tensorflow.python.autograph.pyct import pretty_printer
-from tensorflow.python.autograph.pyct import templates
+from tensorflow.python.autograph.pyct import (anno, parser, pretty_printer,
+                                              templates)
 
 
 # TODO(znado): Use namedtuple.
