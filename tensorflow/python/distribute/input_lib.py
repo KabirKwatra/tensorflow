@@ -14,36 +14,23 @@
 # ==============================================================================
 """Various classes representing distributed inputs."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import sys
 
 import six
-
 from tensorflow.python import tf2
-from tensorflow.python.data.experimental.ops import batching
-from tensorflow.python.data.experimental.ops import distribute
-from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.data.ops import multi_device_iterator_ops
-from tensorflow.python.distribute import device_util
-from tensorflow.python.distribute import distribution_strategy_context
-from tensorflow.python.distribute import input_ops
-from tensorflow.python.distribute import reduce_util
-from tensorflow.python.distribute import values
+from tensorflow.python.data.experimental.ops import batching, distribute
+from tensorflow.python.data.ops import dataset_ops, multi_device_iterator_ops
+from tensorflow.python.distribute import (device_util,
+                                          distribution_strategy_context,
+                                          input_ops, reduce_util, values)
 from tensorflow.python.eager import context
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import device as tf_device
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
+from tensorflow.python.framework import (dtypes, errors, ops, sparse_tensor,
+                                         tensor_shape, tensor_util)
+from tensorflow.python.ops import array_ops, control_flow_ops, math_ops
 from tensorflow.python.ops.ragged import ragged_tensor
 from tensorflow.python.util import nest
 from tensorflow.python.util.deprecation import deprecated
