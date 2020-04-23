@@ -17,7 +17,7 @@ limitations under the License.
 #define TENSORFLOW_COMPILER_XLA_SERVICE_MLIR_GPU_MLIR_COMPILER_H_
 
 #include "mlir/IR/MLIRContext.h"  // from @llvm-project
-#include "mlir/IR/Module.h"  // from @llvm-project
+#include "mlir/IR/Module.h"       // from @llvm-project
 #include "tensorflow/compiler/xla/service/compiler.h"
 #include "tensorflow/compiler/xla/service/mlir_gpu/emission_context.h"
 
@@ -29,38 +29,38 @@ namespace mlir_gpu {
 // generation of a thunk suitable for XLAs runtime. MlirCompilerImpl contains
 // the implementation.
 class MlirCompiler : public Compiler {
-    using ErrorHandler =
-        std::function<void(const EmissionContext::ErrorMap&, HloModule*)>;
+  using ErrorHandler =
+      std::function<void(const EmissionContext::ErrorMap&, HloModule*)>;
 
-public:
-    MlirCompiler();
+ public:
+  MlirCompiler();
 
-    se::Platform::Id PlatformId() const override;
+  se::Platform::Id PlatformId() const override;
 
-    struct IRHook {
-        enum class LoweringStage { LHLO, GPU, LLVM, KERNEL };
+  struct IRHook {
+    enum class LoweringStage { LHLO, GPU, LLVM, KERNEL };
 
-        Status invoke(LoweringStage stage_, mlir::ModuleOp module) {
-            if (callback && stage == stage_) {
-                return callback(module);
-            }
-            return Status::OK();
-        }
+    Status invoke(LoweringStage stage_, mlir::ModuleOp module) {
+      if (callback && stage == stage_) {
+        return callback(module);
+      }
+      return Status::OK();
+    }
 
-        std::function<Status(mlir::ModuleOp)> callback;
-        LoweringStage stage;
-    };
+    std::function<Status(mlir::ModuleOp)> callback;
+    LoweringStage stage;
+  };
 
-    void SetModuleHook(IRHook module_hook);
-    void RemoveModuleHook();
-    void SetErrorHandler(ErrorHandler error_handler);
-    void RemoveErrorHandler();
+  void SetModuleHook(IRHook module_hook);
+  void RemoveModuleHook();
+  void SetErrorHandler(ErrorHandler error_handler);
+  void RemoveErrorHandler();
 
-protected:
-    ::mlir::MLIRContext context_;
-    int64 pointer_size_;
-    IRHook module_hook_;
-    ErrorHandler error_handler_;
+ protected:
+  ::mlir::MLIRContext context_;
+  int64 pointer_size_;
+  IRHook module_hook_;
+  ErrorHandler error_handler_;
 };
 
 }  // namespace mlir_gpu

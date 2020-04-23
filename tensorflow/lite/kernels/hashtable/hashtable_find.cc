@@ -31,59 +31,58 @@ constexpr int kDefaultValueTensor = 2;
 constexpr int kOutputTensor = 0;
 
 TfLiteStatus PrepareHashtableFind(TfLiteContext* context, TfLiteNode* node) {
-    TF_LITE_ENSURE_EQ(context, NumInputs(node), 3);
-    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
+  TF_LITE_ENSURE_EQ(context, NumInputs(node), 3);
+  TF_LITE_ENSURE_EQ(context, NumOutputs(node), 1);
 
-    const TfLiteTensor* input_resource_id_tensor =
-        GetInput(context, node, kInputResourceIdTensor);
-    TF_LITE_ENSURE_EQ(context, input_resource_id_tensor->type, kTfLiteInt32);
-    TF_LITE_ENSURE_EQ(context, NumDimensions(input_resource_id_tensor), 1);
-    TF_LITE_ENSURE_EQ(context, SizeOfDimension(input_resource_id_tensor, 0), 1);
+  const TfLiteTensor* input_resource_id_tensor =
+      GetInput(context, node, kInputResourceIdTensor);
+  TF_LITE_ENSURE_EQ(context, input_resource_id_tensor->type, kTfLiteInt32);
+  TF_LITE_ENSURE_EQ(context, NumDimensions(input_resource_id_tensor), 1);
+  TF_LITE_ENSURE_EQ(context, SizeOfDimension(input_resource_id_tensor, 0), 1);
 
-    const TfLiteTensor* default_value_tensor =
-        GetInput(context, node, kDefaultValueTensor);
+  const TfLiteTensor* default_value_tensor =
+      GetInput(context, node, kDefaultValueTensor);
 
-    const TfLiteTensor* key_tensor = GetInput(context, node, kKeyTensor);
-    TfLiteTensor* output_tensor = GetOutput(context, node, kOutputTensor);
-    TF_LITE_ENSURE_EQ(context, default_value_tensor->type, output_tensor->type);
-    TF_LITE_ENSURE(context, (key_tensor->type == kTfLiteInt64 &&
-                             output_tensor->type == kTfLiteString) ||
-                   (key_tensor->type == kTfLiteString &&
-                    output_tensor->type == kTfLiteInt64));
-    return context->ResizeTensor(context, output_tensor,
-                                 TfLiteIntArrayCopy(key_tensor->dims));
+  const TfLiteTensor* key_tensor = GetInput(context, node, kKeyTensor);
+  TfLiteTensor* output_tensor = GetOutput(context, node, kOutputTensor);
+  TF_LITE_ENSURE_EQ(context, default_value_tensor->type, output_tensor->type);
+  TF_LITE_ENSURE(context, (key_tensor->type == kTfLiteInt64 &&
+                           output_tensor->type == kTfLiteString) ||
+                              (key_tensor->type == kTfLiteString &&
+                               output_tensor->type == kTfLiteInt64));
+  return context->ResizeTensor(context, output_tensor,
+                               TfLiteIntArrayCopy(key_tensor->dims));
 }
 
 TfLiteStatus EvalHashtableFind(TfLiteContext* context, TfLiteNode* node) {
-    const TfLiteTensor* input_resource_id_tensor =
-        GetInput(context, node, kInputResourceIdTensor);
-    int resource_id = input_resource_id_tensor->data.i32[0];
+  const TfLiteTensor* input_resource_id_tensor =
+      GetInput(context, node, kInputResourceIdTensor);
+  int resource_id = input_resource_id_tensor->data.i32[0];
 
-    const TfLiteTensor* key_tensor = GetInput(context, node, kKeyTensor);
-    const TfLiteTensor* default_value_tensor =
-        GetInput(context, node, kDefaultValueTensor);
-    TfLiteTensor* output_tensor = GetOutput(context, node, 0);
+  const TfLiteTensor* key_tensor = GetInput(context, node, kKeyTensor);
+  const TfLiteTensor* default_value_tensor =
+      GetInput(context, node, kDefaultValueTensor);
+  TfLiteTensor* output_tensor = GetOutput(context, node, 0);
 
-    Subgraph* subgraph = reinterpret_cast<Subgraph*>(context->impl_);
-    auto& resources = subgraph->resources();
-    auto* lookup = resource::GetHashtableResource(&resources, resource_id);
-    TF_LITE_ENSURE(context, lookup != nullptr);
-    TF_LITE_ENSURE_STATUS(
-        lookup->CheckKeyAndValueTypes(context, key_tensor, output_tensor));
-    auto result =
-        lookup->Lookup(context, key_tensor, output_tensor, default_value_tensor);
-    return result;
+  Subgraph* subgraph = reinterpret_cast<Subgraph*>(context->impl_);
+  auto& resources = subgraph->resources();
+  auto* lookup = resource::GetHashtableResource(&resources, resource_id);
+  TF_LITE_ENSURE(context, lookup != nullptr);
+  TF_LITE_ENSURE_STATUS(
+      lookup->CheckKeyAndValueTypes(context, key_tensor, output_tensor));
+  auto result =
+      lookup->Lookup(context, key_tensor, output_tensor, default_value_tensor);
+  return result;
 }
 
 }  // namespace hashtable
 
 TfLiteRegistration* Register_HASHTABLE_FIND() {
-    static TfLiteRegistration r = {/*init=*/nullptr,
-                                            /*free=*/nullptr,
-                                            hashtable::PrepareHashtableFind,
-                                            hashtable::EvalHashtableFind
-                                  };
-    return &r;
+  static TfLiteRegistration r = {/*init=*/nullptr,
+                                 /*free=*/nullptr,
+                                 hashtable::PrepareHashtableFind,
+                                 hashtable::EvalHashtableFind};
+  return &r;
 }
 
 }  // namespace custom

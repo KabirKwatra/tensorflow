@@ -20,14 +20,14 @@ namespace ops {
 namespace custom {
 
 extern "C" void AddHashtableOps(::tflite::MutableOpResolver* resolver) {
-    // Add hashtable op handlers.
-    resolver->AddCustom("HashTableV2", tflite::ops::custom::Register_HASHTABLE());
-    resolver->AddCustom("LookupTableFindV2",
-                        tflite::ops::custom::Register_HASHTABLE_FIND());
-    resolver->AddCustom("LookupTableImportV2",
-                        tflite::ops::custom::Register_HASHTABLE_IMPORT());
-    resolver->AddCustom("LookupTableSizeV2",
-                        tflite::ops::custom::Register_HASHTABLE_SIZE());
+  // Add hashtable op handlers.
+  resolver->AddCustom("HashTableV2", tflite::ops::custom::Register_HASHTABLE());
+  resolver->AddCustom("LookupTableFindV2",
+                      tflite::ops::custom::Register_HASHTABLE_FIND());
+  resolver->AddCustom("LookupTableImportV2",
+                      tflite::ops::custom::Register_HASHTABLE_IMPORT());
+  resolver->AddCustom("LookupTableSizeV2",
+                      tflite::ops::custom::Register_HASHTABLE_SIZE());
 }
 
 }  // namespace custom

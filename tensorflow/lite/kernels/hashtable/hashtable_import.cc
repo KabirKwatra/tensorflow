@@ -30,56 +30,55 @@ constexpr int kKeyTensor = 1;
 constexpr int kValueTensor = 2;
 
 TfLiteStatus PrepareHashtableImport(TfLiteContext* context, TfLiteNode* node) {
-    TF_LITE_ENSURE_EQ(context, NumInputs(node), 3);
-    TF_LITE_ENSURE_EQ(context, NumOutputs(node), 0);
+  TF_LITE_ENSURE_EQ(context, NumInputs(node), 3);
+  TF_LITE_ENSURE_EQ(context, NumOutputs(node), 0);
 
-    const TfLiteTensor* input_resource_id_tensor =
-        GetInput(context, node, kInputResourceIdTensor);
-    TF_LITE_ENSURE_EQ(context, input_resource_id_tensor->type, kTfLiteInt32);
-    TF_LITE_ENSURE_EQ(context, NumDimensions(input_resource_id_tensor), 1);
-    TF_LITE_ENSURE_EQ(context, SizeOfDimension(input_resource_id_tensor, 0), 1);
+  const TfLiteTensor* input_resource_id_tensor =
+      GetInput(context, node, kInputResourceIdTensor);
+  TF_LITE_ENSURE_EQ(context, input_resource_id_tensor->type, kTfLiteInt32);
+  TF_LITE_ENSURE_EQ(context, NumDimensions(input_resource_id_tensor), 1);
+  TF_LITE_ENSURE_EQ(context, SizeOfDimension(input_resource_id_tensor, 0), 1);
 
-    const TfLiteTensor* key_tensor = GetInput(context, node, kKeyTensor);
-    const TfLiteTensor* value_tensor = GetInput(context, node, kValueTensor);
-    TF_LITE_ENSURE(context, (key_tensor->type == kTfLiteInt64 &&
-                             value_tensor->type == kTfLiteString) ||
-                   (key_tensor->type == kTfLiteString &&
-                    value_tensor->type == kTfLiteInt64));
-    // TODO(b/144731295): Tensorflow lookup ops support 1-D vector in storing
-    // values.
-    TF_LITE_ENSURE(context, HaveSameShapes(key_tensor, value_tensor));
-    return kTfLiteOk;
+  const TfLiteTensor* key_tensor = GetInput(context, node, kKeyTensor);
+  const TfLiteTensor* value_tensor = GetInput(context, node, kValueTensor);
+  TF_LITE_ENSURE(context, (key_tensor->type == kTfLiteInt64 &&
+                           value_tensor->type == kTfLiteString) ||
+                              (key_tensor->type == kTfLiteString &&
+                               value_tensor->type == kTfLiteInt64));
+  // TODO(b/144731295): Tensorflow lookup ops support 1-D vector in storing
+  // values.
+  TF_LITE_ENSURE(context, HaveSameShapes(key_tensor, value_tensor));
+  return kTfLiteOk;
 }
 
 TfLiteStatus EvalHashtableImport(TfLiteContext* context, TfLiteNode* node) {
-    const TfLiteTensor* input_resource_id_tensor =
-        GetInput(context, node, kInputResourceIdTensor);
-    const int resource_id = input_resource_id_tensor->data.i32[0];
+  const TfLiteTensor* input_resource_id_tensor =
+      GetInput(context, node, kInputResourceIdTensor);
+  const int resource_id = input_resource_id_tensor->data.i32[0];
 
-    const TfLiteTensor* key_tensor = GetInput(context, node, kKeyTensor);
-    const TfLiteTensor* value_tensor = GetInput(context, node, kValueTensor);
+  const TfLiteTensor* key_tensor = GetInput(context, node, kKeyTensor);
+  const TfLiteTensor* value_tensor = GetInput(context, node, kValueTensor);
 
-    Subgraph* subgraph = reinterpret_cast<Subgraph*>(context->impl_);
-    auto& resources = subgraph->resources();
-    auto* lookup = resource::GetHashtableResource(&resources, resource_id);
-    TF_LITE_ENSURE(context, lookup != nullptr);
-    TF_LITE_ENSURE_STATUS(
-        lookup->CheckKeyAndValueTypes(context, key_tensor, value_tensor));
-    // The hashtable resource will only be initialized once, attempting to
-    // initialize it multiple times will be a no-op.
-    auto result = lookup->Import(context, key_tensor, value_tensor);
-    return result;
+  Subgraph* subgraph = reinterpret_cast<Subgraph*>(context->impl_);
+  auto& resources = subgraph->resources();
+  auto* lookup = resource::GetHashtableResource(&resources, resource_id);
+  TF_LITE_ENSURE(context, lookup != nullptr);
+  TF_LITE_ENSURE_STATUS(
+      lookup->CheckKeyAndValueTypes(context, key_tensor, value_tensor));
+  // The hashtable resource will only be initialized once, attempting to
+  // initialize it multiple times will be a no-op.
+  auto result = lookup->Import(context, key_tensor, value_tensor);
+  return result;
 }
 
 }  // namespace hashtable
 
 TfLiteRegistration* Register_HASHTABLE_IMPORT() {
-    static TfLiteRegistration r = {/*init=*/nullptr,
-                                            /*free=*/nullptr,
-                                            hashtable::PrepareHashtableImport,
-                                            hashtable::EvalHashtableImport
-                                  };
-    return &r;
+  static TfLiteRegistration r = {/*init=*/nullptr,
+                                 /*free=*/nullptr,
+                                 hashtable::PrepareHashtableImport,
+                                 hashtable::EvalHashtableImport};
+  return &r;
 }
 
 }  // namespace custom
