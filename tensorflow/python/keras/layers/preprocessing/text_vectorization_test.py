@@ -13,27 +13,36 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for Keras text vectorization preprocessing layer."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 
 import numpy as np
 from absl.testing import parameterized
-from tensorflow.python import keras, tf2
+
+from tensorflow.python import keras
+from tensorflow.python import tf2
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.distribute import one_device_strategy
 from tensorflow.python.eager import context
 from tensorflow.python.framework import dtypes
-from tensorflow.python.keras import backend, keras_parameterized, testing_utils
-from tensorflow.python.keras.layers import convolutional, core, embeddings
-from tensorflow.python.keras.layers.preprocessing import (
-    preprocessing_test_utils, text_vectorization, text_vectorization_v1)
+from tensorflow.python.keras import backend
+from tensorflow.python.keras import keras_parameterized
+from tensorflow.python.keras import testing_utils
+from tensorflow.python.keras.layers import convolutional
+from tensorflow.python.keras.layers import core
+from tensorflow.python.keras.layers import embeddings
+from tensorflow.python.keras.layers.preprocessing import preprocessing_test_utils
+from tensorflow.python.keras.layers.preprocessing import text_vectorization
+from tensorflow.python.keras.layers.preprocessing import text_vectorization_v1
 from tensorflow.python.keras.saving import saved_model_experimental as saving
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.keras.utils.generic_utils import CustomObjectScope
 from tensorflow.python.ops import gen_string_ops
-from tensorflow.python.ops.ragged import ragged_factory_ops, ragged_string_ops
+from tensorflow.python.ops.ragged import ragged_factory_ops
+from tensorflow.python.ops.ragged import ragged_string_ops
 from tensorflow.python.platform import test
 
 

@@ -13,9 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 """Utility functions for tests using TPUStrategy."""
-
-from __future__ import (absolute_import, division, google_type_annotations,
-                        print_function)
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import google_type_annotations
+from __future__ import print_function
 
 from tensorflow.python.distribute import tpu_strategy
 from tensorflow.python.distribute.cluster_resolver import tpu_cluster_resolver

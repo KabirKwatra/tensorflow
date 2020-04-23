@@ -13,18 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 """Timeline visualization for TensorFlow using Chrome Trace Format."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import copy
 import json
 import re
 
+from tensorflow.python.platform import tf_logging as logging
 # The timeline target is usually imported as part of BUILD target
 # "platform_test", which includes also includes the "platform"
 # dependency.  This is why the logging import here is okay.
-from tensorflow.python.platform import tf_logging as logging
 
 
 class AllocationMaximum(

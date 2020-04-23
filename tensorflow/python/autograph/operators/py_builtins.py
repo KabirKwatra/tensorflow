@@ -16,23 +16,36 @@
 
 List of built-in functions: https://docs.python.org/3/library/functions.html
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import functools
 import inspect
 
 import numpy as np
 import six
-from tensorflow.python.autograph.utils import py_func, tensors
+
+from tensorflow.python.autograph.utils import py_func
+from tensorflow.python.autograph.utils import tensors
 from tensorflow.python.data.experimental.ops import cardinality
-from tensorflow.python.data.ops import dataset_ops, iterator_ops
-from tensorflow.python.framework import (constant_op, dtypes, ops, tensor_spec,
-                                         tensor_util)
-from tensorflow.python.ops import (array_ops, check_ops, control_flow_ops,
-                                   gen_parsing_ops, gen_string_ops, list_ops,
-                                   math_ops, sort_ops)
-from tensorflow.python.util import lazy_loader, nest
+from tensorflow.python.data.ops import dataset_ops
+from tensorflow.python.data.ops import iterator_ops
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import check_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import gen_parsing_ops
+from tensorflow.python.ops import gen_string_ops
+from tensorflow.python.ops import list_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import sort_ops
+from tensorflow.python.util import lazy_loader
+from tensorflow.python.util import nest
 
 # TODO(b/145618471): Remove this dependency.
 # Lazy import to work around circular dependencies
