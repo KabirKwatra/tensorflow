@@ -14,9 +14,7 @@
 # ==============================================================================
 """Class MirroredStrategy implementing tf.distribute.Strategy."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import contextlib
 import functools
@@ -26,18 +24,13 @@ import weakref
 from tensorflow.python import pywrap_tfe
 from tensorflow.python.autograph.core import ag_ctx as autograph_ctx
 from tensorflow.python.autograph.impl import api as autograph
-from tensorflow.python.distribute import distribute_lib
-from tensorflow.python.distribute import shared_variable_creator
-from tensorflow.python.distribute import values
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
+from tensorflow.python.distribute import (distribute_lib,
+                                          shared_variable_creator, values)
+from tensorflow.python.eager import context, def_function
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import device as tf_device
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_util
-from tensorflow.python.ops import summary_ops_v2
-from tensorflow.python.ops import variable_scope
+from tensorflow.python.framework import dtypes, ops, tensor_util
+from tensorflow.python.ops import summary_ops_v2, variable_scope
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training import coordinator
 
