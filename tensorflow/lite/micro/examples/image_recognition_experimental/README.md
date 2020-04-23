@@ -2,13 +2,13 @@
 
 ## Table of Contents
 
--   [Introduction](#introduction)
--   [Hardware](#hardware)
--   [Building](#building)
-    -   [Building the testcase](#building-the-testcase)
-    -   [Building the image recognition application](#building-the-image-recognition-application)
-        -   [Prerequisites](#prerequisites)
-        -   [Compiling and flashing](#compiling-and-flashing)
+- [Introduction](#introduction)
+- [Hardware](#hardware)
+- [Building](#building)
+  - [Building the testcase](#building-the-testcase)
+  - [Building the image recognition application](#building-the-image-recognition-application)
+    - [Prerequisites](#prerequisites)
+    - [Compiling and flashing](#compiling-and-flashing)
 
 ## Introduction
 
@@ -57,13 +57,13 @@ for Windows, Mac OS X and Linux.
 
 #### Compiling and flashing
 
-In order to generate the mbed project, run the following command: `$ make -f
-tensorflow/lite/micro/tools/make/Makefile TAGS=disco_f746ng
-generate_image_recognition_mbed_project` This will copy all of the necessary
-files needed to build and flash the application.
+In order to generate the mbed project, run the following command:
+`$ make -f tensorflow/lite/micro/tools/make/Makefile TAGS=disco_f746ng generate_image_recognition_mbed_project`
+This will copy all of the necessary files needed to build and flash the
+application.
 
-Navigate to the output folder: `$ cd
-tensorflow/lite/micro/tools/make/gen/linux_x86_64/prj/image_recognition/mbed/`
+Navigate to the output folder:
+`$ cd tensorflow/lite/micro/tools/make/gen/linux_x86_64/prj/image_recognition/mbed/`
 
 The following instructions for compiling and flashing can also be found in the
 file README_MBED.md in the output folder.
@@ -75,8 +75,8 @@ In order to compile, run: `mbed compile -m auto -t GCC_ARM --profile release`
 `-m auto`: Automatically detects the correct target if the Discovery board is
 connected to the computer. If the board is not connected, replace `auto` with
 `DISCO_F746NG`. \
-`-t GCC_ARM`: Specifies the toolchain used to compile. `GCC_ARM` indicates that
-the arm-none-eabi-toolchain will be used. \
+`-t GCC_ARM`: Specifies the toolchain used to compile. `GCC_ARM` indicates that the
+arm-none-eabi-toolchain will be used. \
 `--profile release`: Build the `release` profile. The different profiles can be
 found under mbed-os/tools/profiles/.
 
