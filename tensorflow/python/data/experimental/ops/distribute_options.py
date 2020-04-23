@@ -30,6 +30,7 @@ class AutoShardPolicy(enum.IntEnum):
     Please see the DistributeOptions.auto_shard_policy documentation for more
     information on each type of autosharding.
     """
+
     OFF = -1
     AUTO = 0
     FILE = 1
@@ -75,10 +76,12 @@ class DistributeOptions(options.OptionsBase):
         "This option is set to AUTO by default, AUTO will attempt to first shard "
         "by FILE, and fall back to sharding by DATA if we cannot find a set of "
         "files to shard.",
-        default_factory=lambda: AutoShardPolicy.AUTO)
+        default_factory=lambda: AutoShardPolicy.AUTO,
+    )
 
     num_devices = options.create_option(
         name="num_devices",
         ty=int,
         docstring="The number of devices attached to this input pipeline. This will be "
-        "automatically set by MultiDeviceIterator.")
+        "automatically set by MultiDeviceIterator.",
+    )
