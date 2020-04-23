@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for Keras callbacks."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import csv
@@ -29,21 +30,27 @@ import unittest
 
 import numpy as np
 from absl.testing import parameterized
+
 from tensorflow.core.framework import summary_pb2
 from tensorflow.python import keras
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import context
-from tensorflow.python.framework import ops, random_seed
-from tensorflow.python.keras import keras_parameterized, testing_utils
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import random_seed
+from tensorflow.python.keras import keras_parameterized
+from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.engine import sequential
-from tensorflow.python.keras.optimizer_v2 import (gradient_descent,
-                                                  learning_rate_schedule)
+from tensorflow.python.keras.optimizer_v2 import gradient_descent
+from tensorflow.python.keras.optimizer_v2 import learning_rate_schedule
 from tensorflow.python.keras.utils import np_utils
-from tensorflow.python.ops import array_ops, math_ops, summary_ops_v2
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import summary_ops_v2
 from tensorflow.python.platform import test
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.summary import summary_iterator
-from tensorflow.python.training import adam, checkpoint_management
+from tensorflow.python.training import adam
+from tensorflow.python.training import checkpoint_management
 
 try:
     import h5py  # pylint:disable=g-import-not-at-top

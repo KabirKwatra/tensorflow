@@ -16,7 +16,9 @@
 # pylint: disable=g-classes-have-attributes
 """Callbacks: utilities called at certain points during model training.
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import copy
@@ -29,21 +31,25 @@ import time
 
 import numpy as np
 import six
+
 from tensorflow.python.data.ops import iterator_ops
-from tensorflow.python.distribute import (distributed_file_utils,
-                                          multi_worker_util)
+from tensorflow.python.distribute import distributed_file_utils
+from tensorflow.python.distribute import multi_worker_util
 from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.distribute import \
     multi_worker_training_state as training_state
-from tensorflow.python.keras.utils import (generic_utils, tf_utils,
-                                           version_utils)
+from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.keras.utils import version_utils
 from tensorflow.python.keras.utils.data_utils import Sequence
 from tensorflow.python.keras.utils.generic_utils import Progbar
 from tensorflow.python.keras.utils.io_utils import path_to_string
 from tensorflow.python.keras.utils.mode_keys import ModeKeys
 from tensorflow.python.lib.io import file_io
-from tensorflow.python.ops import array_ops, math_ops, summary_ops_v2
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import summary_ops_v2
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.profiler import profiler_v2 as profiler
 from tensorflow.python.training import checkpoint_management
