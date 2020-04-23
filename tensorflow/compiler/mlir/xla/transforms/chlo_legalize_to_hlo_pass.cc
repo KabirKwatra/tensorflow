@@ -27,24 +27,24 @@ namespace {
 
 struct TestChloLegalizeToHloPass
     : public PassWrapper<TestChloLegalizeToHloPass, FunctionPass> {
-  void runOnFunction() override {
-    ConversionTarget conversionTarget(getContext());
-    OwningRewritePatternList conversionPatterns;
+    void runOnFunction() override {
+        ConversionTarget conversionTarget(getContext());
+        OwningRewritePatternList conversionPatterns;
 
-    conversionTarget.addIllegalDialect<XlaHloClientDialect>();
-    // Consider the xla_hlo dialect legal for tests.
-    conversionTarget.addLegalDialect<xla_hlo::XlaHloDialect>();
-    // The conversion uses helpers from the Standard dialect.
-    conversionTarget.addLegalDialect<mlir::StandardOpsDialect>();
-    conversionTarget.addLegalDialect<mlir::shape::ShapeDialect>();
+        conversionTarget.addIllegalDialect<XlaHloClientDialect>();
+        // Consider the xla_hlo dialect legal for tests.
+        conversionTarget.addLegalDialect<xla_hlo::XlaHloDialect>();
+        // The conversion uses helpers from the Standard dialect.
+        conversionTarget.addLegalDialect<mlir::StandardOpsDialect>();
+        conversionTarget.addLegalDialect<mlir::shape::ShapeDialect>();
 
-    PopulateLegalizeChloToHloPatterns(&getContext(), &conversionPatterns);
+        PopulateLegalizeChloToHloPatterns(&getContext(), &conversionPatterns);
 
-    if (failed(applyPartialConversion(getFunction(), conversionTarget,
-                                      conversionPatterns))) {
-      return signalPassFailure();
+        if (failed(applyPartialConversion(getFunction(), conversionTarget,
+                                          conversionPatterns))) {
+            return signalPassFailure();
+        }
     }
-  }
 };
 
 }  // namespace

@@ -31,78 +31,79 @@ limitations under the License.
 #define CNN_IMG_SIZE 32
 
 uint8_t camera_buffer[NUM_IN_CH * IN_IMG_WIDTH * IN_IMG_HEIGHT]
-    __attribute__((aligned(4)));
+__attribute__((aligned(4)));
 static const char* labels[] = {"Plane", "Car",  "Bird",  "Cat",  "Deer",
-                               "Dog",   "Frog", "Horse", "Ship", "Truck"};
+                               "Dog",   "Frog", "Horse", "Ship", "Truck"
+                              };
 
 int main(int argc, char** argv) {
-  init_lcd();
-  wait_ms(100);
+    init_lcd();
+    wait_ms(100);
 
-  tflite::MicroErrorReporter micro_error_reporter;
-  tflite::ErrorReporter* error_reporter = &micro_error_reporter;
+    tflite::MicroErrorReporter micro_error_reporter;
+    tflite::ErrorReporter* error_reporter = &micro_error_reporter;
 
-  if (InitCamera(error_reporter) != kTfLiteOk) {
-    TF_LITE_REPORT_ERROR(error_reporter, "Failed to init camera.");
-    return 1;
-  }
-
-  const tflite::Model* model = ::tflite::GetModel(image_recognition_model_data);
-  if (model->version() != TFLITE_SCHEMA_VERSION) {
-    TF_LITE_REPORT_ERROR(error_reporter,
-                         "Model provided is schema version %d not equal "
-                         "to supported version %d.",
-                         model->version(), TFLITE_SCHEMA_VERSION);
-    return 1;
-  }
-
-  tflite::MicroOpResolver<4> micro_op_resolver;
-
-  micro_op_resolver.AddBuiltin(tflite::BuiltinOperator_CONV_2D,
-                               tflite::ops::micro::Register_CONV_2D());
-  micro_op_resolver.AddBuiltin(tflite::BuiltinOperator_MAX_POOL_2D,
-                               tflite::ops::micro::Register_MAX_POOL_2D());
-  micro_op_resolver.AddBuiltin(tflite::BuiltinOperator_FULLY_CONNECTED,
-                               tflite::ops::micro::Register_FULLY_CONNECTED());
-  micro_op_resolver.AddBuiltin(tflite::BuiltinOperator_SOFTMAX,
-                               tflite::ops::micro::Register_SOFTMAX());
-
-  constexpr int tensor_arena_size = 45 * 1024;
-  uint8_t tensor_arena[tensor_arena_size];
-  tflite::MicroInterpreter interpreter(model, resolver, tensor_arena,
-                                       tensor_arena_size, error_reporter);
-  interpreter.AllocateTensors();
-
-  while (true) {
-    TfLiteTensor* input = interpreter.input(0);
-
-    GetImage(error_reporter, IN_IMG_WIDTH, IN_IMG_HEIGHT, NUM_OUT_CH,
-             camera_buffer);
-
-    ResizeConvertImage(error_reporter, IN_IMG_WIDTH, IN_IMG_HEIGHT, NUM_IN_CH,
-                       CNN_IMG_SIZE, CNN_IMG_SIZE, NUM_OUT_CH, camera_buffer,
-                       input->data.uint8);
-
-    if (input->type != kTfLiteUInt8) {
-      TF_LITE_REPORT_ERROR(error_reporter, "Wrong input type.");
+    if (InitCamera(error_reporter) != kTfLiteOk) {
+        TF_LITE_REPORT_ERROR(error_reporter, "Failed to init camera.");
+        return 1;
     }
 
-    TfLiteStatus invoke_status = interpreter.Invoke();
-    if (invoke_status != kTfLiteOk) {
-      TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed.");
-      break;
+    const tflite::Model* model = ::tflite::GetModel(image_recognition_model_data);
+    if (model->version() != TFLITE_SCHEMA_VERSION) {
+        TF_LITE_REPORT_ERROR(error_reporter,
+                             "Model provided is schema version %d not equal "
+                             "to supported version %d.",
+                             model->version(), TFLITE_SCHEMA_VERSION);
+        return 1;
     }
 
-    display_image_rgb565(IN_IMG_WIDTH, IN_IMG_HEIGHT, camera_buffer, 40, 40);
-    display_image_rgb888(CNN_IMG_SIZE, CNN_IMG_SIZE, input->data.uint8, 300,
-                         100);
+    tflite::MicroOpResolver<4> micro_op_resolver;
 
-    TfLiteTensor* output = interpreter.output(0);
+    micro_op_resolver.AddBuiltin(tflite::BuiltinOperator_CONV_2D,
+                                 tflite::ops::micro::Register_CONV_2D());
+    micro_op_resolver.AddBuiltin(tflite::BuiltinOperator_MAX_POOL_2D,
+                                 tflite::ops::micro::Register_MAX_POOL_2D());
+    micro_op_resolver.AddBuiltin(tflite::BuiltinOperator_FULLY_CONNECTED,
+                                 tflite::ops::micro::Register_FULLY_CONNECTED());
+    micro_op_resolver.AddBuiltin(tflite::BuiltinOperator_SOFTMAX,
+                                 tflite::ops::micro::Register_SOFTMAX());
 
-    int top_ind = get_top_prediction(output->data.uint8, 10);
-    print_prediction(labels[top_ind]);
-    print_confidence(output->data.uint8[top_ind]);
-  }
+    constexpr int tensor_arena_size = 45 * 1024;
+    uint8_t tensor_arena[tensor_arena_size];
+    tflite::MicroInterpreter interpreter(model, resolver, tensor_arena,
+                                         tensor_arena_size, error_reporter);
+    interpreter.AllocateTensors();
 
-  return 0;
+    while (true) {
+        TfLiteTensor* input = interpreter.input(0);
+
+        GetImage(error_reporter, IN_IMG_WIDTH, IN_IMG_HEIGHT, NUM_OUT_CH,
+                 camera_buffer);
+
+        ResizeConvertImage(error_reporter, IN_IMG_WIDTH, IN_IMG_HEIGHT, NUM_IN_CH,
+                           CNN_IMG_SIZE, CNN_IMG_SIZE, NUM_OUT_CH, camera_buffer,
+                           input->data.uint8);
+
+        if (input->type != kTfLiteUInt8) {
+            TF_LITE_REPORT_ERROR(error_reporter, "Wrong input type.");
+        }
+
+        TfLiteStatus invoke_status = interpreter.Invoke();
+        if (invoke_status != kTfLiteOk) {
+            TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed.");
+            break;
+        }
+
+        display_image_rgb565(IN_IMG_WIDTH, IN_IMG_HEIGHT, camera_buffer, 40, 40);
+        display_image_rgb888(CNN_IMG_SIZE, CNN_IMG_SIZE, input->data.uint8, 300,
+                             100);
+
+        TfLiteTensor* output = interpreter.output(0);
+
+        int top_ind = get_top_prediction(output->data.uint8, 10);
+        print_prediction(labels[top_ind]);
+        print_confidence(output->data.uint8[top_ind]);
+    }
+
+    return 0;
 }
