@@ -34,63 +34,65 @@ from tensorflow.python.platform import test
 @keras_parameterized.run_all_keras_modes(
     always_skip_v1=True, always_skip_eager=True)
 class TextVectorizationTPUDistributionTest(
-    keras_parameterized.TestCase,
-    preprocessing_test_utils.PreprocessingLayerTest):
+        keras_parameterized.TestCase,
+        preprocessing_test_utils.PreprocessingLayerTest):
 
-  def test_distribution_strategy_output(self):
-    vocab_data = ["earth", "wind", "and", "fire"]
-    input_array = np.array([["earth", "wind", "and", "fire"],
-                            ["fire", "and", "earth", "michigan"]])
-    input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
-        2, drop_remainder=True)
+    def test_distribution_strategy_output(self):
+        vocab_data = ["earth", "wind", "and", "fire"]
+        input_array = np.array([["earth", "wind", "and", "fire"],
+                                ["fire", "and", "earth", "michigan"]])
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
+            2, drop_remainder=True)
 
-    expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
+        expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
 
-    config.set_soft_device_placement(True)
-    strategy = tpu_strategy_test_utils.get_tpu_strategy()
+        config.set_soft_device_placement(True)
+        strategy = tpu_strategy_test_utils.get_tpu_strategy()
 
-    with strategy.scope():
-      input_data = keras.Input(shape=(None,), dtype=dtypes.string)
-      layer = text_vectorization.TextVectorization(
-          max_tokens=None,
-          standardize=None,
-          split=None,
-          output_mode=text_vectorization.INT)
-      layer.set_vocabulary(vocab_data)
-      int_data = layer(input_data)
-      model = keras.Model(inputs=input_data, outputs=int_data)
+        with strategy.scope():
+            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            layer = text_vectorization.TextVectorization(
+                max_tokens=None,
+                standardize=None,
+                split=None,
+                output_mode=text_vectorization.INT)
+            layer.set_vocabulary(vocab_data)
+            int_data = layer(input_data)
+            model = keras.Model(inputs=input_data, outputs=int_data)
 
-    output_dataset = model.predict(input_dataset)
-    self.assertAllEqual(expected_output, output_dataset)
+        output_dataset = model.predict(input_dataset)
+        self.assertAllEqual(expected_output, output_dataset)
 
-  def test_distribution_strategy_output_with_adapt(self):
-    vocab_data = [[
-        "earth", "earth", "earth", "earth", "wind", "wind", "wind", "and",
-        "and", "fire"
-    ]]
-    vocab_dataset = dataset_ops.Dataset.from_tensors(vocab_data)
-    input_array = np.array([["earth", "wind", "and", "fire"],
-                            ["fire", "and", "earth", "michigan"]])
-    input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
-        2, drop_remainder=True)
+    def test_distribution_strategy_output_with_adapt(self):
+        vocab_data = [[
+            "earth", "earth", "earth", "earth", "wind", "wind", "wind", "and",
+            "and", "fire"
+        ]]
+        vocab_dataset = dataset_ops.Dataset.from_tensors(vocab_data)
+        input_array = np.array([["earth", "wind", "and", "fire"],
+                                ["fire", "and", "earth", "michigan"]])
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
+            2, drop_remainder=True)
 
-    expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
+        expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
 
-    config.set_soft_device_placement(True)
-    strategy = tpu_strategy_test_utils.get_tpu_strategy()
+        config.set_soft_device_placement(True)
+        strategy = tpu_strategy_test_utils.get_tpu_strategy()
 
-    with strategy.scope():
-      input_data = keras.Input(shape=(None,), dtype=dtypes.string)
-      layer = text_vectorization.TextVectorization(
-          max_tokens=None,
-          standardize=None,
-          split=None,
-          output_mode=text_vectorization.INT)
-      layer.adapt(vocab_dataset)
-      int_data = layer(input_data)
-      model = keras.Model(inputs=input_data, outputs=int_data)
+        with strategy.scope():
+            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            layer = text_vectorization.TextVectorization(
+                max_tokens=None,
+                standardize=None,
+                split=None,
+                output_mode=text_vectorization.INT)
+            layer.adapt(vocab_dataset)
+            int_data = layer(input_data)
+            model = keras.Model(inputs=input_data, outputs=int_data)
 
-    output_dataset = model.predict(input_dataset)
-    self.assertAllEqual(expected_output, output_dataset)
+        output_dataset = model.predict(input_dataset)
+        self.assertAllEqual(expected_output, output_dataset)
+
+
 if __name__ == "__main__":
-  test.main()
+    test.main()

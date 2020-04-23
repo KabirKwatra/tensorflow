@@ -32,16 +32,16 @@ flags.DEFINE_string("zone", None, "Name of GCP zone with TPU.")
 
 
 def get_tpu_cluster_resolver():
-  resolver = tpu_cluster_resolver.TPUClusterResolver(
-      tpu=FLAGS.tpu,
-      zone=FLAGS.zone,
-      project=FLAGS.project,
-  )
-  return resolver
+    resolver = tpu_cluster_resolver.TPUClusterResolver(
+        tpu=FLAGS.tpu,
+        zone=FLAGS.zone,
+        project=FLAGS.project,
+    )
+    return resolver
 
 
 def get_tpu_strategy():
-  resolver = get_tpu_cluster_resolver()
-  remote.connect_to_cluster(resolver)
-  tpu_strategy_util.initialize_tpu_system(resolver)
-  return tpu_strategy.TPUStrategy(resolver)
+    resolver = get_tpu_cluster_resolver()
+    remote.connect_to_cluster(resolver)
+    tpu_strategy_util.initialize_tpu_system(resolver)
+    return tpu_strategy.TPUStrategy(resolver)
