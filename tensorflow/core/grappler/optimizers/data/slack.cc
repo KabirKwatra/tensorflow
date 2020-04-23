@@ -39,17 +39,18 @@ constexpr char kPrefetchDatasetOp[] = "PrefetchDataset";
 template <std::size_t SIZE>
 bool IsDatasetNodeOfType(const NodeDef& node,
                          const std::array<const char*, SIZE>& arr) {
-  for (const auto& dataset_op_name : arr) {
-    if (node.op() == dataset_op_name) return true;
-  }
-  return false;
+    for (const auto& dataset_op_name : arr) {
+        if (node.op() == dataset_op_name) return true;
+    }
+    return false;
 }
 
 // We don't pass through "Batch*" ops and nested dataset ops (FlatMap, etc)
 // because the correct slack_period cannot be determined directly in those
 // cases.
 constexpr std::array<const char*, 2> kMultipleInputsDatasetOps = {
-    "ZipDataset", "ConcatenateDataset"};
+    "ZipDataset", "ConcatenateDataset"
+};
 
 constexpr std::array<const char*, 22> kPassThroughOps = {
     "CacheDataset",
@@ -80,68 +81,68 @@ constexpr std::array<const char*, 22> kPassThroughOps = {
 
 Status Slack::RecursivelyHandleOp(const MutableGraphView& graph,
                                   NodeDef* dataset_node) {
-  if (dataset_node->op() == kPrefetchDatasetOp) {
-    if (HasNodeAttr(*dataset_node, "slack_period")) {
-      (*dataset_node->mutable_attr())["slack_period"].set_i(slack_period_);
-    } else {
-      AddNodeAttr("slack_period", slack_period_, dataset_node);
+    if (dataset_node->op() == kPrefetchDatasetOp) {
+        if (HasNodeAttr(*dataset_node, "slack_period")) {
+            (*dataset_node->mutable_attr())["slack_period"].set_i(slack_period_);
+        } else {
+            AddNodeAttr("slack_period", slack_period_, dataset_node);
+        }
+        return Status::OK();
     }
-    return Status::OK();
-  }
-  if (IsDatasetNodeOfType(*dataset_node, kPassThroughOps)) {
-    NodeDef* input_node = graph_utils::GetInputNode(*dataset_node, graph, 0);
-    return RecursivelyHandleOp(graph, input_node);
-  }
-  if (IsDatasetNodeOfType(*dataset_node, kMultipleInputsDatasetOps)) {
-    // For all multiple input datasets, all inputs are datasets themselves
-    for (int i = 0; i < dataset_node->input_size(); ++i) {
-      NodeDef* input_node = graph_utils::GetInputNode(*dataset_node, graph, i);
-      TF_RETURN_IF_ERROR(RecursivelyHandleOp(graph, input_node));
+    if (IsDatasetNodeOfType(*dataset_node, kPassThroughOps)) {
+        NodeDef* input_node = graph_utils::GetInputNode(*dataset_node, graph, 0);
+        return RecursivelyHandleOp(graph, input_node);
     }
-    return Status::OK();
-  }
+    if (IsDatasetNodeOfType(*dataset_node, kMultipleInputsDatasetOps)) {
+        // For all multiple input datasets, all inputs are datasets themselves
+        for (int i = 0; i < dataset_node->input_size(); ++i) {
+            NodeDef* input_node = graph_utils::GetInputNode(*dataset_node, graph, i);
+            TF_RETURN_IF_ERROR(RecursivelyHandleOp(graph, input_node));
+        }
+        return Status::OK();
+    }
 
-  return errors::InvalidArgument(
-      "Encountered unsupported op \"", dataset_node->op(),
-      "\" when rewriting the input pipeline graph to use slack in its "
-      "final prefetch transformation.");
+    return errors::InvalidArgument(
+               "Encountered unsupported op \"", dataset_node->op(),
+               "\" when rewriting the input pipeline graph to use slack in its "
+               "final prefetch transformation.");
 }
 
 Status Slack::OptimizeAndCollectStats(Cluster* cluster,
                                       const GrapplerItem& item,
                                       GraphDef* output,
                                       OptimizationStats* stats) {
-  if (slack_period_ < 1)
-    return errors::InvalidArgument("Invalid `slack_period` parameter: ",
-                                   slack_period_);
+    if (slack_period_ < 1)
+        return errors::InvalidArgument("Invalid `slack_period` parameter: ",
+                                       slack_period_);
 
-  *output = item.graph;
-  MutableGraphView graph(output);
-  for (const auto& fetch_name : item.fetch) {
-    // If the GrapplerItem is derived from a FunctionDef, we don't optimize it,
-    // because we only want to add slack to the prefetch on the main dataset
-    // pipeline.
-    auto fetch = graph.GetNode(fetch_name);
-    if (fetch == nullptr || fetch->op() == kRetValOp) {
-      // Heuristic: If the fetch nodes are Retval ops, this item is from a
-      // function.
-      return Status::OK();
+    *output = item.graph;
+    MutableGraphView graph(output);
+    for (const auto& fetch_name : item.fetch) {
+        // If the GrapplerItem is derived from a FunctionDef, we don't optimize it,
+        // because we only want to add slack to the prefetch on the main dataset
+        // pipeline.
+        auto fetch = graph.GetNode(fetch_name);
+        if (fetch == nullptr || fetch->op() == kRetValOp) {
+            // Heuristic: If the fetch nodes are Retval ops, this item is from a
+            // function.
+            return Status::OK();
+        }
     }
-  }
-  if (item.fetch.size() != 1) {
-    return errors::InvalidArgument(
-        "Expected only one fetch node but there were ", item.fetch.size(), ": ",
-        absl::StrJoin(item.fetch, ", "));
-  }
-  // Walks the input pipeline backwards from the fetch node to find the last
-  // PrefetchDataset node in the pipeline.
-  NodeDef* dataset_node = graph.GetNode(item.fetch.at(0));
-  return RecursivelyHandleOp(graph, dataset_node);
+    if (item.fetch.size() != 1) {
+        return errors::InvalidArgument(
+                   "Expected only one fetch node but there were ", item.fetch.size(), ": ",
+                   absl::StrJoin(item.fetch, ", "));
+    }
+    // Walks the input pipeline backwards from the fetch node to find the last
+    // PrefetchDataset node in the pipeline.
+    NodeDef* dataset_node = graph.GetNode(item.fetch.at(0));
+    return RecursivelyHandleOp(graph, dataset_node);
 }
 
 void Slack::Feedback(Cluster* cluster, const GrapplerItem& item,
                      const GraphDef& optimize_output, double result) {
-  // no-op
+    // no-op
 }
 
 REGISTER_GRAPH_OPTIMIZER_AS(Slack, "slack");
