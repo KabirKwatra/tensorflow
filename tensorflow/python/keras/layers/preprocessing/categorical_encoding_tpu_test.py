@@ -28,10 +28,11 @@ from tensorflow.python.keras.layers.preprocessing import preprocessing_test_util
 from tensorflow.python.platform import test
 
 
-@keras_parameterized.run_all_keras_modes(always_skip_v1=True, always_skip_eager=True)
+@keras_parameterized.run_all_keras_modes(always_skip_v1=True,
+                                         always_skip_eager=True)
 class CategoricalEncodingDistributionTest(
-    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
-):
+        keras_parameterized.TestCase,
+        preprocessing_test_utils.PreprocessingLayerTest):
     def test_tpu_distribution(self):
         input_array = np.array([[1, 2, 3, 1], [0, 3, 1, 0]])
 
@@ -43,10 +44,9 @@ class CategoricalEncodingDistributionTest(
         strategy = tpu_strategy_test_utils.get_tpu_strategy()
 
         with strategy.scope():
-            input_data = keras.Input(shape=(4,), dtype=dtypes.int32)
+            input_data = keras.Input(shape=(4, ), dtype=dtypes.int32)
             layer = categorical_encoding.CategoricalEncoding(
-                max_tokens=max_tokens, output_mode=categorical_encoding.BINARY
-            )
+                max_tokens=max_tokens, output_mode=categorical_encoding.BINARY)
             int_data = layer(input_data)
             model = keras.Model(inputs=input_data, outputs=int_data)
         output_dataset = model.predict(input_array)

@@ -30,22 +30,21 @@ from tensorflow.python.keras.layers.preprocessing import preprocessing_test_util
 from tensorflow.python.platform import test
 
 
-@keras_parameterized.run_all_keras_modes(always_skip_v1=True, always_skip_eager=True)
-class HashingDistributionTest(
-    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
-):
+@keras_parameterized.run_all_keras_modes(always_skip_v1=True,
+                                         always_skip_eager=True)
+class HashingDistributionTest(keras_parameterized.TestCase,
+                              preprocessing_test_utils.PreprocessingLayerTest):
     def test_tpu_distribution(self):
         input_data = np.asarray([["omar"], ["stringer"], ["marlo"], ["wire"]])
-        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_data).batch(
-            2, drop_remainder=True
-        )
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(
+            input_data).batch(2, drop_remainder=True)
         expected_output = [[0], [0], [1], [0]]
 
         config.set_soft_device_placement(True)
         strategy = tpu_strategy_test_utils.get_tpu_strategy()
 
         with strategy.scope():
-            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            input_data = keras.Input(shape=(None, ), dtype=dtypes.string)
             layer = hashing.Hashing(num_bins=2)
             int_data = layer(input_data)
             model = keras.Model(inputs=input_data, outputs=int_data)

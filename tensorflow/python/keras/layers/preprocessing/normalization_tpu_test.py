@@ -32,57 +32,70 @@ from tensorflow.python.platform import test
 def _get_layer_computation_test_cases():
     test_cases = (
         {
-            "adapt_data": np.array(
-                [[1.0], [2.0], [3.0], [4.0], [5.0]], dtype=np.float32
-            ),
-            "axis": -1,
-            "test_data": np.array([[1.0], [2.0], [3.0]], np.float32),
-            "expected": np.array([[-1.414214], [-0.707107], [0]], np.float32),
-            "testcase_name": "2d_single_element",
+            "adapt_data":
+            np.array([[1.0], [2.0], [3.0], [4.0], [5.0]], dtype=np.float32),
+            "axis":
+            -1,
+            "test_data":
+            np.array([[1.0], [2.0], [3.0]], np.float32),
+            "expected":
+            np.array([[-1.414214], [-0.707107], [0]], np.float32),
+            "testcase_name":
+            "2d_single_element",
         },
         {
-            "adapt_data": np.array(
-                [[1.0], [2.0], [3.0], [4.0], [5.0]], dtype=np.float32
-            ),
-            "axis": None,
-            "test_data": np.array([[1.0], [2.0], [3.0]], np.float32),
-            "expected": np.array([[-1.414214], [-0.707107], [0]], np.float32),
-            "testcase_name": "2d_single_element_none_axis",
+            "adapt_data":
+            np.array([[1.0], [2.0], [3.0], [4.0], [5.0]], dtype=np.float32),
+            "axis":
+            None,
+            "test_data":
+            np.array([[1.0], [2.0], [3.0]], np.float32),
+            "expected":
+            np.array([[-1.414214], [-0.707107], [0]], np.float32),
+            "testcase_name":
+            "2d_single_element_none_axis",
         },
         {
-            "adapt_data": np.array([[1.0, 2.0, 3.0, 4.0, 5.0]], dtype=np.float32),
+            "adapt_data": np.array([[1.0, 2.0, 3.0, 4.0, 5.0]],
+                                   dtype=np.float32),
             "axis": None,
             "test_data": np.array([[1.0], [2.0], [3.0]], np.float32),
             "expected": np.array([[-1.414214], [-0.707107], [0]], np.float32),
             "testcase_name": "2d_single_element_none_axis_flat_data",
         },
         {
-            "adapt_data": np.array(
+            "adapt_data":
+            np.array(
                 [
                     [[1.0, 2.0, 3.0], [2.0, 3.0, 4.0]],
                     [[3.0, 4.0, 5.0], [4.0, 5.0, 6.0]],
                 ],
                 np.float32,
             ),
-            "axis": 1,
-            "test_data": np.array(
+            "axis":
+            1,
+            "test_data":
+            np.array(
                 [
                     [[1.0, 2.0, 3.0], [2.0, 3.0, 4.0]],
                     [[3.0, 4.0, 5.0], [4.0, 5.0, 6.0]],
                 ],
                 np.float32,
             ),
-            "expected": np.array(
+            "expected":
+            np.array(
                 [
                     [[-1.549193, -0.774597, 0.0], [-1.549193, -0.774597, 0.0]],
                     [[0.0, 0.774597, 1.549193], [0.0, 0.774597, 1.549193]],
                 ],
                 np.float32,
             ),
-            "testcase_name": "3d_internal_axis",
+            "testcase_name":
+            "3d_internal_axis",
         },
         {
-            "adapt_data": np.array(
+            "adapt_data":
+            np.array(
                 [
                     [[1.0, 0.0, 3.0], [2.0, 3.0, 4.0]],
                     [[3.0, -1.0, 5.0], [4.0, 5.0, 8.0]],
@@ -90,21 +103,24 @@ def _get_layer_computation_test_cases():
                 np.float32,
             ),
             "axis": (1, 2),
-            "test_data": np.array(
+            "test_data":
+            np.array(
                 [
                     [[3.0, 1.0, -1.0], [2.0, 5.0, 4.0]],
                     [[3.0, 0.0, 5.0], [2.0, 5.0, 8.0]],
                 ],
                 np.float32,
             ),
-            "expected": np.array(
+            "expected":
+            np.array(
                 [
                     [[1.0, 3.0, -5.0], [-1.0, 1.0, -1.0]],
                     [[1.0, 1.0, 1.0], [-1.0, 1.0, 1.0]],
                 ],
                 np.float32,
             ),
-            "testcase_name": "3d_multiple_axis",
+            "testcase_name":
+            "3d_multiple_axis",
         },
     )
 
@@ -121,23 +137,20 @@ def _get_layer_computation_test_cases():
     return crossed_test_cases
 
 
-@keras_parameterized.run_all_keras_modes(always_skip_v1=True, always_skip_eager=True)
-class NormalizationTest(
-    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
-):
+@keras_parameterized.run_all_keras_modes(always_skip_v1=True,
+                                         always_skip_eager=True)
+class NormalizationTest(keras_parameterized.TestCase,
+                        preprocessing_test_utils.PreprocessingLayerTest):
     @parameterized.named_parameters(*_get_layer_computation_test_cases())
-    def test_layer_computation(
-        self, adapt_data, axis, test_data, use_dataset, expected
-    ):
+    def test_layer_computation(self, adapt_data, axis, test_data, use_dataset,
+                               expected):
         input_shape = tuple([None for _ in range(test_data.ndim - 1)])
         if use_dataset:
             # Keras APIs expect batched datasets
-            adapt_data = dataset_ops.Dataset.from_tensor_slices(adapt_data).batch(
-                test_data.shape[0] // 2
-            )
-            test_data = dataset_ops.Dataset.from_tensor_slices(test_data).batch(
-                test_data.shape[0] // 2
-            )
+            adapt_data = dataset_ops.Dataset.from_tensor_slices(
+                adapt_data).batch(test_data.shape[0] // 2)
+            test_data = dataset_ops.Dataset.from_tensor_slices(
+                test_data).batch(test_data.shape[0] // 2)
 
         strategy = tpu_strategy_test_utils.get_tpu_strategy()
 

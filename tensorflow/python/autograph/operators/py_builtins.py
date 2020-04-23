@@ -49,13 +49,11 @@ from tensorflow.python.util import nest
 
 # TODO(b/145618471): Remove this dependency.
 # Lazy import to work around circular dependencies
-input_lib = lazy_loader.LazyLoader(
-    "input_lib", globals(), "tensorflow.python.distribute.input_lib"
-)
+input_lib = lazy_loader.LazyLoader("input_lib", globals(),
+                                   "tensorflow.python.distribute.input_lib")
 parallel_ops = lazy_loader.LazyLoader(
-    "parallel_ops", globals(), "tensorflow.python.ops.parallel_for.control_flow_ops"
-)
-
+    "parallel_ops", globals(),
+    "tensorflow.python.ops.parallel_for.control_flow_ops")
 
 UNSPECIFIED = object()
 
@@ -74,7 +72,8 @@ def _find_originating_frame(caller_fn_scope, innermost=True):
         # Note it should not be normally possible to get false positives this way
         # because the function scope object is not accessible to user code (barring
         # call stack introspection).
-        if ctx_frame.f_locals.get(caller_fn_scope.name, None) is caller_fn_scope:
+        if ctx_frame.f_locals.get(caller_fn_scope.name,
+                                  None) is caller_fn_scope:
             result = ctx_frame
             if innermost:
                 break
@@ -82,8 +81,7 @@ def _find_originating_frame(caller_fn_scope, innermost=True):
 
     assert result is not None, (
         "the conversion process should ensure the caller_fn_scope is always"
-        " found somewhere on the call stack"
-    )
+        " found somewhere on the call stack")
 
     return result
 
@@ -261,8 +259,8 @@ def _tf_tensor_len(s):
 
     if shape.shape[0] == 0:
         raise ValueError(
-            "len requires a non-scalar tensor, got one of shape {}".format(shape)
-        )
+            "len requires a non-scalar tensor, got one of shape {}".format(
+                shape))
 
     if shape.shape.dims[0].value is not None:
         return array_ops.shape(s)[0]
@@ -271,30 +269,27 @@ def _tf_tensor_len(s):
     rank = array_ops.rank(s)
 
     def raise_zero_rank_error():
-        msg = gen_string_ops.string_join(
-            ["len requires non-zero rank, got ", gen_string_ops.as_string(rank)]
-        )
+        msg = gen_string_ops.string_join([
+            "len requires non-zero rank, got ",
+            gen_string_ops.as_string(rank)
+        ])
         with ops.control_dependencies([control_flow_ops.Assert(False, [msg])]):
             return constant_op.constant(0, dtype=dtypes.int32)
 
-    return control_flow_ops.cond(
-        rank > 0, lambda: array_ops.shape(s)[0], raise_zero_rank_error
-    )
+    return control_flow_ops.cond(rank > 0, lambda: array_ops.shape(s)[0],
+                                 raise_zero_rank_error)
 
 
 def _tf_dataset_len(s):
     l = cardinality.cardinality(s)
-    msg = gen_string_ops.string_join(
-        [
-            "len requires dataset with definitive cardinality, got ",
-            gen_string_ops.as_string(l),
-        ]
-    )
+    msg = gen_string_ops.string_join([
+        "len requires dataset with definitive cardinality, got ",
+        gen_string_ops.as_string(l),
+    ])
     # TODO (yongtang): UNKNOWN is treated as an error.
     # In case there are more UNKNOWN cases for dataset, we could
     # use dataset.reduce() to find out the length (in an expensive way).
-    with ops.control_dependencies(
-        [
+    with ops.control_dependencies([
             control_flow_ops.Assert(
                 math_ops.logical_and(
                     math_ops.not_equal(l, cardinality.INFINITE),
@@ -302,8 +297,7 @@ def _tf_dataset_len(s):
                 ),
                 [msg],
             )
-        ]
-    ):
+    ]):
         l = array_ops.identity(l)
 
     return l
@@ -316,9 +310,11 @@ def _py_len(s):
 def print_(*objects, **kwargs):
     """Overload of the print builtin."""
     # Note: Python 2.6 doesn't support explicit keywords after starargs.
-    unknown_kwargs = tuple(set(kwargs.keys()) - set(("sep", "end", "file", "flush")))
+    unknown_kwargs = tuple(
+        set(kwargs.keys()) - set(("sep", "end", "file", "flush")))
     if unknown_kwargs:
-        raise ValueError("invalid keyword arguments: {}".format(unknown_kwargs))
+        raise ValueError(
+            "invalid keyword arguments: {}".format(unknown_kwargs))
 
     # TODO(mdan): Use next.flatten(objects) instead?
     if any(tensor_util.is_tensor(o) for o in objects):
@@ -341,15 +337,20 @@ def _tf_py_func_print(objects, kwargs):
         override_kwargs["flush"] = True
 
     def print_wrapper(*vals):
-        vals = tuple(v.numpy() if tensor_util.is_tensor(v) else v for v in vals)
+        vals = tuple(v.numpy() if tensor_util.is_tensor(v) else v
+                     for v in vals)
         if not six.PY2:
             # TensorFlow doesn't seem to generate Unicode when passing strings to
             # py_func. This causes the print to add a "b'" wrapper to the output,
             # which is probably never what you want.
-            vals = tuple(v.decode("utf-8") if isinstance(v, bytes) else v for v in vals)
+            vals = tuple(
+                v.decode("utf-8") if isinstance(v, bytes) else v for v in vals)
         six.print_(*vals, **override_kwargs)
 
-    return py_func.wrap_py_func(print_wrapper, None, objects, use_dummy_return=True)
+    return py_func.wrap_py_func(print_wrapper,
+                                None,
+                                objects,
+                                use_dummy_return=True)
 
 
 def range_(start_or_stop, stop=UNSPECIFIED, step=UNSPECIFIED):
@@ -386,10 +387,10 @@ def _py_range(start_or_stop, stop, step):
 def enumerate_(s, start=0):
     if isinstance(s, dataset_ops.DatasetV2):
         return _tf_dataset_enumerate(s, start)
-    if isinstance(s, (input_lib.DistributedIterator, input_lib.DistributedDataset)):
+    if isinstance(
+            s, (input_lib.DistributedIterator, input_lib.DistributedDataset)):
         raise NotImplementedError(
-            "use a for loop over the dataset and keep a separate counter"
-        )
+            "use a for loop over the dataset and keep a separate counter")
     return _py_enumerate(s, start)
 
 
@@ -465,13 +466,12 @@ def _verify_spec_compatible(input_name, spec_name, input_, spec):
     input_dtype = getattr(input_, "dtype", None)
 
     if input_dtype != spec.dtype:
-        input_dtype_str = "no dtype" if input_dtype is None else str(input_dtype)
+        input_dtype_str = "no dtype" if input_dtype is None else str(
+            input_dtype)
 
         raise TypeError(
             "{} must have the same dtype as {}. Expected {}, got {}".format(
-                input_name, spec_name, spec.dtype, input_dtype_str
-            )
-        )
+                input_name, spec_name, spec.dtype, input_dtype_str))
 
 
 def _verify_structure_compatible(input_name, spec_name, input_, spec):
@@ -496,13 +496,11 @@ def _verify_structure_compatible(input_name, spec_name, input_, spec):
     except (ValueError, TypeError) as e:
         raise TypeError(
             "{} must have the same element structure as {}.\n\n{}".format(
-                input_name, spec_name, str(e)
-            )
-        )
+                input_name, spec_name, str(e)))
 
     nest.map_structure(
-        functools.partial(_verify_spec_compatible, input_name, spec_name), input_, spec
-    )
+        functools.partial(_verify_spec_compatible, input_name, spec_name),
+        input_, spec)
 
 
 def next_tf_iterator(iterator, default=UNSPECIFIED):
@@ -511,12 +509,10 @@ def next_tf_iterator(iterator, default=UNSPECIFIED):
         # a runtime exception.
         return next(iterator)
     opt_iterate = iterator_ops.get_next_as_optional(iterator)
-    _verify_structure_compatible(
-        "the default argument", "the iterate", default, iterator.element_spec
-    )
-    return control_flow_ops.cond(
-        opt_iterate.has_value(), opt_iterate.get_value, lambda: default
-    )
+    _verify_structure_compatible("the default argument", "the iterate",
+                                 default, iterator.element_spec)
+    return control_flow_ops.cond(opt_iterate.has_value(),
+                                 opt_iterate.get_value, lambda: default)
 
 
 def next_py(iterator, default=UNSPECIFIED):
@@ -557,11 +553,11 @@ def _tf_dataset_any(iterable):
     if len(specs) != 1 or specs[0].dtype != dtypes.bool:
         raise ValueError(
             'in graph mode, the "any" builtin only supports datasets '
-            "that return bool scalars; got: {}".format(iterable.element_spec)
-        )
+            "that return bool scalars; got: {}".format(iterable.element_spec))
     ds = iterable.filter(lambda x: x)
     ds = ds.take(1)
-    ds = ds.reduce(constant_op.constant(False, dtype=dtypes.bool), lambda _, y: y)
+    ds = ds.reduce(constant_op.constant(False,
+                                        dtype=dtypes.bool), lambda _, y: y)
     return ds
 
 
@@ -584,11 +580,11 @@ def _tf_dataset_all(iterable):
     if len(specs) != 1 or specs[0].dtype != dtypes.bool:
         raise ValueError(
             'in graph mode, the "all" builtin only supports datasets '
-            "that return bool scalars; got: {}".format(iterable.element_spec)
-        )
+            "that return bool scalars; got: {}".format(iterable.element_spec))
     ds = iterable.filter(lambda x: math_ops.logical_not(x))
     ds = ds.take(1)
-    ds = ds.reduce(constant_op.constant(True, dtype=dtypes.bool), lambda _, y: y)
+    ds = ds.reduce(constant_op.constant(True,
+                                        dtype=dtypes.bool), lambda _, y: y)
     return ds
 
 
@@ -612,16 +608,18 @@ def _tf_sorted(iterable, key, reverse):
         mapped = parallel_ops.vectorized_map(key, iterable)
         if mapped.shape.rank is not None and mapped.shape.rank != 1:
             raise ValueError("sort only supports only 1D tensors")
-        with ops.control_dependencies(
-            [check_ops.assert_rank_v2(mapped, 1, "sort only supports only 1D tensors")]
-        ):
+        with ops.control_dependencies([
+                check_ops.assert_rank_v2(mapped, 1,
+                                         "sort only supports only 1D tensors")
+        ]):
             order = sort_ops.argsort(mapped, direction=direction)
             return array_ops.gather_v2(iterable, order)
     if iterable.shape.rank is not None and iterable.shape.rank != 1:
         raise ValueError("sort only supports only 1D tensors")
-    with ops.control_dependencies(
-        [check_ops.assert_rank_v2(iterable, 1, "sort only supports only 1D tensors")]
-    ):
+    with ops.control_dependencies([
+            check_ops.assert_rank_v2(iterable, 1,
+                                     "sort only supports only 1D tensors")
+    ]):
         return sort_ops.sort(iterable, direction=direction)
 
 
@@ -652,7 +650,7 @@ SUPPORTED_BUILTINS = (
 )
 
 if six.PY2:
-    SUPPORTED_BUILTINS += (xrange,)
+    SUPPORTED_BUILTINS += (xrange, )
 
 BUILTIN_FUNCTIONS_MAP = {
     "abs": abs_,

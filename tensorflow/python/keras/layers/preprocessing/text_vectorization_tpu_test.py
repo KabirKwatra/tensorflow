@@ -30,18 +30,17 @@ from tensorflow.python.keras.layers.preprocessing import text_vectorization
 from tensorflow.python.platform import test
 
 
-@keras_parameterized.run_all_keras_modes(always_skip_v1=True, always_skip_eager=True)
+@keras_parameterized.run_all_keras_modes(always_skip_v1=True,
+                                         always_skip_eager=True)
 class TextVectorizationTPUDistributionTest(
-    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
-):
+        keras_parameterized.TestCase,
+        preprocessing_test_utils.PreprocessingLayerTest):
     def test_distribution_strategy_output(self):
         vocab_data = ["earth", "wind", "and", "fire"]
-        input_array = np.array(
-            [["earth", "wind", "and", "fire"], ["fire", "and", "earth", "michigan"]]
-        )
-        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
-            2, drop_remainder=True
-        )
+        input_array = np.array([["earth", "wind", "and", "fire"],
+                                ["fire", "and", "earth", "michigan"]])
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(
+            input_array).batch(2, drop_remainder=True)
 
         expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
 
@@ -49,7 +48,7 @@ class TextVectorizationTPUDistributionTest(
         strategy = tpu_strategy_test_utils.get_tpu_strategy()
 
         with strategy.scope():
-            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            input_data = keras.Input(shape=(None, ), dtype=dtypes.string)
             layer = text_vectorization.TextVectorization(
                 max_tokens=None,
                 standardize=None,
@@ -64,27 +63,23 @@ class TextVectorizationTPUDistributionTest(
         self.assertAllEqual(expected_output, output_dataset)
 
     def test_distribution_strategy_output_with_adapt(self):
-        vocab_data = [
-            [
-                "earth",
-                "earth",
-                "earth",
-                "earth",
-                "wind",
-                "wind",
-                "wind",
-                "and",
-                "and",
-                "fire",
-            ]
-        ]
+        vocab_data = [[
+            "earth",
+            "earth",
+            "earth",
+            "earth",
+            "wind",
+            "wind",
+            "wind",
+            "and",
+            "and",
+            "fire",
+        ]]
         vocab_dataset = dataset_ops.Dataset.from_tensors(vocab_data)
-        input_array = np.array(
-            [["earth", "wind", "and", "fire"], ["fire", "and", "earth", "michigan"]]
-        )
-        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
-            2, drop_remainder=True
-        )
+        input_array = np.array([["earth", "wind", "and", "fire"],
+                                ["fire", "and", "earth", "michigan"]])
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(
+            input_array).batch(2, drop_remainder=True)
 
         expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
 
@@ -92,7 +87,7 @@ class TextVectorizationTPUDistributionTest(
         strategy = tpu_strategy_test_utils.get_tpu_strategy()
 
         with strategy.scope():
-            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            input_data = keras.Input(shape=(None, ), dtype=dtypes.string)
             layer = text_vectorization.TextVectorization(
                 max_tokens=None,
                 standardize=None,
