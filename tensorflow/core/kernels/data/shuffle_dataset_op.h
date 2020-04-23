@@ -21,53 +21,53 @@ namespace tensorflow {
 namespace data {
 
 class ShuffleDatasetOpBase : public UnaryDatasetOpKernel {
-public:
-    static constexpr const char* const kInputDataset = "input_dataset";
-    static constexpr const char* const kBufferSize = "buffer_size";
-    static constexpr const char* const kSeed = "seed";
-    static constexpr const char* const kSeed2 = "seed2";
-    static constexpr const char* const kOutputTypes = "output_types";
-    static constexpr const char* const kOutputShapes = "output_shapes";
+ public:
+  static constexpr const char* const kInputDataset = "input_dataset";
+  static constexpr const char* const kBufferSize = "buffer_size";
+  static constexpr const char* const kSeed = "seed";
+  static constexpr const char* const kSeed2 = "seed2";
+  static constexpr const char* const kOutputTypes = "output_types";
+  static constexpr const char* const kOutputShapes = "output_shapes";
 
-    explicit ShuffleDatasetOpBase(OpKernelConstruction* ctx);
+  explicit ShuffleDatasetOpBase(OpKernelConstruction* ctx);
 
-protected:
-    class ShuffleDatasetBase;
+ protected:
+  class ShuffleDatasetBase;
 };
 
 class ShuffleDatasetOp : public ShuffleDatasetOpBase {
-public:
-    static constexpr const char* const kDatasetType = "Shuffle";
-    static constexpr const char* const kReshuffleEachIteration =
-        "reshuffle_each_iteration";
+ public:
+  static constexpr const char* const kDatasetType = "Shuffle";
+  static constexpr const char* const kReshuffleEachIteration =
+      "reshuffle_each_iteration";
 
-    explicit ShuffleDatasetOp(OpKernelConstruction* ctx);
+  explicit ShuffleDatasetOp(OpKernelConstruction* ctx);
 
-protected:
-    void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
-                     DatasetBase** output) override;
+ protected:
+  void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
+                   DatasetBase** output) override;
 
-private:
-    class Dataset;
-    class DatasetV2;
-    class DatasetV3;
-    int op_version_ = 0;
-    bool reshuffle_each_iteration_;
+ private:
+  class Dataset;
+  class DatasetV2;
+  class DatasetV3;
+  int op_version_ = 0;
+  bool reshuffle_each_iteration_;
 };
 
 class ShuffleAndRepeatDatasetOp : public ShuffleDatasetOpBase {
-public:
-    static constexpr const char* const kDatasetType = "ShuffleAndRepeat";
-    static constexpr const char* const kCount = "count";
+ public:
+  static constexpr const char* const kDatasetType = "ShuffleAndRepeat";
+  static constexpr const char* const kCount = "count";
 
-    explicit ShuffleAndRepeatDatasetOp(OpKernelConstruction* ctx);
+  explicit ShuffleAndRepeatDatasetOp(OpKernelConstruction* ctx);
 
-protected:
-    void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
-                     DatasetBase** output) override;
+ protected:
+  void MakeDataset(OpKernelContext* ctx, DatasetBase* input,
+                   DatasetBase** output) override;
 
-private:
-    class Dataset;
+ private:
+  class Dataset;
 };
 
 }  // namespace data

@@ -40,7 +40,7 @@ namespace op = xla::testing::opcode_matchers;
 class HorizontalFusionTest : public HloTestBase {};
 
 TEST_F(HorizontalFusionTest, BasicTest) {
-    auto module = ParseAndReturnVerifiedModule(R"(
+  auto module = ParseAndReturnVerifiedModule(R"(
  HloModule BasicTest
 
  fused_computation.1 {
@@ -184,53 +184,53 @@ TEST_F(HorizontalFusionTest, HorizontalFusionAfterVerticalFusion) {
   add.2       = f32[321,5]{1,0} add(mul.2.1, mul.2.2)
   ROOT tuple = (f32[4,1024]{1,0}, f32[321,5]{1,0}) tuple(add.1, add.2)
 })")
-                  .ValueOrDie();
+                    .ValueOrDie();
 
-    HloPassPipeline fusion("fusion");
-    fusion.AddPass<xla::gpu::GpuInstructionFusion>(/*may_duplicate=*/false);
-    fusion.AddPass<xla::gpu::GpuInstructionFusion>(/*may_duplicate=*/true);
-    EXPECT_TRUE(fusion.Run(module.get()).ValueOrDie());
-    EXPECT_TRUE(GpuHorizontalFusion().Run(module.get()).ValueOrDie());
+  HloPassPipeline fusion("fusion");
+  fusion.AddPass<xla::gpu::GpuInstructionFusion>(/*may_duplicate=*/false);
+  fusion.AddPass<xla::gpu::GpuInstructionFusion>(/*may_duplicate=*/true);
+  EXPECT_TRUE(fusion.Run(module.get()).ValueOrDie());
+  EXPECT_TRUE(GpuHorizontalFusion().Run(module.get()).ValueOrDie());
 
-    VLOG(2) << "Dump after horizontal fusion:";
-    VLOG(2) << module->ToString();
+  VLOG(2) << "Dump after horizontal fusion:";
+  VLOG(2) << module->ToString();
 
-    EXPECT_TRUE(RunAndCompareNoHloPasses(std::move(module), ErrorSpec{0, 0}));
+  EXPECT_TRUE(RunAndCompareNoHloPasses(std::move(module), ErrorSpec{0, 0}));
 }
 
 TEST_F(HorizontalFusionTest, GradientDescentOptimizerLike) {
-    HloComputation::Builder builder(TestName());
+  HloComputation::Builder builder(TestName());
 
-    std::vector<HloInstruction*> var_outs;
-    for (int64 i = 0; i < 128; ++i) {
-        // For shapes {1, 1024}, {2, 1024}, ..., {128, 1024}
-        auto shape = ShapeUtil::MakeShape(F32, {i + 1, 1024});
-        HloInstruction* param_var_in = builder.AddInstruction(
-                                           HloInstruction::CreateParameter(i * 3 + 0, shape, "var.in"));
-        HloInstruction* param_alpha =
-            builder.AddInstruction(HloInstruction::CreateParameter(
-                                       i * 3 + 1, ShapeUtil::MakeShape(F32, {}), "alpha"));
-        HloInstruction* param_delta = builder.AddInstruction(
-                                          HloInstruction::CreateParameter(i * 3 + 2, shape, "delta"));
-        auto alpha_broadcasted = builder.AddInstruction(
-                                     HloInstruction::CreateBroadcast(shape, param_alpha, {}));
-        auto alpha_delta = builder.AddInstruction(HloInstruction::CreateBinary(
-                               shape, HloOpcode::kMultiply, alpha_broadcasted, param_delta));
-        auto var_out = builder.AddInstruction(HloInstruction::CreateBinary(
-                shape, HloOpcode::kSubtract, param_var_in, alpha_delta));
-        var_outs.push_back(var_out);
-    }
-    builder.AddInstruction(HloInstruction::CreateTuple(var_outs));
+  std::vector<HloInstruction*> var_outs;
+  for (int64 i = 0; i < 128; ++i) {
+    // For shapes {1, 1024}, {2, 1024}, ..., {128, 1024}
+    auto shape = ShapeUtil::MakeShape(F32, {i + 1, 1024});
+    HloInstruction* param_var_in = builder.AddInstruction(
+        HloInstruction::CreateParameter(i * 3 + 0, shape, "var.in"));
+    HloInstruction* param_alpha =
+        builder.AddInstruction(HloInstruction::CreateParameter(
+            i * 3 + 1, ShapeUtil::MakeShape(F32, {}), "alpha"));
+    HloInstruction* param_delta = builder.AddInstruction(
+        HloInstruction::CreateParameter(i * 3 + 2, shape, "delta"));
+    auto alpha_broadcasted = builder.AddInstruction(
+        HloInstruction::CreateBroadcast(shape, param_alpha, {}));
+    auto alpha_delta = builder.AddInstruction(HloInstruction::CreateBinary(
+        shape, HloOpcode::kMultiply, alpha_broadcasted, param_delta));
+    auto var_out = builder.AddInstruction(HloInstruction::CreateBinary(
+        shape, HloOpcode::kSubtract, param_var_in, alpha_delta));
+    var_outs.push_back(var_out);
+  }
+  builder.AddInstruction(HloInstruction::CreateTuple(var_outs));
 
-    auto module = CreateNewVerifiedModule();
-    module->AddEntryComputation(builder.Build());
+  auto module = CreateNewVerifiedModule();
+  module->AddEntryComputation(builder.Build());
 
-    // Testing with the entire gpu optimization pipeline.
-    EXPECT_TRUE(RunAndCompare(std::move(module), ErrorSpec{0, 0}));
+  // Testing with the entire gpu optimization pipeline.
+  EXPECT_TRUE(RunAndCompare(std::move(module), ErrorSpec{0, 0}));
 }
 
 TEST_F(HorizontalFusionTest, FusingDifferentOutputs) {
-    auto module = ParseAndReturnVerifiedModule(R"(
+  auto module = ParseAndReturnVerifiedModule(R"(
  HloModule HeterogeneousMultiOutputFusions
 
  fused_computation.1 {
@@ -398,9 +398,9 @@ TEST_F(HorizontalFusionTest, NegativeTestForDynamicUpdateSlice) {
     f2 = f16[5,9,10] fusion(p.01, p.11, p.21), kind=kLoop, calls=fusion.2
     ROOT tuple = (f16[5,9,10],f16[5,9,10]) tuple(f1, f2)
   })")
-                  .ValueOrDie();
+                    .ValueOrDie();
 
-    EXPECT_FALSE(GpuHorizontalFusion().Run(module.get()).ValueOrDie());
+  EXPECT_FALSE(GpuHorizontalFusion().Run(module.get()).ValueOrDie());
 }
 
 }  // namespace
