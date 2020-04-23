@@ -30,10 +30,12 @@ namespace xla {
 //   - For non-tuple ROOT type:
 //        new_root = bitcast(old_root)
 class RootInstructionSinker : public HloModulePass {
- public:
-  ~RootInstructionSinker() override = default;
-  absl::string_view name() const override { return "root-instruction-sinker"; }
-  StatusOr<bool> Run(HloModule* module) override;
+public:
+    ~RootInstructionSinker() override = default;
+    absl::string_view name() const override {
+        return "root-instruction-sinker";
+    }
+    StatusOr<bool> Run(HloModule* module) override;
 };
 
 }  // namespace xla

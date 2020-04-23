@@ -20,32 +20,32 @@ limitations under the License.
 
 namespace xla {
 class TupleUtil {
- public:
-  // Generates HLO instructions to get a prefix tuple from `input_tuple` (which
-  // must be of tuple shape) of length `elements`.  Returns the root of the
-  // graph of instructions generated.
-  //
-  // The instructions are generated into the computation containing
-  // `input_tuple`.
-  static HloInstruction* ExtractPrefix(HloInstruction* input_tuple,
-                                       int64 elements);
+public:
+    // Generates HLO instructions to get a prefix tuple from `input_tuple` (which
+    // must be of tuple shape) of length `elements`.  Returns the root of the
+    // graph of instructions generated.
+    //
+    // The instructions are generated into the computation containing
+    // `input_tuple`.
+    static HloInstruction* ExtractPrefix(HloInstruction* input_tuple,
+                                         int64 elements);
 
-  // Generates HLO instructions to create a tuple that consists of the values in
-  // `trailing_values` appended to `input_tuple` (which must be of tuple shape).
-  // Returns the root of the graph of instructions generated.
-  //
-  // The instructions are generated into the computation containing
-  // `input_tuple`.
-  static HloInstruction* AppendSuffix(
-      HloInstruction* input_tuple,
-      absl::Span<HloInstruction* const> trailing_values);
+    // Generates HLO instructions to create a tuple that consists of the values in
+    // `trailing_values` appended to `input_tuple` (which must be of tuple shape).
+    // Returns the root of the graph of instructions generated.
+    //
+    // The instructions are generated into the computation containing
+    // `input_tuple`.
+    static HloInstruction* AppendSuffix(
+        HloInstruction* input_tuple,
+        absl::Span<HloInstruction* const> trailing_values);
 
-  // Generates HLO instructions that duplicates the tuple by inserting
-  // get-tuple-elements and a new tuple instruction. Returns the root of the
-  // graph of instructions generated.
-  static HloInstruction* Duplicate(HloInstruction* input_tuple) {
-    return ExtractPrefix(input_tuple, input_tuple->shape().tuple_shapes_size());
-  }
+    // Generates HLO instructions that duplicates the tuple by inserting
+    // get-tuple-elements and a new tuple instruction. Returns the root of the
+    // graph of instructions generated.
+    static HloInstruction* Duplicate(HloInstruction* input_tuple) {
+        return ExtractPrefix(input_tuple, input_tuple->shape().tuple_shapes_size());
+    }
 };
 }  // namespace xla
 

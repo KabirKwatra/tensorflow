@@ -48,97 +48,97 @@ typedef Eigen::ThreadPoolDevice CPUDevice;
 
 template <typename Device, typename T>
 class MklToTfOp : public OpKernel {
- public:
-  explicit MklToTfOp(OpKernelConstruction* context) : OpKernel(context) {
-    OP_REQUIRES_OK(context, context->GetAttr("data_format", &data_format_str));
-    OP_REQUIRES_OK(context, context->GetAttr("T", &op_data_type));
-    has_avx512f_ = port::TestCPUFeature(port::CPUFeature::AVX512F);
-  }
-
-  void Compute(OpKernelContext* context) override {
-    ConvertMklToTf(this, context, data_format_str, op_data_type, has_avx512f_,
-                   0);
-    VLOG(1) << "MKLToTFConversion complete successfully.";
-  }
-
-  // TODO(bhavanis): Move the below ConvertMklToTf() to mkl_util.h
-  static void ConvertMklToTf(OpKernel* op_kernel, OpKernelContext* context,
-                             string data_format_str, DataType op_data_type,
-                             bool has_avx512f, uint input_number) {
-    try {
-      // Check that input tensor is in MKL format.
-      const Tensor& input_tensor = MklGetInput(context, input_number);
-      MklDnnShape input_shape;
-      GetMklShape(context, input_number, &input_shape);
-
-      // if input is already in Tf format, then copy input tensor to output.
-      if (!input_shape.IsMklTensor()) {
-        context->set_output(input_number, input_tensor);
-        VLOG(1) << "MKLToTFConversion: No conversion needed, "
-                << "copying input to output";
-        return;
-      }
-
-      // Check that input data type is same as operator data type and that it
-      // is same as output data type.
-      DataType input_data_type = op_kernel->input_type(input_number);
-      DataType output_data_type = op_kernel->output_type(input_number);
-      CHECK_EQ(op_data_type, input_data_type);
-      CHECK_EQ(op_data_type, output_data_type);
-
-      auto cpu_engine = engine(ENGINE_CPU, 0);
-      MklDnnData<T> input(&cpu_engine);
-
-      // Get MKL layout of input tensor.
-      auto input_mkl_md = input_shape.GetMklLayout();
-      // Get TensorFlow layout of input tensor. Expected output of conversion
-      // has same layout as Tensorflow layout of input tensor.
-      auto output_tf_md = input_shape.GetTfLayout();
-#ifndef ENABLE_MKLDNN_V1
-      auto output_tf_pd = memory::primitive_desc(output_tf_md, cpu_engine);
-#endif  // !ENABLE_MKLDNN_V1
-      // Set input MKL layout as the user layout.
-      input.SetUsrMem(input_mkl_md, &input_tensor);
-
-      // Allocate output tensor.
-      TensorShape output_shape = input_shape.GetTfShape();
-      Tensor* output_tensor = nullptr;
-      OP_REQUIRES_OK(context, context->allocate_output(
-                                  input_number, output_shape, &output_tensor));
-      DCHECK(output_tensor);
-
-      // Check if input needs to be reordered
-      if (input.IsReorderNeeded(OUTPUT_TF_MD)) {
-        // Insert reorder between MKL layout and TensorFlow layout
-        OP_REQUIRES(
-            context,
-            input.CheckReorderToOpMem(OUTPUT_TF_MD, output_tensor, context),
-            errors::Internal("MklToTfOp: Failed to create input reorder"));
-      } else {
-        // If not, just forward input tensor to output tensor.
-        OP_REQUIRES(context,
-                    output_tensor->CopyFrom(input_tensor, output_shape),
-                    errors::Internal(
-                        "MklToTfOp: Failed to forward input tensor to output"));
-      }
-    } catch (mkldnn::error& e) {
-      OP_REQUIRES_OK(
-          context,
-          errors::Aborted("Operation received an exception: Status: ", e.status,
-                          ", message: ", StringPiece(e.message), ", in file ",
-                          __FILE__, ":", __LINE__));
+public:
+    explicit MklToTfOp(OpKernelConstruction* context) : OpKernel(context) {
+        OP_REQUIRES_OK(context, context->GetAttr("data_format", &data_format_str));
+        OP_REQUIRES_OK(context, context->GetAttr("T", &op_data_type));
+        has_avx512f_ = port::TestCPUFeature(port::CPUFeature::AVX512F);
     }
-  }
 
- private:
-  /// Data format of the operation
-  string data_format_str;
+    void Compute(OpKernelContext* context) override {
+        ConvertMklToTf(this, context, data_format_str, op_data_type, has_avx512f_,
+                       0);
+        VLOG(1) << "MKLToTFConversion complete successfully.";
+    }
 
-  /// Data type of the operation
-  DataType op_data_type;
+    // TODO(bhavanis): Move the below ConvertMklToTf() to mkl_util.h
+    static void ConvertMklToTf(OpKernel* op_kernel, OpKernelContext* context,
+                               string data_format_str, DataType op_data_type,
+                               bool has_avx512f, uint input_number) {
+        try {
+            // Check that input tensor is in MKL format.
+            const Tensor& input_tensor = MklGetInput(context, input_number);
+            MklDnnShape input_shape;
+            GetMklShape(context, input_number, &input_shape);
 
-  /// CPUIDInfo
-  bool has_avx512f_ = false;
+            // if input is already in Tf format, then copy input tensor to output.
+            if (!input_shape.IsMklTensor()) {
+                context->set_output(input_number, input_tensor);
+                VLOG(1) << "MKLToTFConversion: No conversion needed, "
+                        << "copying input to output";
+                return;
+            }
+
+            // Check that input data type is same as operator data type and that it
+            // is same as output data type.
+            DataType input_data_type = op_kernel->input_type(input_number);
+            DataType output_data_type = op_kernel->output_type(input_number);
+            CHECK_EQ(op_data_type, input_data_type);
+            CHECK_EQ(op_data_type, output_data_type);
+
+            auto cpu_engine = engine(ENGINE_CPU, 0);
+            MklDnnData<T> input(&cpu_engine);
+
+            // Get MKL layout of input tensor.
+            auto input_mkl_md = input_shape.GetMklLayout();
+            // Get TensorFlow layout of input tensor. Expected output of conversion
+            // has same layout as Tensorflow layout of input tensor.
+            auto output_tf_md = input_shape.GetTfLayout();
+#ifndef ENABLE_MKLDNN_V1
+            auto output_tf_pd = memory::primitive_desc(output_tf_md, cpu_engine);
+#endif  // !ENABLE_MKLDNN_V1
+            // Set input MKL layout as the user layout.
+            input.SetUsrMem(input_mkl_md, &input_tensor);
+
+            // Allocate output tensor.
+            TensorShape output_shape = input_shape.GetTfShape();
+            Tensor* output_tensor = nullptr;
+            OP_REQUIRES_OK(context, context->allocate_output(
+                               input_number, output_shape, &output_tensor));
+            DCHECK(output_tensor);
+
+            // Check if input needs to be reordered
+            if (input.IsReorderNeeded(OUTPUT_TF_MD)) {
+                // Insert reorder between MKL layout and TensorFlow layout
+                OP_REQUIRES(
+                    context,
+                    input.CheckReorderToOpMem(OUTPUT_TF_MD, output_tensor, context),
+                    errors::Internal("MklToTfOp: Failed to create input reorder"));
+            } else {
+                // If not, just forward input tensor to output tensor.
+                OP_REQUIRES(context,
+                            output_tensor->CopyFrom(input_tensor, output_shape),
+                            errors::Internal(
+                                "MklToTfOp: Failed to forward input tensor to output"));
+            }
+        } catch (mkldnn::error& e) {
+            OP_REQUIRES_OK(
+                context,
+                errors::Aborted("Operation received an exception: Status: ", e.status,
+                                ", message: ", StringPiece(e.message), ", in file ",
+                                __FILE__, ":", __LINE__));
+        }
+    }
+
+private:
+    /// Data format of the operation
+    string data_format_str;
+
+    /// Data type of the operation
+    DataType op_data_type;
+
+    /// CPUIDInfo
+    bool has_avx512f_ = false;
 };
 
 ///////////////////////////////////////////////////////////

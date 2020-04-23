@@ -33,25 +33,25 @@ namespace data {
 // builder.BuildAndStart()
 //
 class GrpcMasterImpl : public MasterService::Service {
- public:
-  explicit GrpcMasterImpl(grpc::ServerBuilder* server_builder,
-                          const std::string& protocol);
-  ~GrpcMasterImpl() override {}
+public:
+    explicit GrpcMasterImpl(grpc::ServerBuilder* server_builder,
+                            const std::string& protocol);
+    ~GrpcMasterImpl() override {}
 
 #define HANDLER(method)                               \
   grpc::Status method(grpc::ServerContext* context,   \
                       const method##Request* request, \
                       method##Response* response) override;
-  HANDLER(RegisterWorker);
-  HANDLER(GetOrRegisterDataset);
-  HANDLER(CreateJob);
-  HANDLER(GetTasks);
+    HANDLER(RegisterWorker);
+    HANDLER(GetOrRegisterDataset);
+    HANDLER(CreateJob);
+    HANDLER(GetTasks);
 #undef HANDLER
 
- private:
-  DataServiceMasterImpl impl_;
+private:
+    DataServiceMasterImpl impl_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(GrpcMasterImpl);
+    TF_DISALLOW_COPY_AND_ASSIGN(GrpcMasterImpl);
 };
 
 }  // namespace data
