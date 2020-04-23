@@ -31,11 +31,11 @@ using ::mlir::MLIRContext;
 using ::mlir::LLVM::LLVMDialect;
 
 int64 ConfigureLLVMModuleAndGetPointerSize(MLIRContext* context) {
-  LLVMDialect* dialect = context->getRegisteredDialect<LLVMDialect>();
-  llvm::Module& module = dialect->getLLVMModule();
-  module.setTargetTriple(gpu::nvptx::kTargetTriple);
-  module.setDataLayout(gpu::nvptx::kDataLayout);
-  return module.getDataLayout().getPointerSize();
+    LLVMDialect* dialect = context->getRegisteredDialect<LLVMDialect>();
+    llvm::Module& module = dialect->getLLVMModule();
+    module.setTargetTriple(gpu::nvptx::kTargetTriple);
+    module.setDataLayout(gpu::nvptx::kDataLayout);
+    return module.getDataLayout().getPointerSize();
 }
 
 }  // namespace
@@ -44,22 +44,24 @@ MlirCompiler::MlirCompiler()
     : pointer_size_(ConfigureLLVMModuleAndGetPointerSize(&context_)) {}
 
 se::Platform::Id MlirCompiler::PlatformId() const {
-  return stream_executor::cuda::kCudaPlatformId;
+    return stream_executor::cuda::kCudaPlatformId;
 }
 
 void MlirCompiler::SetModuleHook(IRHook module_hook) {
-  module_hook_ = module_hook;
+    module_hook_ = module_hook;
 }
 
 void MlirCompiler::RemoveModuleHook() {
-  module_hook_ = {nullptr, IRHook::LoweringStage::LHLO};
+    module_hook_ = {nullptr, IRHook::LoweringStage::LHLO};
 }
 
 void MlirCompiler::SetErrorHandler(ErrorHandler error_handler) {
-  error_handler_ = error_handler;
+    error_handler_ = error_handler;
 }
 
-void MlirCompiler::RemoveErrorHandler() { error_handler_ = nullptr; }
+void MlirCompiler::RemoveErrorHandler() {
+    error_handler_ = nullptr;
+}
 
 }  // namespace mlir_gpu
 }  // namespace xla
