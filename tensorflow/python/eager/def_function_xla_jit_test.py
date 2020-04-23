@@ -97,8 +97,7 @@ class DefFunctionTest(test.TestCase):
 
         # pylint: disable=protected-access
         (forward, backward) = xla_func.get_concrete_function(
-            inputs, 1
-        )._delayed_rewrite_functions.forward_backward()
+            inputs, 1)._delayed_rewrite_functions.forward_backward()
 
         # Check that the must-compile attribute gets correctly propagated to the
         # created derivatives.
@@ -135,7 +134,8 @@ class DefFunctionTest(test.TestCase):
         func = def_function.function(fn2, experimental_compile=False)
         inputs = constant_op.constant([1, 2, 2, 3, 3])
         if not test.is_built_with_rocm():
-            with self.assertRaisesRegexp(errors.InvalidArgumentError, "not compilable"):
+            with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                         "not compilable"):
                 func(inputs)
 
     def testUnsupportedOps(self):
@@ -147,7 +147,8 @@ class DefFunctionTest(test.TestCase):
 
         inputs = constant_op.constant([1, 2, 2, 3, 3])
         self.assertAllClose([1, 2, 3], func(inputs))
-        with self.assertRaisesRegexp(errors.InvalidArgumentError, "not compilable"):
+        with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                     "not compilable"):
             xla_func(inputs)
 
     def testFunctionGradient(self):
@@ -176,13 +177,15 @@ class DefFunctionTest(test.TestCase):
     def testControlFlow(self):
         @def_function.function(experimental_compile=True)
         def f(x):
-            assert control_flow_util.GraphOrParentsInXlaContext(ops.get_default_graph())
+            assert control_flow_util.GraphOrParentsInXlaContext(
+                ops.get_default_graph())
             x = ops.convert_to_tensor(x)
 
             def body(i, a):
                 return (
                     i + 1,
-                    control_flow_ops.cond(i > 2, lambda: a + (x ** 2), lambda: a + 3),
+                    control_flow_ops.cond(
+                        i > 2, lambda: a + (x**2), lambda: a + 3),
                 )
 
             return control_flow_ops.while_loop(
@@ -227,7 +230,8 @@ class DefFunctionTest(test.TestCase):
 
         inputs = constant_op.constant([1, 2, 2, 3, 3])
         c = C()
-        with self.assertRaisesRegexp(errors.InvalidArgumentError, "not compilable"):
+        with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                     "not compilable"):
             c.f1(inputs)
 
     def testMustBeConstantPropagation(self):
@@ -257,17 +261,19 @@ class DefFunctionTest(test.TestCase):
         def argmin(x):
             return math_ops.argmin(x)
 
-        self.assertAllClose(0, argmax(array_ops.ones([10], dtype=dtypes.float32)))
+        self.assertAllClose(0,
+                            argmax(array_ops.ones([10], dtype=dtypes.float32)))
         self.assertAllClose(0, argmax(array_ops.ones([10])))
-        self.assertAllClose(0, argmin(array_ops.ones([10], dtype=dtypes.float32)))
+        self.assertAllClose(0,
+                            argmin(array_ops.ones([10], dtype=dtypes.float32)))
         self.assertAllClose(0, argmin(array_ops.ones([10])))
 
     def testErrorMessagePassingTensorArray(self):
         @def_function.function(experimental_compile=True)
         def f(x):
-            ta = tensor_array_ops.TensorArray(
-                dtype=dtypes.float32, size=1, element_shape=[]
-            )
+            ta = tensor_array_ops.TensorArray(dtype=dtypes.float32,
+                                              size=1,
+                                              element_shape=[])
             ta = ta.write(0, 2 * x)
             y = ta.read(0)
             return y
@@ -276,8 +282,8 @@ class DefFunctionTest(test.TestCase):
         with backprop.GradientTape() as tape:
             tape.watch(x)
             with self.assertRaisesRegexp(
-                errors.UnimplementedError, "TensorList crossing the XLA/TF boundary"
-            ):
+                    errors.UnimplementedError,
+                    "TensorList crossing the XLA/TF boundary"):
                 y = f(x)
                 tape.gradient(y, x)
 

@@ -29,7 +29,8 @@ class _Continue(object):
         self.control_var_name = None
 
     def __repr__(self):
-        return "<_Continue(used: {}, var: {})>".format(self.used, self.control_var_name)
+        return "<_Continue(used: {}, var: {})>".format(self.used,
+                                                       self.control_var_name)
 
 
 class _Block(object):
@@ -69,8 +70,7 @@ class ContinueCanonicalizationTransformer(converter.Base):
       var_name = True
     """
         return templates.replace(
-            template, var_name=self.state[_Continue].control_var_name
-        )
+            template, var_name=self.state[_Continue].control_var_name)
 
     def _postprocess_statement(self, node):
         if self.state[_Continue].used:
@@ -84,7 +84,7 @@ class ContinueCanonicalizationTransformer(converter.Base):
           if not var_name:
             original_node
         """
-                (cond,) = templates.replace(
+                (cond, ) = templates.replace(
                     template,
                     var_name=self.state[_Continue].control_var_name,
                     original_node=node,
@@ -100,13 +100,15 @@ class ContinueCanonicalizationTransformer(converter.Base):
         continue_var = self.ctx.namer.new_symbol("continue_", scope.referenced)
         self.state[_Continue].control_var_name = continue_var
 
-        nodes = self.visit_block(nodes, after_visit=self._postprocess_statement)
+        nodes = self.visit_block(nodes,
+                                 after_visit=self._postprocess_statement)
 
         if self.state[_Continue].used:
             template = """
         var_name = False
       """
-            control_var_init = templates.replace(template, var_name=continue_var)
+            control_var_init = templates.replace(template,
+                                                 var_name=continue_var)
             nodes = control_var_init + nodes
 
         self.state[_Block].exit()
@@ -115,7 +117,8 @@ class ContinueCanonicalizationTransformer(converter.Base):
 
     def _visit_non_loop_body(self, nodes):
         self.state[_Block].enter()
-        nodes = self.visit_block(nodes, after_visit=self._postprocess_statement)
+        nodes = self.visit_block(nodes,
+                                 after_visit=self._postprocess_statement)
         self.state[_Block].exit()
         return nodes
 
