@@ -34,12 +34,12 @@ _model_to_estimator_usage_gauge = monitoring.BoolGauge(
 # LINT.IfChange
 @keras_export(v1=["keras.estimator.model_to_estimator"])
 def model_to_estimator(
-    keras_model=None,
-    keras_model_path=None,
-    custom_objects=None,
-    model_dir=None,
-    config=None,
-    checkpoint_format="saver",
+        keras_model=None,
+        keras_model_path=None,
+        custom_objects=None,
+        model_dir=None,
+        config=None,
+        checkpoint_format="saver",
 ):
     """Constructs an `Estimator` instance from given keras model.
 
@@ -116,13 +116,11 @@ def model_to_estimator(
 
     try:
         from tensorflow_estimator.python.estimator import (
-            keras as keras_lib,
-        )  # pylint: disable=g-import-not-at-top
+            keras as keras_lib, )  # pylint: disable=g-import-not-at-top
     except ImportError:
         raise NotImplementedError(
             "tf.keras.estimator.model_to_estimator function not available in your "
-            "installation."
-        )
+            "installation.")
     _model_to_estimator_usage_gauge.get_cell("v1").set(True)
     return keras_lib.model_to_estimator(  # pylint:disable=unexpected-keyword-arg
         keras_model=keras_model,
@@ -137,13 +135,13 @@ def model_to_estimator(
 
 @keras_export("keras.estimator.model_to_estimator", v1=[])
 def model_to_estimator_v2(
-    keras_model=None,
-    keras_model_path=None,
-    custom_objects=None,
-    model_dir=None,
-    config=None,
-    checkpoint_format="checkpoint",
-    metric_names_map=None,
+        keras_model=None,
+        keras_model_path=None,
+        custom_objects=None,
+        model_dir=None,
+        config=None,
+        checkpoint_format="checkpoint",
+        metric_names_map=None,
 ):
     """Constructs an `Estimator` instance from given keras model.
 
@@ -270,13 +268,11 @@ def model_to_estimator_v2(
 
     try:
         from tensorflow_estimator.python.estimator import (
-            keras as keras_lib,
-        )  # pylint: disable=g-import-not-at-top
+            keras as keras_lib, )  # pylint: disable=g-import-not-at-top
     except ImportError:
         raise NotImplementedError(
             "tf.keras.estimator.model_to_estimator function not available in your "
-            "installation."
-        )
+            "installation.")
     _model_to_estimator_usage_gauge.get_cell("v2").set(True)
     return keras_lib.model_to_estimator(  # pylint:disable=unexpected-keyword-arg
         keras_model=keras_model,
