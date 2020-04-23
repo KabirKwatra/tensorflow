@@ -14,17 +14,12 @@
 # ==============================================================================
 """Functional tests for Unstack Op."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
-
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gradient_checker
+from tensorflow.python.framework import constant_op, test_util
+from tensorflow.python.ops import array_ops, gradient_checker
 from tensorflow.python.platform import test
 
 
