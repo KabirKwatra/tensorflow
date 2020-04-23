@@ -36,7 +36,7 @@ mkdir -p "$TEMP_BUILD_DIR"
 unzip -q "$LIBRARY_ZIP" -d "$ARDUINO_LIBRARIES_DIR"
 
 # Installs all dependencies for Arduino
-InstallLibraryDependencies () {
+InstallLibraryDependencies() {
   # Required by magic_wand
   "$ARDUINO_CLI_TOOL" lib install Arduino_LSM9DS1@1.1.0
 
@@ -45,7 +45,7 @@ InstallLibraryDependencies () {
   # Patch to ensure works with nano33ble. This hack (deleting the entire
   # contents of the file) works with 1.8.0. If we bump the version, may need a
   # different patch.
-  > "$ARDUINO_LIBRARIES_DIR"/JPEGDecoder/src/User_Config.h
+  >"$ARDUINO_LIBRARIES_DIR"/JPEGDecoder/src/User_Config.h
 
   # Arducam, not available through Arduino library manager. This specific
   # commit is tested to work; if we bump the commit, we need to ensure that

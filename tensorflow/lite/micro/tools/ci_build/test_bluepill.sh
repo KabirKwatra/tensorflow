@@ -34,4 +34,3 @@ readable_run make -f tensorflow/lite/micro/tools/make/Makefile TARGET="$TARGET" 
 
 # TODO(b/143286954): Run all the tests once they pass.
 readable_run make -j8 -f tensorflow/lite/micro/tools/make/Makefile TARGET="$TARGET" kernel_add_test
-
