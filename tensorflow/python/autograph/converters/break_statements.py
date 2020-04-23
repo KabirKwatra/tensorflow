@@ -25,13 +25,12 @@ from tensorflow.python.autograph.pyct.static_analysis.annos import NodeAnno
 
 
 class _Break(object):
-
     def __init__(self):
         self.used = False
         self.control_var_name = None
 
     def __repr__(self):
-        return 'used: %s, var: %s' % (self.used, self.control_var_name)
+        return "used: %s, var: %s" % (self.used, self.control_var_name)
 
 
 class BreakTransformer(converter.Base):
@@ -56,10 +55,7 @@ class BreakTransformer(converter.Base):
         if not var_name:
           block
       """
-        node = templates.replace(
-            template,
-            var_name=var_name,
-            block=block)
+        node = templates.replace(template, var_name=var_name, block=block)
         return node
 
     def _process_body(self, nodes, break_var):
@@ -73,7 +69,7 @@ class BreakTransformer(converter.Base):
     def visit_While(self, node):
         original_node = node
         scope = anno.getanno(node, NodeAnno.BODY_SCOPE)
-        break_var = self.ctx.namer.new_symbol('break_', scope.referenced)
+        break_var = self.ctx.namer.new_symbol("break_", scope.referenced)
 
         node.test = self.visit(node.test)
         node.body, break_used = self._process_body(node.body, break_var)
@@ -87,7 +83,8 @@ class BreakTransformer(converter.Base):
         orelse
       """
             node = templates.replace(
-                template, test=node.test, body=node.body, orelse=node.orelse)
+                template, test=node.test, body=node.body, orelse=node.orelse
+            )
 
             new_while_node = node[0]
             anno.copyanno(original_node, new_while_node, anno.Basic.DIRECTIVES)
@@ -109,7 +106,8 @@ class BreakTransformer(converter.Base):
             var_name=break_var,
             test=node.test,
             body=node.body,
-            orelse=guarded_orelse)
+            orelse=guarded_orelse,
+        )
 
         new_while_node = node[1]
         anno.copyanno(original_node, new_while_node, anno.Basic.DIRECTIVES)
@@ -119,7 +117,7 @@ class BreakTransformer(converter.Base):
     def visit_For(self, node):
         original_node = node
         scope = anno.getanno(node, NodeAnno.BODY_SCOPE)
-        break_var = self.ctx.namer.new_symbol('break_', scope.referenced)
+        break_var = self.ctx.namer.new_symbol("break_", scope.referenced)
 
         node.target = self.visit(node.target)
         node.iter = self.visit(node.iter)
@@ -138,11 +136,11 @@ class BreakTransformer(converter.Base):
                 iter_=node.iter,
                 target=node.target,
                 body=node.body,
-                orelse=node.orelse)
+                orelse=node.orelse,
+            )
 
             new_for_node = node[0]
-            anno.copyanno(original_node, new_for_node,
-                          anno.Basic.EXTRA_LOOP_TEST)
+            anno.copyanno(original_node, new_for_node, anno.Basic.EXTRA_LOOP_TEST)
             anno.copyanno(original_node, new_for_node, anno.Basic.DIRECTIVES)
 
             return node
@@ -150,8 +148,7 @@ class BreakTransformer(converter.Base):
         # Python's else clause only triggers if the loop exited cleanly (e.g.
         # break did not trigger).
         guarded_orelse = self._guard_if_present(node.orelse, break_var)
-        extra_test = templates.replace_as_expression(
-            'not var_name', var_name=break_var)
+        extra_test = templates.replace_as_expression("not var_name", var_name=break_var)
 
         # The extra test is hidden in the AST, which will confuse the static
         # analysis. To mitigate that, we insert a no-op statement that ensures
@@ -170,7 +167,8 @@ class BreakTransformer(converter.Base):
             iter_=node.iter,
             target=node.target,
             body=node.body,
-            orelse=guarded_orelse)
+            orelse=guarded_orelse,
+        )
 
         new_for_node = node[1]
         anno.setanno(new_for_node, anno.Basic.EXTRA_LOOP_TEST, extra_test)
