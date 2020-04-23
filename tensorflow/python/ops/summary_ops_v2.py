@@ -62,7 +62,6 @@ _USER_NAME_PATTERNS = re.compile(r"^[a-z]([-a-z0-9]{0,29}[a-z0-9])?$", re.I)
 
 
 class _SummaryState(threading.local):
-
     def __init__(self):
         super(_SummaryState, self).__init__()
         self.is_recording = None
@@ -98,9 +97,10 @@ def _should_record_summaries_internal(default_state):
         if static_cond is not None and not static_cond:
             return constant_op.constant(False)
 
-    def resolve(x): return x() if callable(x) else x
-    cond_distributed = resolve(
-        _summary_state.is_recording_distribution_strategy)
+    def resolve(x):
+        return x() if callable(x) else x
+
+    cond_distributed = resolve(_summary_state.is_recording_distribution_strategy)
     cond = resolve(_summary_state.is_recording)
     if cond is None:
         cond = default_state
@@ -152,7 +152,10 @@ def record_summaries_every_n_global_steps(n, global_step=None):
     if global_step is None:
         global_step = training_util.get_or_create_global_step()
     with ops.device("cpu:0"):
-        def should(): return math_ops.equal(global_step % n, 0)
+
+        def should():
+            return math_ops.equal(global_step % n, 0)
+
         if not context.executing_eagerly():
             should = should()
     return record_if(should)
@@ -230,14 +233,10 @@ class SummaryWriter(object):
 class ResourceSummaryWriter(SummaryWriter):
     """Implementation of SummaryWriter using a SummaryWriterInterface resource."""
 
-    def __init__(self,
-                 shared_name,
-                 init_op_fn,
-                 name=None,
-                 v2=False,
-                 metadata=None):
+    def __init__(self, shared_name, init_op_fn, name=None, v2=False, metadata=None):
         self._resource = gen_summary_ops.summary_writer(
-            shared_name=shared_name, name=name)
+            shared_name=shared_name, name=name
+        )
         # TODO(nickfelt): cache other constructed ops in graph mode
         self._init_op_fn = init_op_fn
         self._init_op = init_op_fn(self._resource)
@@ -246,10 +245,10 @@ class ResourceSummaryWriter(SummaryWriter):
         self._closed = False
         if context.executing_eagerly():
             self._resource_deleter = resource_variable_ops.EagerResourceDeleter(
-                handle=self._resource, handle_device="cpu:0")
+                handle=self._resource, handle_device="cpu:0"
+            )
         else:
-            ops.add_to_collection(
-                _SUMMARY_WRITER_INIT_COLLECTION_NAME, self._init_op)
+            ops.add_to_collection(_SUMMARY_WRITER_INIT_COLLECTION_NAME, self._init_op)
 
     def set_as_default(self):
         """Enables this summary writer for the current thread."""
@@ -321,9 +320,7 @@ class NoopSummaryWriter(SummaryWriter):
 
 
 @tf_export(v1=["summary.initialize"])
-def initialize(
-        graph=None,  # pylint: disable=redefined-outer-name
-        session=None):
+def initialize(graph=None, session=None):  # pylint: disable=redefined-outer-name
     """Initializes summary writing for graph execution mode.
 
     This operation is a no-op when executing eagerly.
@@ -354,8 +351,7 @@ def initialize(
     if session is None:
         session = ops.get_default_session()
         if session is None:
-            raise ValueError(
-                "session must be passed if no default session exists")
+            raise ValueError("session must be passed if no default session exists")
     session.run(summary_writer_initializer_op())
     if graph is not None:
         data = _serialize_graph(graph)
@@ -364,11 +360,9 @@ def initialize(
 
 
 @tf_export("summary.create_file_writer", v1=[])
-def create_file_writer_v2(logdir,
-                          max_queue=None,
-                          flush_millis=None,
-                          filename_suffix=None,
-                          name=None):
+def create_file_writer_v2(
+    logdir, max_queue=None, flush_millis=None, filename_suffix=None, name=None
+):
     """Creates a summary file writer for the given log directory.
 
     Args:
@@ -394,7 +388,8 @@ def create_file_writer_v2(logdir,
                     logdir=logdir,
                     max_queue=max_queue,
                     flush_millis=flush_millis,
-                    filename_suffix=filename_suffix)
+                    filename_suffix=filename_suffix,
+                )
             logdir = ops.convert_to_tensor(logdir, dtype=dtypes.string)
             if max_queue is None:
                 max_queue = constant_op.constant(10)
@@ -405,15 +400,15 @@ def create_file_writer_v2(logdir,
             # Prepend the PID and a process-local UID to the filename suffix to avoid
             # filename collisions within the machine (the filename already contains
             # the hostname to avoid cross-machine collisions).
-            unique_prefix = constant_op.constant(
-                ".%s.%s" % (os.getpid(), ops.uid()))
+            unique_prefix = constant_op.constant(".%s.%s" % (os.getpid(), ops.uid()))
             filename_suffix = unique_prefix + filename_suffix
             # Use a unique shared_name to prevent resource sharing.
             if context.executing_eagerly():
                 shared_name = context.shared_name()
             else:
                 shared_name = ops.name_from_scope_name(
-                    scope)  # pylint: disable=protected-access
+                    scope
+                )  # pylint: disable=protected-access
             return ResourceSummaryWriter(
                 shared_name=shared_name,
                 init_op_fn=functools.partial(
@@ -421,17 +416,17 @@ def create_file_writer_v2(logdir,
                     logdir=logdir,
                     max_queue=max_queue,
                     flush_millis=flush_millis,
-                    filename_suffix=filename_suffix),
+                    filename_suffix=filename_suffix,
+                ),
                 name=name,
                 v2=True,
-                metadata={"logdir": logdir})
+                metadata={"logdir": logdir},
+            )
 
 
-def create_file_writer(logdir,
-                       max_queue=None,
-                       flush_millis=None,
-                       filename_suffix=None,
-                       name=None):
+def create_file_writer(
+    logdir, max_queue=None, flush_millis=None, filename_suffix=None, name=None
+):
     """Creates a summary file writer in the current context under the given name.
 
     Args:
@@ -471,14 +466,14 @@ def create_file_writer(logdir,
                 logdir=logdir,
                 max_queue=max_queue,
                 flush_millis=flush_millis,
-                filename_suffix=filename_suffix))
+                filename_suffix=filename_suffix,
+            ),
+        )
 
 
-def create_db_writer(db_uri,
-                     experiment_name=None,
-                     run_name=None,
-                     user_name=None,
-                     name=None):
+def create_db_writer(
+    db_uri, experiment_name=None, run_name=None, user_name=None, name=None
+):
     """Creates a summary database writer in the current context.
 
     This can be used to write tensors from the execution graph directly
@@ -507,17 +502,16 @@ def create_db_writer(db_uri,
     """
     with ops.device("cpu:0"):
         if experiment_name is None:
-            experiment_name = time.strftime(
-                "%Y-%m-%d", time.localtime(time.time()))
+            experiment_name = time.strftime("%Y-%m-%d", time.localtime(time.time()))
         if run_name is None:
             run_name = time.strftime("%H:%M:%S", time.localtime(time.time()))
         if user_name is None:
             user_name = getpass.getuser()
         experiment_name = _cleanse_string(
-            "experiment_name", _EXPERIMENT_NAME_PATTERNS, experiment_name)
+            "experiment_name", _EXPERIMENT_NAME_PATTERNS, experiment_name
+        )
         run_name = _cleanse_string("run_name", _RUN_NAME_PATTERNS, run_name)
-        user_name = _cleanse_string(
-            "user_name", _USER_NAME_PATTERNS, user_name)
+        user_name = _cleanse_string("user_name", _USER_NAME_PATTERNS, user_name)
         return ResourceSummaryWriter(
             shared_name=name,
             init_op_fn=functools.partial(
@@ -525,7 +519,9 @@ def create_db_writer(db_uri,
                 db_uri=db_uri,
                 experiment_name=experiment_name,
                 run_name=run_name,
-                user_name=user_name))
+                user_name=user_name,
+            ),
+        )
 
 
 @tf_export("summary.create_noop_writer", v1=[])
@@ -539,8 +535,7 @@ def create_noop_writer():
 
 def _cleanse_string(name, pattern, value):
     if isinstance(value, six.string_types) and pattern.search(value) is None:
-        raise ValueError("%s (%s) must match %s" %
-                         (name, value, pattern.pattern))
+        raise ValueError("%s (%s) must match %s" % (name, value, pattern.pattern))
     return ops.convert_to_tensor(value, dtypes.string)
 
 
@@ -562,7 +557,9 @@ def all_v2_summary_ops():
     """
     if context.executing_eagerly():
         return None
-    return ops.get_collection(ops.GraphKeys._SUMMARY_COLLECTION)  # pylint: disable=protected-access
+    return ops.get_collection(
+        ops.GraphKeys._SUMMARY_COLLECTION
+    )  # pylint: disable=protected-access
 
 
 def summary_writer_initializer_op():
@@ -577,7 +574,8 @@ def summary_writer_initializer_op():
     if context.executing_eagerly():
         raise RuntimeError(
             "tf.contrib.summary.summary_writer_initializer_op is only "
-            "supported in graph mode.")
+            "supported in graph mode."
+        )
     return ops.get_collection(_SUMMARY_WRITER_INIT_COLLECTION_NAME)
 
 
@@ -660,8 +658,10 @@ def write(tag, tensor, step=None, metadata=None, name=None):
         if step is None:
             step = get_step()
             if step is None:
-                raise ValueError("No step set via 'step' argument or "
-                                 "tf.summary.experimental.set_step()")
+                raise ValueError(
+                    "No step set via 'step' argument or "
+                    "tf.summary.experimental.set_step()"
+                )
         if metadata is None:
             serialized_metadata = b""
         elif hasattr(metadata, "SerializeToString"):
@@ -673,23 +673,27 @@ def write(tag, tensor, step=None, metadata=None, name=None):
             """Record the actual summary and return True."""
             # Note the identity to move the tensor to the CPU.
             with ops.device("cpu:0"):
-                summary_tensor = tensor() if callable(tensor) else array_ops.identity(
-                    tensor)
+                summary_tensor = (
+                    tensor() if callable(tensor) else array_ops.identity(tensor)
+                )
                 write_summary_op = gen_summary_ops.write_summary(
                     _summary_state.writer._resource,  # pylint: disable=protected-access
                     step,
                     summary_tensor,
                     tag,
                     serialized_metadata,
-                    name=scope)
+                    name=scope,
+                )
                 with ops.control_dependencies([write_summary_op]):
                     return constant_op.constant(True)
 
         op = smart_cond.smart_cond(
-            _should_record_summaries_v2(), record, _nothing, name="summary_cond")
+            _should_record_summaries_v2(), record, _nothing, name="summary_cond"
+        )
         if not context.executing_eagerly():
             ops.add_to_collection(
-                ops.GraphKeys._SUMMARY_COLLECTION, op)  # pylint: disable=protected-access
+                ops.GraphKeys._SUMMARY_COLLECTION, op
+            )  # pylint: disable=protected-access
         return op
 
 
@@ -722,8 +726,10 @@ def write_raw_pb(tensor, step=None, name=None):
         if step is None:
             step = get_step()
             if step is None:
-                raise ValueError("No step set via 'step' argument or "
-                                 "tf.summary.experimental.set_step()")
+                raise ValueError(
+                    "No step set via 'step' argument or "
+                    "tf.summary.experimental.set_step()"
+                )
 
         def record():
             """Record the actual summary and return True."""
@@ -733,16 +739,19 @@ def write_raw_pb(tensor, step=None, name=None):
                     _summary_state.writer._resource,  # pylint: disable=protected-access
                     step,
                     array_ops.identity(tensor),
-                    name=scope)
+                    name=scope,
+                )
                 with ops.control_dependencies([raw_summary_op]):
                     return constant_op.constant(True)
 
         with ops.device("cpu:0"):
             op = smart_cond.smart_cond(
-                _should_record_summaries_v2(), record, _nothing, name="summary_cond")
+                _should_record_summaries_v2(), record, _nothing, name="summary_cond"
+            )
             if not context.executing_eagerly():
                 ops.add_to_collection(
-                    ops.GraphKeys._SUMMARY_COLLECTION, op)  # pylint: disable=protected-access
+                    ops.GraphKeys._SUMMARY_COLLECTION, op
+                )  # pylint: disable=protected-access
             return op
 
 
@@ -765,18 +774,19 @@ def summary_writer_function(name, tensor, function, family=None):
 
     def record():
         with ops.name_scope(name_scope), summary_op_util.summary_scope(
-                name, family, values=[tensor]) as (tag, scope):
+            name, family, values=[tensor]
+        ) as (tag, scope):
             with ops.control_dependencies([function(tag, scope)]):
                 return constant_op.constant(True)
 
     if _summary_state.writer is None:
         return control_flow_ops.no_op()
     with ops.device("cpu:0"):
-        op = smart_cond.smart_cond(
-            should_record_summaries(), record, _nothing, name="")
+        op = smart_cond.smart_cond(should_record_summaries(), record, _nothing, name="")
         if not context.executing_eagerly():
             ops.add_to_collection(
-                ops.GraphKeys._SUMMARY_COLLECTION, op)  # pylint: disable=protected-access
+                ops.GraphKeys._SUMMARY_COLLECTION, op
+            )  # pylint: disable=protected-access
     return op
 
 
@@ -787,8 +797,7 @@ def generic(name, tensor, metadata=None, family=None, step=None):
         if metadata is None:
             serialized_metadata = constant_op.constant("")
         elif hasattr(metadata, "SerializeToString"):
-            serialized_metadata = constant_op.constant(
-                metadata.SerializeToString())
+            serialized_metadata = constant_op.constant(metadata.SerializeToString())
         else:
             serialized_metadata = metadata
         # Note the identity to move the tensor to the CPU.
@@ -798,7 +807,9 @@ def generic(name, tensor, metadata=None, family=None, step=None):
             array_ops.identity(tensor),
             tag,
             serialized_metadata,
-            name=scope)
+            name=scope,
+        )
+
     return summary_writer_function(name, tensor, function, family=family)
 
 
@@ -829,7 +840,8 @@ def scalar(name, tensor, family=None, step=None):
             _choose_step(step),
             tag,
             array_ops.identity(tensor),
-            name=scope)
+            name=scope,
+        )
 
     return summary_writer_function(name, tensor, function, family=family)
 
@@ -844,7 +856,8 @@ def histogram(name, tensor, family=None, step=None):
             _choose_step(step),
             tag,
             array_ops.identity(tensor),
-            name=scope)
+            name=scope,
+        )
 
     return summary_writer_function(name, tensor, function, family=family)
 
@@ -853,8 +866,11 @@ def image(name, tensor, bad_color=None, max_images=3, family=None, step=None):
     """Writes an image summary if possible."""
 
     def function(tag, scope):
-        bad_color_ = (constant_op.constant([255, 0, 0, 255], dtype=dtypes.uint8)
-                      if bad_color is None else bad_color)
+        bad_color_ = (
+            constant_op.constant([255, 0, 0, 255], dtype=dtypes.uint8)
+            if bad_color is None
+            else bad_color
+        )
         # Note the identity to move the tensor to the CPU.
         return gen_summary_ops.write_image_summary(
             _summary_state.writer._resource,  # pylint: disable=protected-access
@@ -863,7 +879,8 @@ def image(name, tensor, bad_color=None, max_images=3, family=None, step=None):
             array_ops.identity(tensor),
             bad_color_,
             max_images,
-            name=scope)
+            name=scope,
+        )
 
     return summary_writer_function(name, tensor, function, family=family)
 
@@ -880,7 +897,8 @@ def audio(name, tensor, sample_rate, max_outputs, family=None, step=None):
             array_ops.identity(tensor),
             sample_rate=sample_rate,
             max_outputs=max_outputs,
-            name=scope)
+            name=scope,
+        )
 
     return summary_writer_function(name, tensor, function, family=family)
 
@@ -916,19 +934,21 @@ def graph(param, step=None, name=None):
       TypeError: If `param` isn't already a `tf.Tensor` in graph mode.
     """
     if not context.executing_eagerly() and not isinstance(param, ops.Tensor):
-        raise TypeError("graph() needs a tf.Tensor (e.g. tf.placeholder) in graph "
-                        "mode, but was: %s" % type(param))
+        raise TypeError(
+            "graph() needs a tf.Tensor (e.g. tf.placeholder) in graph "
+            "mode, but was: %s" % type(param)
+        )
     writer = _summary_state.writer
     if writer is None:
         return control_flow_ops.no_op()
     with ops.device("cpu:0"):
         if isinstance(param, (ops.Graph, graph_pb2.GraphDef)):
-            tensor = ops.convert_to_tensor(
-                _serialize_graph(param), dtypes.string)
+            tensor = ops.convert_to_tensor(_serialize_graph(param), dtypes.string)
         else:
             tensor = array_ops.identity(param)
         return gen_summary_ops.write_graph_summary(
-            writer._resource, _choose_step(step), tensor, name=name)  # pylint: disable=protected-access
+            writer._resource, _choose_step(step), tensor, name=name
+        )  # pylint: disable=protected-access
 
 
 _graph = graph  # for functions with a graph parameter
@@ -950,7 +970,8 @@ def import_event(tensor, name=None):
       The created `tf.Operation`.
     """
     return gen_summary_ops.import_event(
-        _summary_state.writer._resource, tensor, name=name)  # pylint: disable=protected-access
+        _summary_state.writer._resource, tensor, name=name
+    )  # pylint: disable=protected-access
 
 
 @tf_export("summary.flush", v1=[])
@@ -989,12 +1010,13 @@ def eval_dir(model_dir, name=None):
     return os.path.join(model_dir, "eval" if not name else "eval_" + name)
 
 
-@deprecation.deprecated(date=None,
-                        instructions="Renamed to create_file_writer().")
+@deprecation.deprecated(date=None, instructions="Renamed to create_file_writer().")
 def create_summary_file_writer(*args, **kwargs):
     """Please use `tf.contrib.summary.create_file_writer`."""
-    logging.warning("Deprecation Warning: create_summary_file_writer was renamed "
-                    "to create_file_writer")
+    logging.warning(
+        "Deprecation Warning: create_summary_file_writer was renamed "
+        "to create_file_writer"
+    )
     return create_file_writer(*args, **kwargs)
 
 
@@ -1027,14 +1049,16 @@ def _check_create_file_writer_args(inside_function, **kwargs):
         if not isinstance(arg, ops.EagerTensor) and tensor_util.is_tensor(arg):
             if inside_function:
                 raise ValueError(
-                    "Invalid graph Tensor argument \"%s=%s\" to create_file_writer() "
+                    'Invalid graph Tensor argument "%s=%s" to create_file_writer() '
                     "inside an @tf.function. The create call will be lifted into the "
                     "outer eager execution context, so it cannot consume graph tensors "
-                    "defined inside the function body." % (arg_name, arg))
+                    "defined inside the function body." % (arg_name, arg)
+                )
             else:
                 raise ValueError(
-                    "Invalid graph Tensor argument \"%s=%s\" to eagerly executed "
-                    "create_file_writer()." % (arg_name, arg))
+                    'Invalid graph Tensor argument "%s=%s" to eagerly executed '
+                    "create_file_writer()." % (arg_name, arg)
+                )
 
 
 def run_metadata(name, data, step=None):
@@ -1066,17 +1090,10 @@ def run_metadata(name, data, step=None):
     # version number = 1
     summary_metadata.plugin_data.content = b"1"
 
-    with summary_scope(name,
-                       "graph_run_metadata_summary",
-                       [data, step]) as (tag, _):
+    with summary_scope(name, "graph_run_metadata_summary", [data, step]) as (tag, _):
         with ops.device("cpu:0"):
-            tensor = constant_op.constant(data.SerializeToString(),
-                                          dtype=dtypes.string)
-        return write(
-            tag=tag,
-            tensor=tensor,
-            step=step,
-            metadata=summary_metadata)
+            tensor = constant_op.constant(data.SerializeToString(), dtype=dtypes.string)
+        return write(tag=tag, tensor=tensor, step=step, metadata=summary_metadata)
 
 
 def run_metadata_graphs(name, data, step=None):
@@ -1106,20 +1123,16 @@ def run_metadata_graphs(name, data, step=None):
     summary_metadata.plugin_data.content = b"1"
 
     data = config_pb2.RunMetadata(
-        function_graphs=data.function_graphs,
-        partition_graphs=data.partition_graphs)
+        function_graphs=data.function_graphs, partition_graphs=data.partition_graphs
+    )
 
-    with summary_scope(name,
-                       "graph_run_metadata_graph_summary",
-                       [data, step]) as (tag, _):
+    with summary_scope(name, "graph_run_metadata_graph_summary", [data, step]) as (
+        tag,
+        _,
+    ):
         with ops.device("cpu:0"):
-            tensor = constant_op.constant(data.SerializeToString(),
-                                          dtype=dtypes.string)
-        return write(
-            tag=tag,
-            tensor=tensor,
-            step=step,
-            metadata=summary_metadata)
+            tensor = constant_op.constant(data.SerializeToString(), dtype=dtypes.string)
+        return write(tag=tag, tensor=tensor, step=step, metadata=summary_metadata)
 
 
 def keras_model(name, data, step=None):
@@ -1162,11 +1175,7 @@ def keras_model(name, data, step=None):
     with summary_scope(name, "graph_keras_model", [data, step]) as (tag, _):
         with ops.device("cpu:0"):
             tensor = constant_op.constant(json_string, dtype=dtypes.string)
-        return write(
-            tag=tag,
-            tensor=tensor,
-            step=step,
-            metadata=summary_metadata)
+        return write(tag=tag, tensor=tensor, step=step, metadata=summary_metadata)
 
 
 _TraceContext = collections.namedtuple("TraceContext", ("graph", "profiler"))
@@ -1253,15 +1262,18 @@ def trace_export(name, step=None, profiler_outdir=None):
         if _current_trace_context is None:
             raise ValueError("Must enable trace before export.")
         graph, profiler = _current_trace_context  # pylint: disable=redefined-outer-name
-        if profiler_outdir is None \
-                and isinstance(_summary_state.writer, ResourceSummaryWriter):
+        if profiler_outdir is None and isinstance(
+            _summary_state.writer, ResourceSummaryWriter
+        ):
             logdir = _summary_state.writer._metadata.get(
-                "logdir")  # pylint: disable=protected-access
+                "logdir"
+            )  # pylint: disable=protected-access
             if logdir is not None:
                 profiler_outdir = logdir
         if profiler and profiler_outdir is None:
-            raise ValueError("Must set profiler_outdir or "
-                             "enable summary writer with logdir.")
+            raise ValueError(
+                "Must set profiler_outdir or " "enable summary writer with logdir."
+            )
 
     run_meta = context.context().export_run_metadata()
 
