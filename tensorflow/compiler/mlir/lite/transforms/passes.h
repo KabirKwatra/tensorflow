@@ -34,14 +34,14 @@ class QuantizationSpecs;
 // TFL builtin op towards the TFL runtime capability and the incompatible TF ops
 // will be left in the graph without getting legalized.
 std::unique_ptr<OperationPass<FuncOp>> CreateLegalizeTFPass(
-    bool run_tfl_runtime_verification);
+                                        bool run_tfl_runtime_verification);
 
 // Creates an instance of the TensorFlow Lite dialect Optimize pass.
 std::unique_ptr<OperationPass<FuncOp>> CreateOptimizePass();
 
 // Creates an instance of the TensorFlow Lite dialect PrepareTF pass.
 std::unique_ptr<OperationPass<FuncOp>> CreatePrepareTFPass(
-    bool unfold_batch_matmul);
+                                        bool unfold_batch_matmul);
 
 // Creates an instance of the TensorFlow Lite dialect LowerStaticTensorList
 // pass.
@@ -52,16 +52,16 @@ std::unique_ptr<OperationPass<FuncOp>> CreateQuantizePass();
 
 // Creates an instance of the TensorFlow Lite dialect PrepareQuantize pass.
 std::unique_ptr<OperationPass<FuncOp>> CreatePrepareQuantizePass(
-    const QuantizationSpecs& quant_specs);
+                                        const QuantizationSpecs& quant_specs);
 
 // Creates an instance of the TensorFlow Lite dialect PostQuantize pass.
 std::unique_ptr<OperationPass<FuncOp>> CreatePostQuantizePass(
-    bool emit_quant_adaptor_ops);
+                                        bool emit_quant_adaptor_ops);
 
 // Creates an instance of the TensorFlow Lite dialect TrimFunctions
 // pass.
 std::unique_ptr<OperationPass<ModuleOp>> CreateTrimFunctionsPass(
-    llvm::ArrayRef<std::string> trim_funcs_whitelist);
+        llvm::ArrayRef<std::string> trim_funcs_whitelist);
 
 // Creates an instance of the TensorFlow Lite dialect PrepareCompositeFunctions
 // pass.
@@ -76,7 +76,7 @@ std::unique_ptr<OperationPass<ModuleOp>> CreateOptimizeFunctionalOpsPass();
 // Creates an instance of the TensorFlow Lite dialect pass to add default
 // quantization parameters.
 std::unique_ptr<OperationPass<FuncOp>> CreateDefaultQuantParamsPass(
-    double default_min, double default_max);
+                                        double default_min, double default_max);
 
 // Creates an instance of the TensorFlow Lite dialect pass to convert dense
 // tensor to sparse format.
