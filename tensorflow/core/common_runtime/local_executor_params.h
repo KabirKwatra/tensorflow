@@ -33,20 +33,20 @@ class Status;
 // of an executor. We expect that different contexts would provide different
 // implementations (e.g. local versus distributed).
 struct LocalExecutorParams {
-    Device* device;
+  Device* device;
 
-    const SessionMetadata* session_metadata = nullptr;
+  const SessionMetadata* session_metadata = nullptr;
 
-    // The library runtime support.
-    FunctionLibraryRuntime* function_library = nullptr;
+  // The library runtime support.
+  FunctionLibraryRuntime* function_library = nullptr;
 
-    // create_kernel returns an instance of op kernel based on NodeDef.
-    // delete_kernel is called for every kernel used by the executor
-    // when the executor is deleted.
-    std::function<Status(const std::shared_ptr<const NodeProperties>&,
-                         OpKernel**)>
-    create_kernel;
-    std::function<void(OpKernel*)> delete_kernel;
+  // create_kernel returns an instance of op kernel based on NodeDef.
+  // delete_kernel is called for every kernel used by the executor
+  // when the executor is deleted.
+  std::function<Status(const std::shared_ptr<const NodeProperties>&,
+                       OpKernel**)>
+      create_kernel;
+  std::function<void(OpKernel*)> delete_kernel;
 };
 
 }  // end namespace tensorflow

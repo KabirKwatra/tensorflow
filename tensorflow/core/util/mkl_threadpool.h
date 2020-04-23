@@ -48,90 +48,88 @@ namespace tensorflow {
 
 template <typename T, typename U>
 inline void balance211(T n, U team, U tid, T* n_start, T* n_end) {
-    if (team <= 1 || n == 0) {
-        *n_start = 0;
-        *n_end = n;
-        return;
-    }
-    T min_per_team = n / team;
-    T remainder = n - min_per_team * team;  // i.e., n % teams.
-    *n_start = tid * min_per_team + std::min(tid, remainder);
-    *n_end = *n_start + min_per_team + (tid < remainder);
+  if (team <= 1 || n == 0) {
+    *n_start = 0;
+    *n_end = n;
+    return;
+  }
+  T min_per_team = n / team;
+  T remainder = n - min_per_team * team;  // i.e., n % teams.
+  *n_start = tid * min_per_team + std::min(tid, remainder);
+  *n_end = *n_start + min_per_team + (tid < remainder);
 }
 
 struct MklDnnThreadPool : public dnnl::threadpool_iface {
-    MklDnnThreadPool() = default;
+  MklDnnThreadPool() = default;
 
-    MklDnnThreadPool(OpKernelContext* ctx)
-        : eigen_interface_(ctx->device()
-                           ->tensorflow_cpu_worker_threads()
-                           ->workers->AsEigenThreadPool()) {}
-    virtual int get_num_threads() override {
-        return eigen_interface_->NumThreads();
-    }
-    virtual bool get_in_parallel() override {
-        return (eigen_interface_->CurrentThreadId() != -1) ? true : false;
-    }
-    virtual uint64_t get_flags() override {
-        return ASYNCHRONOUS;
-    }
-    virtual void parallel_for(int n,
-                              const std::function<void(int, int)>& fn) override {
-        // Should never happen (handled by DNNL)
-        if (n == 0) return;
+  MklDnnThreadPool(OpKernelContext* ctx)
+      : eigen_interface_(ctx->device()
+                             ->tensorflow_cpu_worker_threads()
+                             ->workers->AsEigenThreadPool()) {}
+  virtual int get_num_threads() override {
+    return eigen_interface_->NumThreads();
+  }
+  virtual bool get_in_parallel() override {
+    return (eigen_interface_->CurrentThreadId() != -1) ? true : false;
+  }
+  virtual uint64_t get_flags() override { return ASYNCHRONOUS; }
+  virtual void parallel_for(int n,
+                            const std::function<void(int, int)>& fn) override {
+    // Should never happen (handled by DNNL)
+    if (n == 0) return;
 
-        // Should never happen (handled by DNNL)
-        if (n == 1) {
-            fn(0, 1);
-            return;
-        }
-
-        int nthr = get_num_threads();
-        int njobs = std::min(n, nthr);
-        for (int i = 0; i < njobs; i++) {
-            eigen_interface_->ScheduleWithHint(
-            [i, n, njobs, fn]() {
-                int start, end;
-                balance211(n, njobs, i, &start, &end);
-                for (int j = start; j < end; j++) fn(j, n);
-            },
-            i, i + 1);
-        }
+    // Should never happen (handled by DNNL)
+    if (n == 1) {
+      fn(0, 1);
+      return;
     }
-    ~MklDnnThreadPool() {}
 
-private:
-    Eigen::ThreadPoolInterface* eigen_interface_ = nullptr;
+    int nthr = get_num_threads();
+    int njobs = std::min(n, nthr);
+    for (int i = 0; i < njobs; i++) {
+      eigen_interface_->ScheduleWithHint(
+          [i, n, njobs, fn]() {
+            int start, end;
+            balance211(n, njobs, i, &start, &end);
+            for (int j = start; j < end; j++) fn(j, n);
+          },
+          i, i + 1);
+    }
+  }
+  ~MklDnnThreadPool() {}
+
+ private:
+  Eigen::ThreadPoolInterface* eigen_interface_ = nullptr;
 };
 
 class MklDnnThreadPoolWrapper {
-public:
-    static MklDnnThreadPoolWrapper& GetInstance() {
-        static MklDnnThreadPoolWrapper instance_;
-        return instance_;
+ public:
+  static MklDnnThreadPoolWrapper& GetInstance() {
+    static MklDnnThreadPoolWrapper instance_;
+    return instance_;
+  }
+  MklDnnThreadPool* CreateThreadPoolPtr(OpKernelContext* ctx) {
+    if (threadpool_map_.empty() ||
+        threadpool_map_.find(ctx->device()) == threadpool_map_.end()) {
+      auto tp_iface = new MklDnnThreadPool(ctx);
+      threadpool_map_.emplace(std::make_pair(ctx->device(), tp_iface));
+      return tp_iface;
+    } else {
+      auto entry = threadpool_map_.find(ctx->device());
+      return entry->second;
     }
-    MklDnnThreadPool* CreateThreadPoolPtr(OpKernelContext* ctx) {
-        if (threadpool_map_.empty() ||
-                threadpool_map_.find(ctx->device()) == threadpool_map_.end()) {
-            auto tp_iface = new MklDnnThreadPool(ctx);
-            threadpool_map_.emplace(std::make_pair(ctx->device(), tp_iface));
-            return tp_iface;
-        } else {
-            auto entry = threadpool_map_.find(ctx->device());
-            return entry->second;
-        }
-    }
+  }
 
-private:
-    std::unordered_map<DeviceBase*, MklDnnThreadPool*> threadpool_map_;
-    MklDnnThreadPoolWrapper() {}
-    MklDnnThreadPoolWrapper(const MklDnnThreadPoolWrapper&) = delete;
-    MklDnnThreadPoolWrapper& operator=(const MklDnnThreadPoolWrapper&) = delete;
-    ~MklDnnThreadPoolWrapper() {
-        for (auto& tp : threadpool_map_) {
-            delete tp.second;
-        }
+ private:
+  std::unordered_map<DeviceBase*, MklDnnThreadPool*> threadpool_map_;
+  MklDnnThreadPoolWrapper() {}
+  MklDnnThreadPoolWrapper(const MklDnnThreadPoolWrapper&) = delete;
+  MklDnnThreadPoolWrapper& operator=(const MklDnnThreadPoolWrapper&) = delete;
+  ~MklDnnThreadPoolWrapper() {
+    for (auto& tp : threadpool_map_) {
+      delete tp.second;
     }
+  }
 };
 
 }  // namespace tensorflow

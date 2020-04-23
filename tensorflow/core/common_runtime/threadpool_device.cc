@@ -47,27 +47,27 @@ ThreadPoolDevice::ThreadPoolDevice(const SessionOptions& options,
                                    const DeviceLocality& locality,
                                    Allocator* allocator)
     : LocalDevice(options, Device::BuildDeviceAttributes(
-                      name, DEVICE_CPU, memory_limit, locality)),
+                               name, DEVICE_CPU, memory_limit, locality)),
       allocator_(allocator),
       scoped_allocator_mgr_(new ScopedAllocatorMgr(name)) {
 #if !defined(ENABLE_MKLDNN_THREADPOOL) && defined(INTEL_MKL)
-    // Early return when MKL is disabled
-    if (DisableMKL()) return;
+  // Early return when MKL is disabled
+  if (DisableMKL()) return;
 #ifdef _OPENMP
-    const char* user_omp_threads = getenv("OMP_NUM_THREADS");
-    if (user_omp_threads == nullptr) {
-        // OMP_NUM_THREADS controls MKL's intra-op parallelization
-        // Default to available physical cores
-        const int mkl_intra_op = port::NumSchedulableCPUs();
-        const int ht = port::NumHyperthreadsPerCore();
-        omp_set_num_threads((mkl_intra_op + ht - 1) / ht);
-    } else {
-        uint64 user_val = 0;
-        if (strings::safe_strtou64(user_omp_threads, &user_val)) {
-            // Superflous but triggers OpenMP loading
-            omp_set_num_threads(user_val);
-        }
+  const char* user_omp_threads = getenv("OMP_NUM_THREADS");
+  if (user_omp_threads == nullptr) {
+    // OMP_NUM_THREADS controls MKL's intra-op parallelization
+    // Default to available physical cores
+    const int mkl_intra_op = port::NumSchedulableCPUs();
+    const int ht = port::NumHyperthreadsPerCore();
+    omp_set_num_threads((mkl_intra_op + ht - 1) / ht);
+  } else {
+    uint64 user_val = 0;
+    if (strings::safe_strtou64(user_omp_threads, &user_val)) {
+      // Superflous but triggers OpenMP loading
+      omp_set_num_threads(user_val);
     }
+  }
 #endif  // _OPENMP
 #endif  // !defined(ENABLE_MKLDNN_THREADPOOL) && defined(INTEL_MKL)
 }
@@ -75,63 +75,59 @@ ThreadPoolDevice::ThreadPoolDevice(const SessionOptions& options,
 ThreadPoolDevice::~ThreadPoolDevice() {}
 
 Allocator* ThreadPoolDevice::GetAllocator(AllocatorAttributes attr) {
-    return allocator_;
+  return allocator_;
 }
 
 Allocator* ThreadPoolDevice::GetScopedAllocator(AllocatorAttributes attr,
-        int64 step_id) {
-    if (attr.scope_id > 0) {
-        return scoped_allocator_mgr_->GetContainer(step_id)->GetInstance(
-                   attr.scope_id);
-    }
-    LOG(FATAL) << "Unexpected call to ThreadPoolDevice::GetScopedAllocator "
-               << "attr.scope_id = " << attr.scope_id;
-    return allocator_;
+                                                int64 step_id) {
+  if (attr.scope_id > 0) {
+    return scoped_allocator_mgr_->GetContainer(step_id)->GetInstance(
+        attr.scope_id);
+  }
+  LOG(FATAL) << "Unexpected call to ThreadPoolDevice::GetScopedAllocator "
+             << "attr.scope_id = " << attr.scope_id;
+  return allocator_;
 }
 
 Status ThreadPoolDevice::MakeTensorFromProto(
     const TensorProto& tensor_proto, const AllocatorAttributes alloc_attrs,
     Tensor* tensor) {
-    if (tensor_proto.dtype() > 0 && tensor_proto.dtype() <= DataType_MAX) {
-        Tensor parsed(tensor_proto.dtype());
-        if (parsed.FromProto(allocator_, tensor_proto)) {
-            *tensor = std::move(parsed);
-            return Status::OK();
-        }
+  if (tensor_proto.dtype() > 0 && tensor_proto.dtype() <= DataType_MAX) {
+    Tensor parsed(tensor_proto.dtype());
+    if (parsed.FromProto(allocator_, tensor_proto)) {
+      *tensor = std::move(parsed);
+      return Status::OK();
     }
-    return errors::InvalidArgument("Cannot parse tensor from proto: ",
-                                   tensor_proto.DebugString());
+  }
+  return errors::InvalidArgument("Cannot parse tensor from proto: ",
+                                 tensor_proto.DebugString());
 }
 
 void ThreadPoolDevice::CopyTensorInSameDevice(
     const Tensor* input_tensor, Tensor* output_tensor,
     const DeviceContext* device_context, StatusCallback done) {
-    if (input_tensor->NumElements() != output_tensor->NumElements()) {
-        done(errors::Internal(
-                 "CPU->CPU copy shape mismatch: input=", input_tensor->shape(),
-                 ", output=", output_tensor->shape()));
-        return;
-    }
-    tensor::DeepCopy(*input_tensor, output_tensor);
-    done(Status::OK());
+  if (input_tensor->NumElements() != output_tensor->NumElements()) {
+    done(errors::Internal(
+        "CPU->CPU copy shape mismatch: input=", input_tensor->shape(),
+        ", output=", output_tensor->shape()));
+    return;
+  }
+  tensor::DeepCopy(*input_tensor, output_tensor);
+  done(Status::OK());
 }
 
 #ifdef INTEL_MKL
 namespace {
 class MklCPUAllocatorFactory : public AllocatorFactory {
-public:
-    bool NumaEnabled() override {
-        return false;
-    }
+ public:
+  bool NumaEnabled() override { return false; }
 
-    Allocator* CreateAllocator() override {
-        return new MklCPUAllocator;
-    }
+  Allocator* CreateAllocator() override { return new MklCPUAllocator; }
 
-    // Note: Ignores numa_node, for now.
-    virtual SubAllocator* CreateSubAllocator(int numa_node) {
-        return new MklSubAllocator;
-    }
+  // Note: Ignores numa_node, for now.
+  virtual SubAllocator* CreateSubAllocator(int numa_node) {
+    return new MklSubAllocator;
+  }
 };
 
 #ifdef ENABLE_MKL

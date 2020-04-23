@@ -26,8 +26,8 @@ namespace op = xla::testing::opcode_matchers;
 using RootInstructionSinkerTest = HloTestBase;
 
 TEST_F(RootInstructionSinkerTest, TupleNoChange) {
-    // ROOTS are already sunk, no change performed to the module.
-    absl::string_view hlo_string = R"(
+  // ROOTS are already sunk, no change performed to the module.
+  absl::string_view hlo_string = R"(
   HloModule While, is_scheduled=true
   While.body {
     loop_var.1 = (s32[], s32[3]{0}) parameter(0)
@@ -52,23 +52,23 @@ TEST_F(RootInstructionSinkerTest, TupleNoChange) {
       While.condition, body=While.body
   }
   )";
-    TF_ASSERT_OK_AND_ASSIGN(auto module,
-                            ParseAndReturnVerifiedModule(hlo_string));
-    auto while_body =
-        module->entry_computation()->root_instruction()->while_body();
-    int num_body_instructions = while_body->instruction_count();
-    RootInstructionSinker sinker;
-    EXPECT_FALSE(sinker.Run(module.get()).ValueOrDie());
-    EXPECT_EQ(module->entry_computation()
-              ->root_instruction()
-              ->while_body()
-              ->instruction_count(),
-              num_body_instructions);
+  TF_ASSERT_OK_AND_ASSIGN(auto module,
+                          ParseAndReturnVerifiedModule(hlo_string));
+  auto while_body =
+      module->entry_computation()->root_instruction()->while_body();
+  int num_body_instructions = while_body->instruction_count();
+  RootInstructionSinker sinker;
+  EXPECT_FALSE(sinker.Run(module.get()).ValueOrDie());
+  EXPECT_EQ(module->entry_computation()
+                ->root_instruction()
+                ->while_body()
+                ->instruction_count(),
+            num_body_instructions);
 }
 
 TEST_F(RootInstructionSinkerTest, Tuple) {
-    // Sink tuple return type.
-    absl::string_view hlo_string = R"(
+  // Sink tuple return type.
+  absl::string_view hlo_string = R"(
   HloModule While, is_scheduled=true
   While.body {
     loop_var.1 = (s32[], s32[3]{0}) parameter(0)
@@ -96,23 +96,23 @@ TEST_F(RootInstructionSinkerTest, Tuple) {
       While.condition, body=While.body
   }
   )";
-    TF_ASSERT_OK_AND_ASSIGN(auto module,
-                            ParseAndReturnVerifiedModule(hlo_string));
-    RootInstructionSinker sinker;
-    EXPECT_TRUE(sinker.Run(module.get()).ValueOrDie());
-    auto while_body =
-        module->entry_computation()->root_instruction()->while_body();
-    const auto& sequence = module->schedule().sequence(while_body);
-    EXPECT_EQ(sequence.instructions().at(sequence.size() - 1),
-              while_body->root_instruction());
-    EXPECT_THAT(while_body->root_instruction(),
-                op::Tuple(op::GetTupleElement(op::Tuple()),
-                          op::GetTupleElement(op::Tuple())));
+  TF_ASSERT_OK_AND_ASSIGN(auto module,
+                          ParseAndReturnVerifiedModule(hlo_string));
+  RootInstructionSinker sinker;
+  EXPECT_TRUE(sinker.Run(module.get()).ValueOrDie());
+  auto while_body =
+      module->entry_computation()->root_instruction()->while_body();
+  const auto& sequence = module->schedule().sequence(while_body);
+  EXPECT_EQ(sequence.instructions().at(sequence.size() - 1),
+            while_body->root_instruction());
+  EXPECT_THAT(while_body->root_instruction(),
+              op::Tuple(op::GetTupleElement(op::Tuple()),
+                        op::GetTupleElement(op::Tuple())));
 }
 
 TEST_F(RootInstructionSinkerTest, NontupleNoChange) {
-    // ROOTS are already sunk, no change performed to the module.
-    absl::string_view hlo_string = R"(
+  // ROOTS are already sunk, no change performed to the module.
+  absl::string_view hlo_string = R"(
   HloModule Call, is_scheduled=true
   Call {
     param = s32[3]{0} parameter(0)
@@ -123,23 +123,23 @@ TEST_F(RootInstructionSinkerTest, NontupleNoChange) {
     ROOT call = s32[3]{0} call(constant.4), to_apply=Call
   }
   )";
-    TF_ASSERT_OK_AND_ASSIGN(auto module,
-                            ParseAndReturnVerifiedModule(hlo_string));
-    auto called_computation =
-        module->entry_computation()->root_instruction()->called_computations()[0];
-    int num_instructions = called_computation->instruction_count();
-    RootInstructionSinker sinker;
-    EXPECT_FALSE(sinker.Run(module.get()).ValueOrDie());
-    EXPECT_EQ(module->entry_computation()
-              ->root_instruction()
-              ->called_computations()[0]
-              ->instruction_count(),
-              num_instructions);
+  TF_ASSERT_OK_AND_ASSIGN(auto module,
+                          ParseAndReturnVerifiedModule(hlo_string));
+  auto called_computation =
+      module->entry_computation()->root_instruction()->called_computations()[0];
+  int num_instructions = called_computation->instruction_count();
+  RootInstructionSinker sinker;
+  EXPECT_FALSE(sinker.Run(module.get()).ValueOrDie());
+  EXPECT_EQ(module->entry_computation()
+                ->root_instruction()
+                ->called_computations()[0]
+                ->instruction_count(),
+            num_instructions);
 }
 
 TEST_F(RootInstructionSinkerTest, Nontuple) {
-    // Sink a non-tuple return type.
-    absl::string_view hlo_string = R"(
+  // Sink a non-tuple return type.
+  absl::string_view hlo_string = R"(
   HloModule Call, is_scheduled=true
   Call {
     param = s32[3]{0} parameter(0)
@@ -153,17 +153,17 @@ TEST_F(RootInstructionSinkerTest, Nontuple) {
     ROOT call = s32[3]{0} call(constant.4), to_apply=Call
   }
   )";
-    TF_ASSERT_OK_AND_ASSIGN(auto module,
-                            ParseAndReturnVerifiedModule(hlo_string));
-    RootInstructionSinker sinker;
-    EXPECT_TRUE(sinker.Run(module.get()).ValueOrDie());
-    auto called_computation =
-        module->entry_computation()->root_instruction()->called_computations()[0];
-    const auto& sequence = module->schedule().sequence(called_computation);
-    EXPECT_EQ(sequence.instructions().at(sequence.size() - 1),
-              called_computation->root_instruction());
-    EXPECT_THAT(called_computation->root_instruction(),
-                op::Bitcast(op::Multiply()));
+  TF_ASSERT_OK_AND_ASSIGN(auto module,
+                          ParseAndReturnVerifiedModule(hlo_string));
+  RootInstructionSinker sinker;
+  EXPECT_TRUE(sinker.Run(module.get()).ValueOrDie());
+  auto called_computation =
+      module->entry_computation()->root_instruction()->called_computations()[0];
+  const auto& sequence = module->schedule().sequence(called_computation);
+  EXPECT_EQ(sequence.instructions().at(sequence.size() - 1),
+            called_computation->root_instruction());
+  EXPECT_THAT(called_computation->root_instruction(),
+              op::Bitcast(op::Multiply()));
 }
 
 }  // namespace
