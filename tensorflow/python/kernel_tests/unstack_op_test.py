@@ -30,7 +30,8 @@ from tensorflow.python.platform import test
 def np_split_squeeze(array, axis):
     axis_len = array.shape[axis]
     return [
-        np.squeeze(arr, axis=(axis,)) for arr in np.split(array, axis_len, axis=axis)
+        np.squeeze(arr, axis=(axis, ))
+        for arr in np.split(array, axis_len, axis=axis)
     ]
 
 
@@ -52,23 +53,24 @@ class UnstackOpTest(test.TestCase):
             # Slice in axis dimension of k'th slice.
             # e.g. if rank=4 k=2, axis=2 then equivalent of data[:,:,2,:]
             # Give error with loop context
-            slice_spec = tuple(slice(None) if i != axis else k for i in range(rank))
+            slice_spec = tuple(
+                slice(None) if i != axis else k for i in range(rank))
             result.append(data.__getitem__(slice_spec))
         return result
 
     def testSimple(self):
         np.random.seed(7)
-        for shape in (2,), (3,), (2, 3), (3, 2), (4, 3, 2):
+        for shape in (2, ), (3, ), (2, 3), (3, 2), (4, 3, 2):
             rank = len(shape)
             for axis in range(-rank, rank):
                 for dtype in [
-                    np.bool,
-                    np.float16,
-                    np.float32,
-                    np.float64,
-                    np.uint8,
-                    np.int32,
-                    np.int64,
+                        np.bool,
+                        np.float16,
+                        np.float32,
+                        np.float64,
+                        np.uint8,
+                        np.int32,
+                        np.int64,
                 ]:
                     data = self.randn(shape, dtype)
                     # Convert data to a single tensorflow tensor
@@ -80,7 +82,10 @@ class UnstackOpTest(test.TestCase):
                     self.assertEqual(type(cs), list)
                     self.assertEqual(len(cs), shape[axis])
                     for k, c in enumerate(cs):
-                        with self.subTest(shape=shape, k=k, axis=axis, dtype=dtype):
+                        with self.subTest(shape=shape,
+                                          k=k,
+                                          axis=axis,
+                                          dtype=dtype):
                             self.assertAllEqual(ref[k], self.evaluate(c))
 
     def testSimpleGpu(self):
@@ -89,17 +94,17 @@ class UnstackOpTest(test.TestCase):
 
         np.random.seed(7)
         with test_util.force_gpu():
-            for shape in (2,), (3,), (2, 3), (3, 2), (4, 3, 2):
+            for shape in (2, ), (3, ), (2, 3), (3, 2), (4, 3, 2):
                 rank = len(shape)
                 for axis in range(-rank, rank):
                     for dtype in [
-                        np.bool,
-                        np.float16,
-                        np.float32,
-                        np.float64,
-                        np.uint8,
-                        np.int32,
-                        np.int64,
+                            np.bool,
+                            np.float16,
+                            np.float32,
+                            np.float64,
+                            np.uint8,
+                            np.int32,
+                            np.int64,
                     ]:
                         data = self.randn(shape, dtype)
                         # Convert data to a single tensorflow tensor
@@ -111,12 +116,15 @@ class UnstackOpTest(test.TestCase):
                         self.assertEqual(len(cs), shape[axis])
                         for k, c in enumerate(cs):
                             # Give error with loop context
-                            with self.subTest(shape=shape, k=k, axis=axis, dtype=dtype):
+                            with self.subTest(shape=shape,
+                                              k=k,
+                                              axis=axis,
+                                              dtype=dtype):
                                 self.assertAllEqual(ref[k], self.evaluate(c))
 
     @test_util.run_deprecated_v1
     def testGradientsAxis0(self):
-        for shape in (2,), (3,), (2, 3), (3, 2), (4, 3, 2):
+        for shape in (2, ), (3, ), (2, 3), (3, 2), (4, 3, 2):
             data = np.random.randn(*shape)
             shapes = [shape[1:]] * shape[0]
             for i in xrange(shape[0]):
@@ -124,8 +132,7 @@ class UnstackOpTest(test.TestCase):
                     x = constant_op.constant(data)
                     cs = array_ops.unstack(x, num=shape[0])
                     err = gradient_checker.compute_gradient_error(
-                        x, shape, cs[i], shapes[i]
-                    )
+                        x, shape, cs[i], shapes[i])
                     self.assertLess(err, 1e-6)
 
     @test_util.run_deprecated_v1
@@ -139,13 +146,12 @@ class UnstackOpTest(test.TestCase):
                     x = constant_op.constant(data)
                     cs = array_ops.unstack(x, num=shape[1], axis=1)
                     err = gradient_checker.compute_gradient_error(
-                        x, shape, cs[i], out_shape
-                    )
+                        x, shape, cs[i], out_shape)
                     self.assertLess(err, 1e-6)
 
     @test_util.run_deprecated_v1
     def testInferNum(self):
-        for shape in (2,), (3,), (2, 3), (3, 2), (4, 3, 2):
+        for shape in (2, ), (3, ), (2, 3), (3, 2), (4, 3, 2):
             x = array_ops.placeholder(np.float32, shape=shape)
             cs = array_ops.unstack(x)
             self.assertEqual(type(cs), list)
@@ -154,9 +160,8 @@ class UnstackOpTest(test.TestCase):
     @test_util.run_deprecated_v1
     def testCannotInferNumFromUnknownShape(self):
         x = array_ops.placeholder(np.float32)
-        with self.assertRaisesRegexp(
-            ValueError, r"Cannot infer num from shape <unknown>"
-        ):
+        with self.assertRaisesRegexp(ValueError,
+                                     r"Cannot infer num from shape <unknown>"):
             array_ops.unstack(x)
 
     @test_util.run_deprecated_v1
@@ -166,10 +171,9 @@ class UnstackOpTest(test.TestCase):
 
     @test_util.run_deprecated_v1
     def testCannotInferNumFromNoneShape(self):
-        x = array_ops.placeholder(np.float32, shape=(None,))
+        x = array_ops.placeholder(np.float32, shape=(None, ))
         with self.assertRaisesRegexp(
-            ValueError, r"Cannot infer num from shape \((\?|None),\)"
-        ):
+                ValueError, r"Cannot infer num from shape \((\?|None),\)"):
             array_ops.unstack(x)
 
     def testAgainstNumpy(self):
@@ -200,7 +204,8 @@ class UnstackOpTest(test.TestCase):
 
     def testAxisOutOfNegativeRange(self):
         a = constant_op.constant([[1, 2, 3], [4, 5, 6]], name="a")
-        with self.assertRaisesRegexp(ValueError, r"axis = -3 not in \[-2, 2\)"):
+        with self.assertRaisesRegexp(ValueError,
+                                     r"axis = -3 not in \[-2, 2\)"):
             array_ops.unstack(a, axis=-3)
 
     def testZeroLengthDim(self):
@@ -214,7 +219,7 @@ class UnstackOpTest(test.TestCase):
 
         np.random.seed(7)
         with test_util.force_gpu():
-            for shape in (2,), (3,), (2, 3), (3, 2), (4, 3, 2):
+            for shape in (2, ), (3, ), (2, 3), (3, 2), (4, 3, 2):
                 for dtype in [np.complex64, np.complex128]:
                     data = np.random.randn(*shape).astype(dtype)
                     # Convert data to a single tensorflow tensor
