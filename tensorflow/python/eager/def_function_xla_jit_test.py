@@ -13,24 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import control_flow_util
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.eager import backprop, context, def_function
+from tensorflow.python.framework import (constant_op, dtypes, errors, ops,
+                                         test_util)
+from tensorflow.python.ops import (array_ops, control_flow_ops,
+                                   control_flow_util, math_ops,
+                                   resource_variable_ops, tensor_array_ops)
 from tensorflow.python.platform import test
 
 

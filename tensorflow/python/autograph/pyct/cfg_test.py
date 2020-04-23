@@ -14,14 +14,10 @@
 # ==============================================================================
 """Tests for cfg module."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import gast
-
-from tensorflow.python.autograph.pyct import cfg
-from tensorflow.python.autograph.pyct import parser
+from tensorflow.python.autograph.pyct import cfg, parser
 from tensorflow.python.platform import test
 
 
