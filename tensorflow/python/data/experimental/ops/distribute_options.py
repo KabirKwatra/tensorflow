@@ -82,6 +82,7 @@ class DistributeOptions(options.OptionsBase):
     num_devices = options.create_option(
         name="num_devices",
         ty=int,
-        docstring="The number of devices attached to this input pipeline. This will be "
+        docstring=
+        "The number of devices attached to this input pipeline. This will be "
         "automatically set by MultiDeviceIterator.",
     )
