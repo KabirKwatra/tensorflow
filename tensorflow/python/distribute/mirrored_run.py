@@ -72,19 +72,24 @@ def call_for_each_replica(strategy, fn, args=None, kwargs=None):
             # call_for_each_replica() because we would like to retain the arguments to
             # the @tf.function decorator of fn.
             wrapped = fn._clone(  # pylint: disable=protected-access
-                python_function=functools.partial(call_for_each_replica, strategy,
-                                                  fn.python_function))
+                python_function=functools.partial(
+                    call_for_each_replica, strategy, fn.python_function
+                )
+            )
             _cfer_fn_cache[strategy][fn] = wrapped
         return wrapped(args, kwargs)
 
     if context.executing_eagerly():
         logging.log_first_n(
-            logging.WARN, "Using %s eagerly has significant "
+            logging.WARN,
+            "Using %s eagerly has significant "
             "overhead currently. We will be working on improving "
             "this in the future, but for now please wrap "
             "`call_for_each_replica` or `experimental_run` or "
             "`experimental_run_v2` inside a tf.function to get "
-            "the best performance." % strategy.__class__.__name__, 5)
+            "the best performance." % strategy.__class__.__name__,
+            5,
+        )
     else:
         # When a tf.function is wrapped to trigger _call_for_each_replica (see
         # the other branch above), AutoGraph stops conversion at
@@ -106,12 +111,16 @@ def _enter_graph(g, eager, creator_stack=None):
     if eager:
         with g.as_default(), context.eager_mode():
             if creator_stack is not None:
-                g._variable_creator_stack = creator_stack  # pylint: disable=protected-access
+                g._variable_creator_stack = (
+                    creator_stack  # pylint: disable=protected-access
+                )
             yield
     else:
         with g.as_default():
             if creator_stack is not None:
-                g._variable_creator_stack = creator_stack  # pylint: disable=protected-access
+                g._variable_creator_stack = (
+                    creator_stack  # pylint: disable=protected-access
+                )
             yield
 
 
@@ -148,8 +157,7 @@ def _call_for_each_replica(distribution, fn, args, kwargs):
         # Needed for per-thread device, etc. contexts in graph mode.
         ops.get_default_graph().switch_to_thread_local()
 
-    coord = coordinator.Coordinator(
-        clean_stop_exception_types=(_RequestedStop,))
+    coord = coordinator.Coordinator(clean_stop_exception_types=(_RequestedStop,))
 
     shared_variable_store = {}
     devices = distribution.extended.worker_devices
@@ -158,11 +166,18 @@ def _call_for_each_replica(distribution, fn, args, kwargs):
     threads = []
     for index in range(len(devices)):
         variable_creator_fn = shared_variable_creator.make_fn(
-            shared_variable_store, index)
+            shared_variable_store, index
+        )
         t = _MirroredReplicaThread(
-            distribution, coord, index, devices, variable_creator_fn, fn,
+            distribution,
+            coord,
+            index,
+            devices,
+            variable_creator_fn,
+            fn,
             values.select_replica(index, args),
-            values.select_replica(index, kwargs))
+            values.select_replica(index, kwargs),
+        )
         threads.append(t)
 
     for t in threads:
@@ -207,13 +222,15 @@ def _call_for_each_replica(distribution, fn, args, kwargs):
                 all_done = all(done)
                 if not all_done:
                     if any(done):
-                        raise RuntimeError("Some replicas made a different number of "
-                                           "replica_context().merge_call() calls.")
+                        raise RuntimeError(
+                            "Some replicas made a different number of "
+                            "replica_context().merge_call() calls."
+                        )
                     # get_replica_context().merge_call() case
-                    merge_args = values.regroup(
-                        tuple(t.merge_args for t in threads))
+                    merge_args = values.regroup(tuple(t.merge_args for t in threads))
                     merge_kwargs = values.regroup(
-                        tuple(t.merge_kwargs for t in threads))
+                        tuple(t.merge_kwargs for t in threads)
+                    )
                     # We capture the name_scope of the MRT when we call merge_fn
                     # to ensure that if we have opened a name scope in the MRT,
                     # it will be respected when executing the merge function. We only
@@ -224,13 +241,17 @@ def _call_for_each_replica(distribution, fn, args, kwargs):
                     # Capture and merge the control dependencies from all the threads.
                     mtt_captured_control_deps = set()
                     for t in threads:
-                        mtt_captured_control_deps.update(
-                            t.captured_control_deps)
-                    with ops.name_scope(mtt_captured_name_scope),\
-                            ops.control_dependencies(mtt_captured_control_deps), \
-                            variable_scope.variable_scope(mtt_captured_var_scope):
-                        merge_result = threads[0].merge_fn(distribution, *merge_args,
-                                                           **merge_kwargs)
+                        mtt_captured_control_deps.update(t.captured_control_deps)
+                    with ops.name_scope(
+                        mtt_captured_name_scope
+                    ), ops.control_dependencies(
+                        mtt_captured_control_deps
+                    ), variable_scope.variable_scope(
+                        mtt_captured_var_scope
+                    ):
+                        merge_result = threads[0].merge_fn(
+                            distribution, *merge_args, **merge_kwargs
+                        )
                     for r, t in enumerate(threads):
                         t.merge_result = values.select_replica(r, merge_result)
     finally:
@@ -244,8 +265,9 @@ def _call_for_each_replica(distribution, fn, args, kwargs):
 class _MirroredReplicaThread(threading.Thread):
     """A thread that runs() a function on a device."""
 
-    def __init__(self, dist, coord, replica_id, devices, variable_creator_fn,
-                 fn, args, kwargs):
+    def __init__(
+        self, dist, coord, replica_id, devices, variable_creator_fn, fn, args, kwargs
+    ):
         super(_MirroredReplicaThread, self).__init__()
         self.coord = coord
         self.distribution = dist
@@ -283,15 +305,16 @@ class _MirroredReplicaThread(threading.Thread):
         self.in_eager = ctx.executing_eagerly()
         self.record_thread_local_summary_state()
         self.record_thread_local_eager_context_state()
-        self.context_device_policy = (
-            pywrap_tfe.TFE_ContextGetDevicePlacementPolicy(
-                ctx._context_handle))  # pylint: disable=protected-access
+        self.context_device_policy = pywrap_tfe.TFE_ContextGetDevicePlacementPolicy(
+            ctx._context_handle
+        )  # pylint: disable=protected-access
         self.graph = ops.get_default_graph()
         with ops.init_scope():
             self._init_in_eager = context.executing_eagerly()
             self._init_graph = ops.get_default_graph()
         self._variable_creator_stack = self.graph._variable_creator_stack[
-            :]  # pylint: disable=protected-access
+            :
+        ]  # pylint: disable=protected-access
         self._var_scope = variable_scope.get_variable_scope()
         # Adding a "/" at end lets us re-enter this scope later.
         self._name_scope = self.graph.get_name_scope()
@@ -311,20 +334,24 @@ class _MirroredReplicaThread(threading.Thread):
             self.restore_thread_local_summary_state()
             self.restore_thread_local_eager_context_state()
             # TODO(josh11b): Use current logical device instead of 0 here.
-            with self.coord.stop_on_exception(), \
-                    _enter_graph(self._init_graph, self._init_in_eager), \
-                    _enter_graph(self.graph, self.in_eager,
-                                 self._variable_creator_stack), \
-                    context.device_policy(self.context_device_policy), \
-                    _MirroredReplicaContext(self.distribution, constant_op.constant(
-                        self.replica_id, dtypes.int32)), \
-                    ops.device(self.devices[self.replica_id]), \
-                    ops.name_scope(self._name_scope), \
-                    variable_scope.variable_scope(
-                        self._var_scope, reuse=self.replica_id > 0), \
-                    variable_scope.variable_creator_scope(self.variable_creator_fn):
-                self.main_result = self.main_fn(
-                    *self.main_args, **self.main_kwargs)
+            with self.coord.stop_on_exception(), _enter_graph(
+                self._init_graph, self._init_in_eager
+            ), _enter_graph(
+                self.graph, self.in_eager, self._variable_creator_stack
+            ), context.device_policy(
+                self.context_device_policy
+            ), _MirroredReplicaContext(
+                self.distribution, constant_op.constant(self.replica_id, dtypes.int32)
+            ), ops.device(
+                self.devices[self.replica_id]
+            ), ops.name_scope(
+                self._name_scope
+            ), variable_scope.variable_scope(
+                self._var_scope, reuse=self.replica_id > 0
+            ), variable_scope.variable_creator_scope(
+                self.variable_creator_fn
+            ):
+                self.main_result = self.main_fn(*self.main_args, **self.main_kwargs)
                 self.done = True
         finally:
             self.has_paused.set()
@@ -332,22 +359,28 @@ class _MirroredReplicaThread(threading.Thread):
     def record_thread_local_summary_state(self):
         """Record the thread local summary state in self."""
         # TODO(slebedev): is this still relevant? the referenced bug is closed.
-        summary_state = summary_ops_v2._summary_state  # pylint: disable=protected-access
+        summary_state = (
+            summary_ops_v2._summary_state
+        )  # pylint: disable=protected-access
         self._summary_step = summary_state.step
         self._summary_writer = summary_state.writer
         self._summary_recording = summary_state.is_recording
         self._summary_recording_distribution_strategy = (
-            summary_state.is_recording_distribution_strategy)
+            summary_state.is_recording_distribution_strategy
+        )
 
     def restore_thread_local_summary_state(self):
         """Restore thread local summary state from self."""
         # TODO(slebedev): is this still relevant? the referenced bug is closed.
-        summary_state = summary_ops_v2._summary_state  # pylint: disable=protected-access
+        summary_state = (
+            summary_ops_v2._summary_state
+        )  # pylint: disable=protected-access
         summary_state.step = self._summary_step
         summary_state.writer = self._summary_writer
         summary_state.is_recording = self._summary_recording
         summary_state.is_recording_distribution_strategy = (
-            self._summary_recording_distribution_strategy)
+            self._summary_recording_distribution_strategy
+        )
 
     def record_thread_local_eager_context_state(self):
         ctx = context.context()
@@ -401,7 +434,8 @@ class _MirroredReplicaContext(distribute_lib.ReplicaContext):
             t.captured_name_scope += "/"
 
         t.captured_var_scope = variable_scope.get_variable_scope()
-        t.captured_control_deps = t.graph._current_control_dependencies(
+        t.captured_control_deps = (
+            t.graph._current_control_dependencies()
         )  # pylint: disable=protected-access
 
         # It is problematic if `merge_call` is called under a different graph other
@@ -445,7 +479,8 @@ class _MirroredReplicaContext(distribute_lib.ReplicaContext):
                 " please avoid nested `tf.function`s or control flow statements that"
                 " may potentially cross a synchronization boundary, for example,"
                 " wrap the `fn` passed to `strategy.run` or the entire `strategy.run`"
-                " inside a `tf.function` or move the control flow out of `fn`")
+                " inside a `tf.function` or move the control flow out of `fn`"
+            )
 
         t.has_paused.set()
         t.should_run.wait()

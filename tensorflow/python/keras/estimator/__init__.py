@@ -26,19 +26,22 @@ from tensorflow.python.util.tf_export import keras_export
 # everything will work as normal.
 
 _model_to_estimator_usage_gauge = monitoring.BoolGauge(
-    '/tensorflow/api/keras/model_to_estimator',
-    'Whether tf.keras.estimator.model_to_estimator() is called.', 'version')
+    "/tensorflow/api/keras/model_to_estimator",
+    "Whether tf.keras.estimator.model_to_estimator() is called.",
+    "version",
+)
 
 
 # LINT.IfChange
-@keras_export(v1=['keras.estimator.model_to_estimator'])
+@keras_export(v1=["keras.estimator.model_to_estimator"])
 def model_to_estimator(
-        keras_model=None,
-        keras_model_path=None,
-        custom_objects=None,
-        model_dir=None,
-        config=None,
-        checkpoint_format='saver'):
+    keras_model=None,
+    keras_model_path=None,
+    custom_objects=None,
+    model_dir=None,
+    config=None,
+    checkpoint_format="saver",
+):
     """Constructs an `Estimator` instance from given keras model.
 
     If you use infrastructure or other tooling that relies on Estimators, you can
@@ -113,12 +116,15 @@ def model_to_estimator(
     """
 
     try:
-        from tensorflow_estimator.python.estimator import keras as keras_lib  # pylint: disable=g-import-not-at-top
+        from tensorflow_estimator.python.estimator import (
+            keras as keras_lib,
+        )  # pylint: disable=g-import-not-at-top
     except ImportError:
         raise NotImplementedError(
-            'tf.keras.estimator.model_to_estimator function not available in your '
-            'installation.')
-    _model_to_estimator_usage_gauge.get_cell('v1').set(True)
+            "tf.keras.estimator.model_to_estimator function not available in your "
+            "installation."
+        )
+    _model_to_estimator_usage_gauge.get_cell("v1").set(True)
     return keras_lib.model_to_estimator(  # pylint:disable=unexpected-keyword-arg
         keras_model=keras_model,
         keras_model_path=keras_model_path,
@@ -126,17 +132,20 @@ def model_to_estimator(
         model_dir=model_dir,
         config=config,
         checkpoint_format=checkpoint_format,
-        use_v2_estimator=False)
+        use_v2_estimator=False,
+    )
 
 
-@keras_export('keras.estimator.model_to_estimator', v1=[])
-def model_to_estimator_v2(keras_model=None,
-                          keras_model_path=None,
-                          custom_objects=None,
-                          model_dir=None,
-                          config=None,
-                          checkpoint_format='checkpoint',
-                          metric_names_map=None):
+@keras_export("keras.estimator.model_to_estimator", v1=[])
+def model_to_estimator_v2(
+    keras_model=None,
+    keras_model_path=None,
+    custom_objects=None,
+    model_dir=None,
+    config=None,
+    checkpoint_format="checkpoint",
+    metric_names_map=None,
+):
     """Constructs an `Estimator` instance from given keras model.
 
     If you use infrastructure or other tooling that relies on Estimators, you can
@@ -261,12 +270,15 @@ def model_to_estimator_v2(keras_model=None,
     """
 
     try:
-        from tensorflow_estimator.python.estimator import keras as keras_lib  # pylint: disable=g-import-not-at-top
+        from tensorflow_estimator.python.estimator import (
+            keras as keras_lib,
+        )  # pylint: disable=g-import-not-at-top
     except ImportError:
         raise NotImplementedError(
-            'tf.keras.estimator.model_to_estimator function not available in your '
-            'installation.')
-    _model_to_estimator_usage_gauge.get_cell('v2').set(True)
+            "tf.keras.estimator.model_to_estimator function not available in your "
+            "installation."
+        )
+    _model_to_estimator_usage_gauge.get_cell("v2").set(True)
     return keras_lib.model_to_estimator(  # pylint:disable=unexpected-keyword-arg
         keras_model=keras_model,
         keras_model_path=keras_model_path,
@@ -275,5 +287,8 @@ def model_to_estimator_v2(keras_model=None,
         config=config,
         checkpoint_format=checkpoint_format,
         use_v2_estimator=True,
-        metric_names_map=metric_names_map)
+        metric_names_map=metric_names_map,
+    )
+
+
 # LINT.ThenChange(//tensorflow_estimator/python/estimator/keras.py)
