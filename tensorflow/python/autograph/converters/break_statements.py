@@ -13,11 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 """Lowers break statements to conditionals."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from tensorflow.python.autograph.core import converter
-from tensorflow.python.autograph.pyct import anno, templates
+from tensorflow.python.autograph.pyct import anno
+from tensorflow.python.autograph.pyct import templates
 from tensorflow.python.autograph.pyct.static_analysis.annos import NodeAnno
 
 

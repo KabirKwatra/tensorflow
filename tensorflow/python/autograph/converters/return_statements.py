@@ -13,12 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 """Canonicalizes functions with multiple returns to use just one."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import gast
+
 from tensorflow.python.autograph.core import converter
-from tensorflow.python.autograph.pyct import anno, parser, templates
+from tensorflow.python.autograph.pyct import anno
+from tensorflow.python.autograph.pyct import parser
+from tensorflow.python.autograph.pyct import templates
 from tensorflow.python.autograph.pyct.static_analysis.annos import NodeAnno
 
 BODY_DEFINITELY_RETURNS = "BODY_DEFINITELY_RETURNS"
