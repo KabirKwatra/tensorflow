@@ -40,134 +40,164 @@ namespace data {
 // * Task: A job is broken into multiple tasks, which each represent
 //   iterating over all of or part of the dataset. Workers process tasks.
 class DataServiceMasterImpl {
- public:
-  explicit DataServiceMasterImpl(const std::string protocol);
+public:
+    explicit DataServiceMasterImpl(const std::string protocol);
 
-  // See master.proto for API documentation.
+    // See master.proto for API documentation.
 
-  /// Worker-facing API.
-  Status RegisterWorker(const RegisterWorkerRequest* request,
-                        RegisterWorkerResponse* response);
+    /// Worker-facing API.
+    Status RegisterWorker(const RegisterWorkerRequest* request,
+                          RegisterWorkerResponse* response);
 
-  /// Client-facing API.
-  Status GetOrRegisterDataset(const GetOrRegisterDatasetRequest* request,
-                              GetOrRegisterDatasetResponse* response);
-  Status CreateJob(const CreateJobRequest* request,
-                   CreateJobResponse* response);
-  Status GetTasks(const GetTasksRequest* request, GetTasksResponse* response);
+    /// Client-facing API.
+    Status GetOrRegisterDataset(const GetOrRegisterDatasetRequest* request,
+                                GetOrRegisterDatasetResponse* response);
+    Status CreateJob(const CreateJobRequest* request,
+                     CreateJobResponse* response);
+    Status GetTasks(const GetTasksRequest* request, GetTasksResponse* response);
 
- private:
-  class Worker {
-   public:
-    Worker(int64 worker_id, const std::string address)
-        : worker_id_(worker_id), address_(address) {}
+private:
+    class Worker {
+    public:
+        Worker(int64 worker_id, const std::string address)
+            : worker_id_(worker_id), address_(address) {}
 
-    int64 worker_id() { return worker_id_; }
-    std::string address() { return address_; }
-    WorkerService::Stub* stub() { return stub_.get(); }
-    void set_stub(std::unique_ptr<WorkerService::Stub> stub) {
-      stub_ = std::move(stub);
-    }
+        int64 worker_id() {
+            return worker_id_;
+        }
+        std::string address() {
+            return address_;
+        }
+        WorkerService::Stub* stub() {
+            return stub_.get();
+        }
+        void set_stub(std::unique_ptr<WorkerService::Stub> stub) {
+            stub_ = std::move(stub);
+        }
 
-    std::string DebugString() {
-      return absl::StrCat("id: ", worker_id_, "address: ", address_);
-    }
+        std::string DebugString() {
+            return absl::StrCat("id: ", worker_id_, "address: ", address_);
+        }
 
-   private:
-    const int64 worker_id_;
-    const std::string address_;
-    std::unique_ptr<WorkerService::Stub> stub_;
-  };
+    private:
+        const int64 worker_id_;
+        const std::string address_;
+        std::unique_ptr<WorkerService::Stub> stub_;
+    };
 
-  class Dataset {
-   public:
-    Dataset(int64 dataset_id, int64 fingerprint, const DatasetDef& dataset_def)
-        : dataset_id_(dataset_id),
-          fingerprint_(fingerprint),
-          dataset_def_(dataset_def) {}
+    class Dataset {
+    public:
+        Dataset(int64 dataset_id, int64 fingerprint, const DatasetDef& dataset_def)
+            : dataset_id_(dataset_id),
+              fingerprint_(fingerprint),
+              dataset_def_(dataset_def) {}
 
-    int64 dataset_id() const { return dataset_id_; }
-    int64 fingerprint() const { return fingerprint_; }
-    const DatasetDef& dataset_def() { return dataset_def_; }
+        int64 dataset_id() const {
+            return dataset_id_;
+        }
+        int64 fingerprint() const {
+            return fingerprint_;
+        }
+        const DatasetDef& dataset_def() {
+            return dataset_def_;
+        }
 
-   private:
-    const int64 dataset_id_;
-    const int64 fingerprint_;
-    const DatasetDef dataset_def_;
-  };
+    private:
+        const int64 dataset_id_;
+        const int64 fingerprint_;
+        const DatasetDef dataset_def_;
+    };
 
-  class Job {
-   public:
-    Job(int64 job_id, int64 dataset_id)
-        : job_id_(job_id), dataset_id_(dataset_id) {}
+    class Job {
+    public:
+        Job(int64 job_id, int64 dataset_id)
+            : job_id_(job_id), dataset_id_(dataset_id) {}
 
-    int64 job_id() const { return job_id_; }
-    int64 dataset_id() const { return dataset_id_; }
-    const std::vector<int64>& task_ids() const { return task_ids_; }
-    void add_task_id(int64 task_id) { task_ids_.push_back(task_id); }
-    bool finished() const { return finished_; }
+        int64 job_id() const {
+            return job_id_;
+        }
+        int64 dataset_id() const {
+            return dataset_id_;
+        }
+        const std::vector<int64>& task_ids() const {
+            return task_ids_;
+        }
+        void add_task_id(int64 task_id) {
+            task_ids_.push_back(task_id);
+        }
+        bool finished() const {
+            return finished_;
+        }
 
-   private:
-    const int64 job_id_;
-    const int64 dataset_id_;
-    std::vector<int64> task_ids_;
-    bool finished_ = false;
-  };
+    private:
+        const int64 job_id_;
+        const int64 dataset_id_;
+        std::vector<int64> task_ids_;
+        bool finished_ = false;
+    };
 
-  class Task {
-   public:
-    Task(int64 task_id, int64 job_id, int64 dataset_id,
-         const std::string& worker_address)
-        : task_id_(task_id),
-          job_id_(job_id),
-          dataset_id_(dataset_id),
-          worker_address_(worker_address) {}
+    class Task {
+    public:
+        Task(int64 task_id, int64 job_id, int64 dataset_id,
+             const std::string& worker_address)
+            : task_id_(task_id),
+              job_id_(job_id),
+              dataset_id_(dataset_id),
+              worker_address_(worker_address) {}
 
-    int64 task_id() const { return task_id_; }
-    int64 job_id() const { return job_id_; }
-    int64 dataset_id() const { return dataset_id_; }
-    std::string worker_address() const { return worker_address_; }
+        int64 task_id() const {
+            return task_id_;
+        }
+        int64 job_id() const {
+            return job_id_;
+        }
+        int64 dataset_id() const {
+            return dataset_id_;
+        }
+        std::string worker_address() const {
+            return worker_address_;
+        }
 
-   private:
-    const int64 task_id_;
-    const int64 job_id_;
-    const int64 dataset_id_;
-    const std::string worker_address_;
-  };
+    private:
+        const int64 task_id_;
+        const int64 job_id_;
+        const int64 dataset_id_;
+        const std::string worker_address_;
+    };
 
-  // Registers a dataset with the given fingerprint, returning a new dataset id.
-  int64 RegisterDataset(uint64 fingerprint, const DatasetDef& dataset);
-  // Initializes a workers stub, if it hasn't been initialized already.
-  Status EnsureWorkerStubInitialized(Worker* worker);
-  // Instructs a worker to begin processing a task.
-  Status AllocateTaskToWorker(const Task& task_id, Worker* worker);
-  // Creates a new task for a job, returning the new task's id.
-  int64 CreateTask(Job* job, const std::string& worker_address);
+    // Registers a dataset with the given fingerprint, returning a new dataset id.
+    int64 RegisterDataset(uint64 fingerprint, const DatasetDef& dataset);
+    // Initializes a workers stub, if it hasn't been initialized already.
+    Status EnsureWorkerStubInitialized(Worker* worker);
+    // Instructs a worker to begin processing a task.
+    Status AllocateTaskToWorker(const Task& task_id, Worker* worker);
+    // Creates a new task for a job, returning the new task's id.
+    int64 CreateTask(Job* job, const std::string& worker_address);
 
-  // Protocol to use for communicating with workers.
-  const std::string protocol_;
+    // Protocol to use for communicating with workers.
+    const std::string protocol_;
 
-  mutex mu_;
+    mutex mu_;
 
-  int64 next_worker_id_ TF_GUARDED_BY(mu_) = 0;
-  int64 next_dataset_id_ TF_GUARDED_BY(mu_) = 0;
-  int64 next_job_id_ TF_GUARDED_BY(mu_) = 0;
-  int64 next_task_id_ TF_GUARDED_BY(mu_) = 0;
+    int64 next_worker_id_ TF_GUARDED_BY(mu_) = 0;
+    int64 next_dataset_id_ TF_GUARDED_BY(mu_) = 0;
+    int64 next_job_id_ TF_GUARDED_BY(mu_) = 0;
+    int64 next_task_id_ TF_GUARDED_BY(mu_) = 0;
 
-  // Registered workers.
-  std::vector<Worker> workers_ TF_GUARDED_BY(mu_);
-  // Registered datasets, keyed by dataset ids.
-  absl::flat_hash_map<int64, std::shared_ptr<Dataset>> datasets_by_id_
-      TF_GUARDED_BY(mu_);
-  // Registered datasets, keyed by dataset fingerprints.
-  absl::flat_hash_map<uint64, std::shared_ptr<Dataset>> datasets_by_fingerprint_
-      TF_GUARDED_BY(mu_);
-  // Information about jobs, keyed by job ids.
-  absl::flat_hash_map<int64, Job> jobs_ TF_GUARDED_BY(mu_);
-  // Information about tasks, keyed by task ids.
-  absl::flat_hash_map<int64, Task> tasks_ TF_GUARDED_BY(mu_);
+    // Registered workers.
+    std::vector<Worker> workers_ TF_GUARDED_BY(mu_);
+    // Registered datasets, keyed by dataset ids.
+    absl::flat_hash_map<int64, std::shared_ptr<Dataset>> datasets_by_id_
+            TF_GUARDED_BY(mu_);
+    // Registered datasets, keyed by dataset fingerprints.
+    absl::flat_hash_map<uint64, std::shared_ptr<Dataset>> datasets_by_fingerprint_
+            TF_GUARDED_BY(mu_);
+    // Information about jobs, keyed by job ids.
+    absl::flat_hash_map<int64, Job> jobs_ TF_GUARDED_BY(mu_);
+    // Information about tasks, keyed by task ids.
+    absl::flat_hash_map<int64, Task> tasks_ TF_GUARDED_BY(mu_);
 
-  TF_DISALLOW_COPY_AND_ASSIGN(DataServiceMasterImpl);
+    TF_DISALLOW_COPY_AND_ASSIGN(DataServiceMasterImpl);
 };
 
 }  // namespace data
