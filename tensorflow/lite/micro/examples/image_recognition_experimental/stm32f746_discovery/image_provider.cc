@@ -18,22 +18,22 @@ limitations under the License.
 #include "BSP_DISCO_F746NG/Drivers/BSP/STM32746G-Discovery/stm32746g_discovery_camera.h"
 
 TfLiteStatus InitCamera(tflite::ErrorReporter* error_reporter) {
-    if (BSP_CAMERA_Init(RESOLUTION_R160x120) != CAMERA_OK) {
-        TF_LITE_REPORT_ERROR(error_reporter, "Failed to init camera.\n");
-        return kTfLiteError;
-    }
+  if (BSP_CAMERA_Init(RESOLUTION_R160x120) != CAMERA_OK) {
+    TF_LITE_REPORT_ERROR(error_reporter, "Failed to init camera.\n");
+    return kTfLiteError;
+  }
 
-    return kTfLiteOk;
+  return kTfLiteOk;
 }
 
 TfLiteStatus GetImage(tflite::ErrorReporter* error_reporter, int frame_width,
                       int frame_height, int channels, uint8_t* frame) {
-    // For consistency, the signature of this function is the
-    // same as the GetImage-function in micro_vision.
-    (void)error_reporter;
-    (void)frame_width;
-    (void)frame_height;
-    (void)channels;
-    BSP_CAMERA_SnapshotStart(frame);
-    return kTfLiteOk;
+  // For consistency, the signature of this function is the
+  // same as the GetImage-function in micro_vision.
+  (void)error_reporter;
+  (void)frame_width;
+  (void)frame_height;
+  (void)channels;
+  BSP_CAMERA_SnapshotStart(frame);
+  return kTfLiteOk;
 }
