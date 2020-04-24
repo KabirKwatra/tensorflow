@@ -50,11 +50,11 @@ public final class OvicClassifierBenchmarker extends OvicBenchmarker {
    * @param model: a {@link MappedByteBuffer} model to benchmark.
    */
   @Override
-   public void getReadyToTest(InputStream labelInputStream, MappedByteBuffer model) {
+  public void getReadyToTest(InputStream labelInputStream, MappedByteBuffer model) {
     try {
       Log.i(TAG, "Creating classifier.");
       classifier = new OvicClassifier(labelInputStream, model);
-      int [] inputDims = classifier.getInputDims();
+      int[] inputDims = classifier.getInputDims();
       imgHeight = inputDims[1];
       imgWidth = inputDims[2];
       // Only accept QUANTIZED_UINT8 input.
@@ -62,8 +62,8 @@ public final class OvicClassifierBenchmarker extends OvicBenchmarker {
       imgData.order(ByteOrder.nativeOrder());
       intValues = new int[imgHeight * imgWidth];
     } catch (Exception e) {
-        Log.e(TAG, e.getMessage());
-        Log.e(TAG, "Failed to initialize ImageNet classifier for the benchmarker.");
+      Log.e(TAG, e.getMessage());
+      Log.e(TAG, "Failed to initialize ImageNet classifier for the benchmarker.");
     }
   }
 
@@ -95,7 +95,7 @@ public final class OvicClassifierBenchmarker extends OvicBenchmarker {
     Log.d(TAG, "Native inference latency (ns): " + iterResult.latencyNano);
     Log.i(TAG, iterResult.toString());
 
-    if (!benchmarkStarted) {  // Skip the first image to discount warming-up time.
+    if (!benchmarkStarted) { // Skip the first image to discount warming-up time.
       benchmarkStarted = true;
     } else {
       totalRuntimeNano += ((double) iterResult.latencyNano);

@@ -31,7 +31,7 @@ public final class OvicDetectorBenchmarker extends OvicBenchmarker {
 
   public double scaleFactorWidth = 1.0f;
   public double scaleFactorHeight = 1.0f;
-  private Bitmap scaledBitmap = null;  // Preallocate bitmap for scaling.
+  private Bitmap scaledBitmap = null; // Preallocate bitmap for scaling.
 
   private OvicDetector detector;
 
@@ -100,7 +100,7 @@ public final class OvicDetectorBenchmarker extends OvicBenchmarker {
     } else {
       totalRuntimeNano += ((double) detector.result.latencyNano);
     }
-    return true;  // Indicating that result is ready.
+    return true; // Indicating that result is ready.
   }
 
   /**
@@ -115,13 +115,13 @@ public final class OvicDetectorBenchmarker extends OvicBenchmarker {
     if (shouldStop() || !readyToTest()) {
       return false;
     }
-    convertBitmapToInput(bitmap);  // Scale bitmap if needed, store result in imgData.
+    convertBitmapToInput(bitmap); // Scale bitmap if needed, store result in imgData.
     if (!processBuffer(imgData, imageId)) {
       return false;
     }
     // Scale results back to original image coordinates.
     detector.result.scaleUp(scaleFactorWidth, scaleFactorHeight);
-    return true;  // Indicating that result is ready.
+    return true; // Indicating that result is ready.
   }
 
   public OvicDetectionResult getLastDetectionResult() {

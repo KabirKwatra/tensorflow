@@ -35,7 +35,6 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link org.tensorflow.ovic.OvicClassifier}. */
 @RunWith(JUnit4.class)
 public final class OvicClassifierTest {
-
   private OvicClassifier classifier;
   private InputStream labelsInputStream = null;
   private MappedByteBuffer quantizedModel = null;
@@ -44,16 +43,13 @@ public final class OvicClassifierTest {
   private ByteBuffer testImage = null;
   private ByteBuffer lowResTestImage = null;
   private OvicClassificationResult testResult = null;
-  private static final String LABELS_PATH =
-      "tensorflow/lite/java/ovic/src/testdata/labels.txt";
+  private static final String LABELS_PATH = "tensorflow/lite/java/ovic/src/testdata/labels.txt";
   private static final String QUANTIZED_MODEL_PATH =
       "external/tflite_ovic_testdata/quantized_model.lite";
   private static final String LOW_RES_MODEL_PATH =
       "external/tflite_ovic_testdata/low_res_model.lite";
-  private static final String FLOAT_MODEL_PATH =
-      "external/tflite_ovic_testdata/float_model.lite";
-  private static final String TEST_IMAGE_PATH =
-      "external/tflite_ovic_testdata/test_image_224.jpg";
+  private static final String FLOAT_MODEL_PATH = "external/tflite_ovic_testdata/float_model.lite";
+  private static final String TEST_IMAGE_PATH = "external/tflite_ovic_testdata/test_image_224.jpg";
   private static final String TEST_LOW_RES_IMAGE_PATH =
       "external/tflite_ovic_testdata/test_image_128.jpg";
   private static final int TEST_IMAGE_GROUNDTRUTH = 653; // "military uniform"
@@ -134,8 +130,7 @@ public final class OvicClassifierTest {
   }
 
   private static ByteBuffer toByteBuffer(BufferedImage image) {
-    ByteBuffer imgData = ByteBuffer.allocateDirect(
-        image.getHeight() * image.getWidth() * 3);
+    ByteBuffer imgData = ByteBuffer.allocateDirect(image.getHeight() * image.getWidth() * 3);
     imgData.order(ByteOrder.nativeOrder());
     for (int y = 0; y < image.getHeight(); y++) {
       for (int x = 0; x < image.getWidth(); x++) {

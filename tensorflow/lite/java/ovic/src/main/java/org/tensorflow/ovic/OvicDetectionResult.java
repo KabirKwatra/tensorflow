@@ -18,7 +18,6 @@ import java.util.ArrayList;
 
 /** Result class for inference run on a single image. */
 public class OvicDetectionResult {
-
   // Top K classes and probabilities.
   public final ArrayList<BoundingBox> detections;
   // Latency (ms).
@@ -71,24 +70,10 @@ public class OvicDetectionResult {
     textToShow += "\n" + latencyNano + "ns";
     int k = 0;
     for (BoundingBox box : detections) {
-      textToShow +=
-          "\nPrediction ["
-              + k
-              + "] = Class "
-              + box.category
-              + " ("
-              + box.x1
-              + ", "
-              + box.y1
-              + ", "
-              + box.x2
-              + ", "
-              + box.y2
-              + ") : "
-              + box.score;
+      textToShow += "\nPrediction [" + k + "] = Class " + box.category + " (" + box.x1 + ", "
+          + box.y1 + ", " + box.x2 + ", " + box.y2 + ") : " + box.score;
       k++;
     }
-
 
     return textToShow;
   }

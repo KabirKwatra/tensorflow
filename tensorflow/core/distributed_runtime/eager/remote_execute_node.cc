@@ -24,72 +24,72 @@ namespace tensorflow {
 namespace eager {
 
 void RemoteExecuteNode::RunAsync(StatusCallback done) {
-    EnqueueResponse* response = new EnqueueResponse;
+  EnqueueResponse* response = new EnqueueResponse;
 
-    const gtl::InlinedVector<TensorHandle*, 4>& inputs = inputs_;
-    const gtl::InlinedVector<TensorHandle*, 2>& retvals = retvals_;
-    Device* device = device_;
+  const gtl::InlinedVector<TensorHandle*, 4>& inputs = inputs_;
+  const gtl::InlinedVector<TensorHandle*, 2>& retvals = retvals_;
+  Device* device = device_;
 
-    // Filled and used only when VLOG(3) is on.
-    string rpc_description;
-    if (VLOG_IS_ON(3)) {
-        std::vector<string> ops;
-        ops.reserve(request_->queue_size());
-        for (const QueueItem& item : request_->queue()) {
-            if (item.has_operation()) {
-                ops.push_back(item.operation().name());
-            } else {
-                ops.push_back(absl::StrCat("DeleteHandle(",
-                                           item.handle_to_decref().op_id(), ":",
-                                           item.handle_to_decref().output_num(), ")"));
-            }
-        }
-        rpc_description =
-            absl::StrCat("RemoteOperation(", absl::StrJoin(ops, ", "), ")");
+  // Filled and used only when VLOG(3) is on.
+  string rpc_description;
+  if (VLOG_IS_ON(3)) {
+    std::vector<string> ops;
+    ops.reserve(request_->queue_size());
+    for (const QueueItem& item : request_->queue()) {
+      if (item.has_operation()) {
+        ops.push_back(item.operation().name());
+      } else {
+        ops.push_back(absl::StrCat("DeleteHandle(",
+                                   item.handle_to_decref().op_id(), ":",
+                                   item.handle_to_decref().output_num(), ")"));
+      }
     }
-    VLOG(3) << "Issuing: " << rpc_description;
+    rpc_description =
+        absl::StrCat("RemoteOperation(", absl::StrJoin(ops, ", "), ")");
+  }
+  VLOG(3) << "Issuing: " << rpc_description;
 
-    for (auto handle : inputs_) {
-        handle->Ref();
-    }
-    for (auto handle : retvals) {
-        handle->Ref();
-    }
+  for (auto handle : inputs_) {
+    handle->Ref();
+  }
+  for (auto handle : retvals) {
+    handle->Ref();
+  }
 
-    eager_client_->StreamingEnqueueAsync(
-        request_.get(), response,
-        [inputs, retvals, response, device, context_view_id = context_view_id_,
-            rpc_description, done](const Status& status) {
+  eager_client_->StreamingEnqueueAsync(
+      request_.get(), response,
+      [inputs, retvals, response, device, context_view_id = context_view_id_,
+       rpc_description, done](const Status& status) {
         for (auto handle : inputs) {
-            handle->Unref();
+          handle->Unref();
         }
         if (status.ok()) {
-            VLOG(3) << "Completed successfully: " << rpc_description;
+          VLOG(3) << "Completed successfully: " << rpc_description;
         } else {
-            VLOG(3) << "Failed: " << rpc_description << " with status "
-                    << status.ToString();
+          VLOG(3) << "Failed: " << rpc_description << " with status "
+                  << status.ToString();
         }
         for (size_t i = 0; i < retvals.size(); ++i) {
-            if (status.ok()) {
-                Status s = retvals[i]->SetRemoteShape(
-                               response->queue_response(0).shape(i), device, context_view_id);
-                if (!s.ok()) {
-                    LOG(ERROR) << "Ignoring an error encountered when setting "
-                               "remote shape of tensor handle: "
-                               << retvals[i]
-                               << " with execute status: " << status.ToString()
-                               << " and SetRemoteShape status: " << s.ToString()
-                               << "\nThis should never happen. "
-                               "Please file an issue with the TensorFlow Team.";
-                }
-            } else {
-                retvals[i]->PoisonRemote(status, device, context_view_id);
+          if (status.ok()) {
+            Status s = retvals[i]->SetRemoteShape(
+                response->queue_response(0).shape(i), device, context_view_id);
+            if (!s.ok()) {
+              LOG(ERROR) << "Ignoring an error encountered when setting "
+                            "remote shape of tensor handle: "
+                         << retvals[i]
+                         << " with execute status: " << status.ToString()
+                         << " and SetRemoteShape status: " << s.ToString()
+                         << "\nThis should never happen. "
+                            "Please file an issue with the TensorFlow Team.";
             }
-            retvals[i]->Unref();
+          } else {
+            retvals[i]->PoisonRemote(status, device, context_view_id);
+          }
+          retvals[i]->Unref();
         }
         done(status);
         delete response;
-    });
+      });
 }
 
 }  // namespace eager

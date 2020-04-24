@@ -24,7 +24,7 @@ limitations under the License.
 // and should not be depended on.
 
 struct TF_ConcreteFunctionList {
-    std::vector<tensorflow::ConcreteFunction*> list;
+  std::vector<tensorflow::ConcreteFunction*> list;
 };
 
 #endif  // TENSORFLOW_C_EXPERIMENTAL_SAVED_MODEL_INTERNAL_CONCRETE_FUNCTION_LIST_TYPE_H_

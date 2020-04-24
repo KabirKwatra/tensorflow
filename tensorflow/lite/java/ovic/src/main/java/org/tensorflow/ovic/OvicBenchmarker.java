@@ -80,11 +80,8 @@ public abstract class OvicBenchmarker {
   /** Check whether the benchmarker should stop. */
   public Boolean shouldStop() {
     if (totalRuntimeNano >= wallTimeNano) {
-      Log.e(
-          TAG,
-          "Total runtime (ms) "
-              + (totalRuntimeNano * 1.0e-6)
-              + " exceeded wall-time "
+      Log.e(TAG,
+          "Total runtime (ms) " + (totalRuntimeNano * 1.0e-6) + " exceeded wall-time "
               + (wallTimeNano * 1.0e-6));
       return true;
     }

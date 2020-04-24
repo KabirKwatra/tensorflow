@@ -18,7 +18,6 @@ import java.util.ArrayList;
 
 /** Result class for inference run on a single image. */
 public class OvicClassificationResult {
-
   /** Top K classes and probabilities. */
   public final ArrayList<String> topKClasses;
 
@@ -44,15 +43,8 @@ public class OvicClassificationResult {
     String textToShow = latencyMilli + "ms";
     textToShow += "\n" + latencyNano + "ns";
     for (int k = 0; k < topKProbs.size(); ++k) {
-      textToShow +=
-          "\nPrediction ["
-              + k
-              + "] = Class "
-              + topKIndices.get(k)
-              + " ("
-              + topKClasses.get(k)
-              + ") : "
-              + topKProbs.get(k);
+      textToShow += "\nPrediction [" + k + "] = Class " + topKIndices.get(k) + " ("
+          + topKClasses.get(k) + ") : " + topKProbs.get(k);
     }
     return textToShow;
   }

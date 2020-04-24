@@ -34,7 +34,6 @@ import org.tensorflow.lite.TestHelper;
 
 /** Class for running ImageNet classification with a TfLite model. */
 public class OvicClassifier {
-
   /** Tag for the {@link Log}. */
   private static final String TAG = "OvicClassifier";
 
@@ -58,14 +57,12 @@ public class OvicClassifier {
   private Boolean outputIsFloat = null;
 
   private final PriorityQueue<Map.Entry<Integer, Float>> sortedLabels =
-      new PriorityQueue<>(
-          RESULTS_TO_SHOW,
-          new Comparator<Map.Entry<Integer, Float>>() {
-            @Override
-            public int compare(Map.Entry<Integer, Float> o1, Map.Entry<Integer, Float> o2) {
-              return o1.getValue().compareTo(o2.getValue());
-            }
-          });
+      new PriorityQueue<>(RESULTS_TO_SHOW, new Comparator<Map.Entry<Integer, Float>>() {
+        @Override
+        public int compare(Map.Entry<Integer, Float> o1, Map.Entry<Integer, Float> o2) {
+          return o1.getValue().compareTo(o2.getValue());
+        }
+      });
 
   /** Initializes an {@code OvicClassifier}. */
   public OvicClassifier(InputStream labelInputStream, MappedByteBuffer model) throws IOException {
@@ -180,7 +177,7 @@ public class OvicClassifier {
   private static List<String> loadLabelList(InputStream labelInputStream) throws IOException {
     List<String> labelList = new ArrayList<>();
     try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(labelInputStream, UTF_8))) {
+             new BufferedReader(new InputStreamReader(labelInputStream, UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         labelList.add(line);
@@ -202,12 +199,8 @@ public class OvicClassifier {
     }
     OvicClassificationResult singleImageResult = new OvicClassificationResult();
     if (sortedLabels.size() != RESULTS_TO_SHOW) {
-      throw new RuntimeException(
-          "Number of returned labels does not match requirement: "
-              + sortedLabels.size()
-              + " returned, but "
-              + RESULTS_TO_SHOW
-              + " required.");
+      throw new RuntimeException("Number of returned labels does not match requirement: "
+          + sortedLabels.size() + " returned, but " + RESULTS_TO_SHOW + " required.");
     }
     for (int i = 0; i < RESULTS_TO_SHOW; ++i) {
       Map.Entry<Integer, Float> label = sortedLabels.poll();

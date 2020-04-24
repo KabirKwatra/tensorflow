@@ -31,7 +31,6 @@ import org.tensorflow.lite.TestHelper;
 
 /** Class for running COCO detection with a TfLite model. */
 public class OvicDetector implements AutoCloseable {
-
   /** Tag for the {@link Log}. */
   private static final String TAG = "OvicDetector";
 
@@ -106,7 +105,7 @@ public class OvicDetector implements AutoCloseable {
   private static List<String> loadLabelList(InputStream labelInputStream) throws IOException {
     List<String> labelList = new ArrayList<>();
     try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(labelInputStream, UTF_8))) {
+             new BufferedReader(new InputStreamReader(labelInputStream, UTF_8))) {
       String line;
       while ((line = reader.readLine()) != null) {
         labelList.add(line);
@@ -142,15 +141,12 @@ public class OvicDetector implements AutoCloseable {
       // The boxes expect pixel coordinates [x1, y1, x2, y2].
       // The height and width of the input are in inputDims[1] and inputDims[2].
       // The following command converts between model outputs to bounding boxes.
-      result.addBox(
-          outputLocations[0][i][1] * inputDims[2],
-          outputLocations[0][i][0] * inputDims[1],
-          outputLocations[0][i][3] * inputDims[2],
+      result.addBox(outputLocations[0][i][1] * inputDims[2],
+          outputLocations[0][i][0] * inputDims[1], outputLocations[0][i][3] * inputDims[2],
           outputLocations[0][i][2] * inputDims[1],
-          Math.round(outputClasses[0][i] + 1 /* Label offset */),
-          outputScores[0][i]);
+          Math.round(outputClasses[0][i] + 1 /* Label offset */), outputScores[0][i]);
     }
-    return true;  // Marks that the result is available.
+    return true; // Marks that the result is available.
   }
 
   /*

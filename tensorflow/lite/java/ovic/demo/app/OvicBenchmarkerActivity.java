@@ -192,14 +192,9 @@ public class OvicBenchmarkerActivity extends Activity {
 
     if (textView != null) {
       if (testIter > 0) {
-        textView.setText(
-            displayText
-                + modelPath
-                + ": Average latency="
-                + df2.format(benchmarker.getTotalRuntimeNano() * 1.0e-6 / testIter)
-                + "ms after "
-                + testIter
-                + " runs.");
+        textView.setText(displayText + modelPath + ": Average latency="
+            + df2.format(benchmarker.getTotalRuntimeNano() * 1.0e-6 / testIter) + "ms after "
+            + testIter + " runs.");
       } else {
         textView.setText("Benchmarker failed to run on more than one images.");
       }
@@ -230,8 +225,7 @@ public class OvicBenchmarkerActivity extends Activity {
       }
       if (SystemClock.elapsedRealtime() > startTimeMs + WAIT_TIME_FOR_AFFINITY) {
         throw new IOException(
-            String.format(
-                "Core-binding failed: affinity set to 0x%02x but read back as 0x%02x\n"
+            String.format("Core-binding failed: affinity set to 0x%02x but read back as 0x%02x\n"
                     + "please root device.",
                 mask, readBackMask));
       }
