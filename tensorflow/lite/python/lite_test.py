@@ -14,8 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for lite.py."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import io
 import logging
@@ -26,18 +27,30 @@ import numpy as np
 import six
 from absl.testing import parameterized
 from six.moves import range
-from tensorflow.lite.python import lite, lite_constants
+
+from tensorflow.lite.python import lite
+from tensorflow.lite.python import lite_constants
 from tensorflow.lite.python.convert import ConverterError
 from tensorflow.lite.python.interpreter import Interpreter
 from tensorflow.python import keras
 from tensorflow.python.client import session
-from tensorflow.python.eager import context, def_function
-from tensorflow.python.framework import constant_op, dtypes, ops, test_util
-from tensorflow.python.ops import (array_ops, gen_array_ops, math_ops, nn_ops,
-                                   variable_scope, variables)
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import test_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import gen_array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import nn_ops
+from tensorflow.python.ops import variable_scope
+from tensorflow.python.ops import variables
 from tensorflow.python.ops.variables import \
     global_variables_initializer as _global_variables_initializer
-from tensorflow.python.platform import gfile, resource_loader, test
+from tensorflow.python.platform import gfile
+from tensorflow.python.platform import resource_loader
+from tensorflow.python.platform import test
 from tensorflow.python.saved_model import saved_model
 from tensorflow.python.training.training_util import write_graph
 
