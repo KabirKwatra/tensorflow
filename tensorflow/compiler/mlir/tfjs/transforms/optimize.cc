@@ -37,24 +37,24 @@ namespace {
 
 // Optimize TFJS operations in functions.
 struct Optimize : public PassWrapper<Optimize, FunctionPass> {
-  void runOnFunction() override;
+    void runOnFunction() override;
 };
 
 #include "tensorflow/compiler/mlir/tfjs/transforms/generated_optimize.inc"
 
 void Optimize::runOnFunction() {
-  OwningRewritePatternList patterns;
-  auto *ctx = &getContext();
-  auto func = getFunction();
+    OwningRewritePatternList patterns;
+    auto *ctx = &getContext();
+    auto func = getFunction();
 
-  populateWithGenerated(ctx, &patterns);
-  applyPatternsAndFoldGreedily(func, patterns);
+    populateWithGenerated(ctx, &patterns);
+    applyPatternsAndFoldGreedily(func, patterns);
 }
 }  // namespace
 
 // Creates an instance of the TensorFlow.js dialect Optimize pass.
 std::unique_ptr<OperationPass<FuncOp>> CreateOptimizePass() {
-  return std::make_unique<Optimize>();
+    return std::make_unique<Optimize>();
 }
 
 static PassRegistration<Optimize> pass(

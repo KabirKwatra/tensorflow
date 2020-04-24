@@ -28,26 +28,26 @@ limitations under the License.
 namespace tensorflow {
 
 class TFSavedModelAPIImpl : public SavedModelAPI {
- public:
-  TFSavedModelAPIImpl() = default;
+public:
+    TFSavedModelAPIImpl() = default;
 
-  Status GetFunction(const std::string& function_path,
-                     ConcreteFunction** function) override;
+    Status GetFunction(const std::string& function_path,
+                       ConcreteFunction** function) override;
 
-  Status GetSignatureDefFunction(const std::string& signature_def_key,
-                                 ConcreteFunction** function) override;
+    Status GetSignatureDefFunction(const std::string& signature_def_key,
+                                   ConcreteFunction** function) override;
 
-  static Status Load(
-      const std::string& directory,
-      const absl::optional<std::unordered_set<std::string>>& tags,
-      TFSavedModelAPIImpl* out);
+    static Status Load(
+        const std::string& directory,
+        const absl::optional<std::unordered_set<std::string>>& tags,
+        TFSavedModelAPIImpl* out);
 
-  std::vector<ConcreteFunction*> ListFunctions() override;
+    std::vector<ConcreteFunction*> ListFunctions() override;
 
-  ~TFSavedModelAPIImpl() override = default;
+    ~TFSavedModelAPIImpl() override = default;
 
- private:
-  std::vector<ConcreteFunction> functions_;
+private:
+    std::vector<ConcreteFunction> functions_;
 };
 
 }  // namespace tensorflow

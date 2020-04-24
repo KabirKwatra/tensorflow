@@ -27,26 +27,26 @@ limitations under the License.
 namespace mlir {
 /// Create a pass to convert from the TFExecutor to the TF control dialect.
 std::unique_ptr<OperationPass<FuncOp>>
-CreateTFExecutorToControlDialectConversion();
+                                    CreateTFExecutorToControlDialectConversion();
 }  // namespace mlir
 
 namespace tensorflow {
 
 void AddTFToTFJSConversionPasses(mlir::OpPassManager* pm) {
-  // Then we pass the MLIR module through the TF standard pipeline, which for
-  mlir::TF::StandardPipelineOptions tf_options;
-  tf_options.enable_inliner = true;
-  mlir::TF::CreateTFStandardPipeline(*pm, tf_options);
+    // Then we pass the MLIR module through the TF standard pipeline, which for
+    mlir::TF::StandardPipelineOptions tf_options;
+    tf_options.enable_inliner = true;
+    mlir::TF::CreateTFStandardPipeline(*pm, tf_options);
 
-  // freeze global tensors.
-  pm->addPass(mlir::tf_saved_model::CreateFreezeGlobalTensorsPass());
+    // freeze global tensors.
+    pm->addPass(mlir::tf_saved_model::CreateFreezeGlobalTensorsPass());
 
-  // TFJS dialect passes.
-  pm->addPass(mlir::tfjs::CreateOptimizePass());
+    // TFJS dialect passes.
+    pm->addPass(mlir::tfjs::CreateOptimizePass());
 
-  // Canonicalize, CSE etc.
-  pm->addNestedPass<mlir::FuncOp>(mlir::createCanonicalizerPass());
-  pm->addNestedPass<mlir::FuncOp>(mlir::createCSEPass());
+    // Canonicalize, CSE etc.
+    pm->addNestedPass<mlir::FuncOp>(mlir::createCanonicalizerPass());
+    pm->addNestedPass<mlir::FuncOp>(mlir::createCSEPass());
 }
 
 }  // namespace tensorflow
