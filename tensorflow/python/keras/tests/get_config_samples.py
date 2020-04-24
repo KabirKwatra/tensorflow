@@ -43,13 +43,18 @@ FUNCTIONAL_DNN = {
                 "activation": "relu",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dtype": "float32",
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "dense",
@@ -66,13 +71,18 @@ FUNCTIONAL_DNN = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dtype": "float32",
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "dense_1",
@@ -84,7 +94,8 @@ FUNCTIONAL_DNN = {
             "name": "dense_1",
         },
     ],
-    "name": "model",
+    "name":
+    "model",
     "output_layers": [["dense_1", 0, 0]],
 }
 
@@ -114,7 +125,10 @@ FUNCTIONAL_CNN = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "data_format": "channels_last",
                 "dilation_rate": (1, 1),
@@ -123,7 +137,9 @@ FUNCTIONAL_CNN = {
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "kernel_size": (3, 3),
@@ -153,13 +169,18 @@ FUNCTIONAL_CNN = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dtype": "float32",
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "dense_2",
@@ -171,7 +192,8 @@ FUNCTIONAL_CNN = {
             "name": "dense_2",
         },
     ],
-    "name": "model_1",
+    "name":
+    "model_1",
     "output_layers": [["dense_2", 0, 0]],
 }
 
@@ -200,7 +222,10 @@ FUNCTIONAL_LSTM = {
                 "activation": "tanh",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dropout": 0.0,
                 "dtype": "float32",
@@ -209,7 +234,9 @@ FUNCTIONAL_LSTM = {
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "lstm_2",
@@ -218,7 +245,10 @@ FUNCTIONAL_LSTM = {
                 "recurrent_dropout": 0.0,
                 "recurrent_initializer": {
                     "class_name": "Orthogonal",
-                    "config": {"gain": 1.0, "seed": None},
+                    "config": {
+                        "gain": 1.0,
+                        "seed": None
+                    },
                 },
                 "recurrent_regularizer": None,
                 "return_sequences": False,
@@ -240,13 +270,18 @@ FUNCTIONAL_LSTM = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dtype": "float32",
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "dense_4",
@@ -258,7 +293,8 @@ FUNCTIONAL_LSTM = {
             "name": "dense_4",
         },
     ],
-    "name": "model_3",
+    "name":
+    "model_3",
     "output_layers": [["dense_4", 0, 0]],
 }
 
@@ -273,13 +309,18 @@ SEQUENTIAL_DNN = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dtype": "float32",
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "dense_2",
@@ -294,13 +335,18 @@ SEQUENTIAL_DNN = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dtype": "float32",
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "dense_3",
@@ -310,7 +356,8 @@ SEQUENTIAL_DNN = {
             },
         },
     ],
-    "name": "sequential_1",
+    "name":
+    "sequential_1",
 }
 
 # model = tf.keras.Sequential()
@@ -325,7 +372,10 @@ SEQUENTIAL_CNN = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "data_format": "channels_last",
                 "dilation_rate": (1, 1),
@@ -334,7 +384,9 @@ SEQUENTIAL_CNN = {
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "kernel_size": (3, 3),
@@ -360,13 +412,18 @@ SEQUENTIAL_CNN = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dtype": "float32",
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "dense_6",
@@ -376,7 +433,8 @@ SEQUENTIAL_CNN = {
             },
         },
     ],
-    "name": "sequential_4",
+    "name":
+    "sequential_4",
 }
 
 # model = tf.keras.Sequential()
@@ -390,7 +448,10 @@ SEQUENTIAL_LSTM = {
                 "activation": "tanh",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dropout": 0.0,
                 "dtype": "float32",
@@ -399,7 +460,9 @@ SEQUENTIAL_LSTM = {
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "lstm",
@@ -408,7 +471,10 @@ SEQUENTIAL_LSTM = {
                 "recurrent_dropout": 0.0,
                 "recurrent_initializer": {
                     "class_name": "Orthogonal",
-                    "config": {"gain": 1.0, "seed": None},
+                    "config": {
+                        "gain": 1.0,
+                        "seed": None
+                    },
                 },
                 "recurrent_regularizer": None,
                 "return_sequences": False,
@@ -428,13 +494,18 @@ SEQUENTIAL_LSTM = {
                 "activation": "linear",
                 "activity_regularizer": None,
                 "bias_constraint": None,
-                "bias_initializer": {"class_name": "Zeros", "config": {}},
+                "bias_initializer": {
+                    "class_name": "Zeros",
+                    "config": {}
+                },
                 "bias_regularizer": None,
                 "dtype": "float32",
                 "kernel_constraint": None,
                 "kernel_initializer": {
                     "class_name": "GlorotUniform",
-                    "config": {"seed": None},
+                    "config": {
+                        "seed": None
+                    },
                 },
                 "kernel_regularizer": None,
                 "name": "dense_4",
@@ -444,5 +515,6 @@ SEQUENTIAL_LSTM = {
             },
         },
     ],
-    "name": "sequential_2",
+    "name":
+    "sequential_2",
 }

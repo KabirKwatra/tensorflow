@@ -49,9 +49,8 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
         )
 
         def dataset_fn(count=5, buffer_size=None, seed=0):
-            repeat_dataset = dataset_ops.Dataset.from_tensor_slices(components).repeat(
-                count
-            )
+            repeat_dataset = dataset_ops.Dataset.from_tensor_slices(
+                components).repeat(count)
             if buffer_size:
                 shuffle_dataset = repeat_dataset.shuffle(buffer_size, seed)
 
@@ -81,7 +80,8 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
             self.evaluate(get_next())
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
-        self.assertAllEqual(sorted(unshuffled_elements), sorted(shuffled_elements))
+        self.assertAllEqual(sorted(unshuffled_elements),
+                            sorted(shuffled_elements))
 
         # Assert that shuffling twice with the same seeds gives the same sequence.
         get_next = self.getNext(dataset_fn(buffer_size=100, seed=37))
@@ -97,13 +97,14 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
         get_next = self.getNext(dataset_fn(buffer_size=100, seed=137))
         reshuffled_elements_different_seed = []
         for _ in range(20):
-            reshuffled_elements_different_seed.append(self.evaluate(get_next()))
+            reshuffled_elements_different_seed.append(self.evaluate(
+                get_next()))
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
-        self.assertNotEqual(shuffled_elements, reshuffled_elements_different_seed)
-        self.assertAllEqual(
-            sorted(shuffled_elements), sorted(reshuffled_elements_different_seed)
-        )
+        self.assertNotEqual(shuffled_elements,
+                            reshuffled_elements_different_seed)
+        self.assertAllEqual(sorted(shuffled_elements),
+                            sorted(reshuffled_elements_different_seed))
 
         # Assert that the shuffled dataset has the same elements as the
         # "ground truth" when the buffer size is smaller than the input
@@ -114,9 +115,8 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
             reshuffled_elements_small_buffer.append(self.evaluate(get_next()))
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
-        self.assertAllEqual(
-            sorted(unshuffled_elements), sorted(reshuffled_elements_small_buffer)
-        )
+        self.assertAllEqual(sorted(unshuffled_elements),
+                            sorted(reshuffled_elements_small_buffer))
 
         # Test the case of shuffling an empty dataset.
         get_next = self.getNext(dataset_fn(count=0, buffer_size=100, seed=37))
@@ -124,12 +124,12 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
         with self.assertRaises(errors.OutOfRangeError):
             self.evaluate(get_next())
 
-    @combinations.generate(combinations.combine(tf_api_version=1, mode="graph"))
+    @combinations.generate(combinations.combine(tf_api_version=1,
+                                                mode="graph"))
     def testSeedZero(self):
         """Test for same behavior when the seed is a Python or Tensor zero."""
         iterator = dataset_ops.make_one_shot_iterator(
-            dataset_ops.Dataset.range(10).shuffle(10, seed=0)
-        )
+            dataset_ops.Dataset.range(10).shuffle(10, seed=0))
         get_next = iterator.get_next()
 
         elems = []
@@ -141,8 +141,7 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         seed_placeholder = array_ops.placeholder(dtypes.int64, shape=[])
         iterator = dataset_ops.make_initializable_iterator(
-            dataset_ops.Dataset.range(10).shuffle(10, seed=seed_placeholder)
-        )
+            dataset_ops.Dataset.range(10).shuffle(10, seed=seed_placeholder))
         get_next = iterator.get_next()
 
         with self.cached_session() as sess:
@@ -155,7 +154,8 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(test_base.default_test_combinations())
     def testDefaultArguments(self):
         components = [0, 1, 2, 3, 4]
-        dataset = dataset_ops.Dataset.from_tensor_slices(components).shuffle(5).repeat()
+        dataset = dataset_ops.Dataset.from_tensor_slices(components).shuffle(
+            5).repeat()
         get_next = self.getNext(dataset)
         counts = collections.defaultdict(lambda: 0)
         for _ in range(10):
@@ -169,21 +169,18 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
         combinations.times(
             test_base.graph_only_combinations(),
             combinations.combine(reshuffle=[True, False]),
-            combinations.combine(graph_seed=38, op_seed=None)
-            + combinations.combine(graph_seed=None, op_seed=42)
-            + combinations.combine(graph_seed=38, op_seed=42),
-        )
-    )
+            combinations.combine(graph_seed=38, op_seed=None) +
+            combinations.combine(graph_seed=None, op_seed=42) +
+            combinations.combine(graph_seed=38, op_seed=42),
+        ))
     def testShuffleSeed(self, reshuffle, graph_seed, op_seed):
         results = []
         for _ in range(2):
             with ops.Graph().as_default() as g:
                 random_seed.set_random_seed(graph_seed)
-                dataset = (
-                    dataset_ops.Dataset.range(10)
-                    .shuffle(10, seed=op_seed, reshuffle_each_iteration=reshuffle)
-                    .repeat(3)
-                )
+                dataset = (dataset_ops.Dataset.range(10).shuffle(
+                    10, seed=op_seed,
+                    reshuffle_each_iteration=reshuffle).repeat(3))
                 iterator = dataset_ops.make_one_shot_iterator(dataset)
                 next_element = iterator.get_next()
 
@@ -201,24 +198,23 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(
         combinations.times(
             test_base.graph_only_combinations(),
-            combinations.combine(reshuffle=[True, False], initializable=[True, False]),
-        )
-    )
+            combinations.combine(reshuffle=[True, False],
+                                 initializable=[True, False]),
+        ))
     def testMultipleIterators(self, reshuffle, initializable):
         with ops.Graph().as_default() as g:
-            dataset = (
-                dataset_ops.Dataset.range(100)
-                .shuffle(10, reshuffle_each_iteration=reshuffle)
-                .repeat(3)
-            )
+            dataset = (dataset_ops.Dataset.range(100).shuffle(
+                10, reshuffle_each_iteration=reshuffle).repeat(3))
 
             if initializable:
                 iterators = [
-                    dataset_ops.make_initializable_iterator(dataset) for _ in range(2)
+                    dataset_ops.make_initializable_iterator(dataset)
+                    for _ in range(2)
                 ]
             else:
                 iterators = [
-                    dataset_ops.make_one_shot_iterator(dataset) for _ in range(2)
+                    dataset_ops.make_one_shot_iterator(dataset)
+                    for _ in range(2)
                 ]
 
             results = []
@@ -241,14 +237,10 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
         combinations.times(
             test_base.default_test_combinations(),
             combinations.combine(reshuffle=[True, False], seed=[None, 42]),
-        )
-    )
+        ))
     def testReshuffleRepeatEpochs(self, reshuffle, seed):
-        dataset = (
-            dataset_ops.Dataset.range(10)
-            .shuffle(10, seed=seed, reshuffle_each_iteration=reshuffle)
-            .repeat(2)
-        )
+        dataset = (dataset_ops.Dataset.range(10).shuffle(
+            10, seed=seed, reshuffle_each_iteration=reshuffle).repeat(2))
         next_element = self.getNext(dataset)
 
         first_epoch = []
@@ -265,22 +257,21 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
         combinations.times(
             combinations.combine(tf_api_version=2, mode="eager"),
             combinations.combine(reshuffle=[True, False], seed=[None, 42]),
-        )
-    )
+        ))
     def testReshuffleIterationEpochs(self, reshuffle, seed):
         # TensorFlow unit tests set the global graph seed. We unset it here so that
         # we can control determinism via the `seed` parameter.
         random_seed.set_random_seed(None)
         dataset = dataset_ops.Dataset.range(10).shuffle(
-            10, seed=seed, reshuffle_each_iteration=reshuffle
-        )
+            10, seed=seed, reshuffle_each_iteration=reshuffle)
 
         first_epoch = self.getDatasetOutput(dataset)
         second_epoch = self.getDatasetOutput(dataset)
 
         self.assertEqual(first_epoch == second_epoch, not reshuffle)
 
-    @combinations.generate(combinations.combine(tf_api_version=2, mode="eager"))
+    @combinations.generate(combinations.combine(tf_api_version=2,
+                                                mode="eager"))
     def testShuffleV2ResourceCapture(self):
         def make_dataset():
             ids = dataset_ops.Dataset.range(10)
@@ -303,22 +294,26 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
         combinations.times(
             test_base.eager_only_combinations(),
             combinations.combine(reshuffle=[True, False], seed=[None, 42]),
-        )
-    )
+        ))
     def testReshuffleSeparateTransformations(self, reshuffle, seed):
         dataset = dataset_ops.Dataset.range(10)
 
         first_epoch = []
-        for elem in dataset.shuffle(10, seed=seed, reshuffle_each_iteration=reshuffle):
+        for elem in dataset.shuffle(10,
+                                    seed=seed,
+                                    reshuffle_each_iteration=reshuffle):
             first_epoch.append(elem.numpy())
 
         second_epoch = []
-        for elem in dataset.shuffle(10, seed=seed, reshuffle_each_iteration=reshuffle):
+        for elem in dataset.shuffle(10,
+                                    seed=seed,
+                                    reshuffle_each_iteration=reshuffle):
             second_epoch.append(elem.numpy())
 
         self.assertEqual(first_epoch != second_epoch, seed is None)
 
-    @combinations.generate(combinations.combine(tf_api_version=2, mode="eager"))
+    @combinations.generate(combinations.combine(tf_api_version=2,
+                                                mode="eager"))
     def testShuffleV2InFunction(self):
         counter_var = variables.Variable(0)
 
@@ -358,10 +353,10 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
     # to its use of an external seed generator resource.
     @combinations.generate(
         combinations.times(
-            test_base.graph_only_combinations() + combinations.combine(mode=["eager"]),
+            test_base.graph_only_combinations() +
+            combinations.combine(mode=["eager"]),
             combinations.combine(reshuffle=[True, False]),
-        )
-    )
+        ))
     def testRerandomizeOnReplicate(self, reshuffle):
         if tf2.enabled() and not compat.forward_compatible(2020, 5, 22):
             self.skipTest("Functionality currently not supported.")
@@ -371,7 +366,8 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
         # produce elements in a different order.
         num_elements = 100
         dataset = dataset_ops.Dataset.range(num_elements)
-        dataset = dataset.shuffle(num_elements, reshuffle_each_iteration=reshuffle)
+        dataset = dataset.shuffle(num_elements,
+                                  reshuffle_each_iteration=reshuffle)
 
         shuffle_1 = self.getDatasetOutput(dataset)
         dataset = self.graphRoundTrip(dataset, allow_stateful=True)

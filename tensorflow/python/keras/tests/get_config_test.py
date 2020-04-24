@@ -39,15 +39,18 @@ class TestGetConfigBackwardsCompatible(keras_parameterized.TestCase):
         self.assertLen(model.layers, 3)
 
     def test_sequential_dnn(self):
-        model = sequential.Sequential.from_config(get_config_samples.SEQUENTIAL_DNN)
+        model = sequential.Sequential.from_config(
+            get_config_samples.SEQUENTIAL_DNN)
         self.assertLen(model.layers, 2)
 
     def test_sequential_cnn(self):
-        model = sequential.Sequential.from_config(get_config_samples.SEQUENTIAL_CNN)
+        model = sequential.Sequential.from_config(
+            get_config_samples.SEQUENTIAL_CNN)
         self.assertLen(model.layers, 3)
 
     def test_sequential_lstm(self):
-        model = sequential.Sequential.from_config(get_config_samples.SEQUENTIAL_LSTM)
+        model = sequential.Sequential.from_config(
+            get_config_samples.SEQUENTIAL_LSTM)
         self.assertLen(model.layers, 2)
 
 

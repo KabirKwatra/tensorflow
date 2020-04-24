@@ -74,13 +74,13 @@ def make_scatter_nd_tests(options):
 
     def build_inputs(parameters, sess, inputs, outputs):
         indices = np.array(parameters["indices_value"])
-        updates = create_tensor_data(
-            parameters["updates_dtype"], parameters["updates_shape"]
-        )
+        updates = create_tensor_data(parameters["updates_dtype"],
+                                     parameters["updates_shape"])
         shape = np.array(parameters["shape_value"])
         return (
             [indices, updates, shape],
-            sess.run(outputs, feed_dict=dict(zip(inputs, [indices, updates, shape]))),
+            sess.run(outputs,
+                     feed_dict=dict(zip(inputs, [indices, updates, shape]))),
         )
 
     make_zip_of_tests(options, test_parameters, build_graph, build_inputs)

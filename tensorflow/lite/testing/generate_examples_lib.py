@@ -207,7 +207,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 # erases the reduction indices array while it's shared with other ops.
 # For verifying https://github.com/tensorflow/tensorflow/issues/23599
 
-
 # A map from regular expression to bug number. Any test failure with label
 # matching the expression will be considered due to the corresponding bug.
 KNOWN_BUGS = {
@@ -324,22 +323,22 @@ def generate_examples(options):
         test_name = options.multi_gen_state.test_name
     else:
         # Remove suffixes to extract the test name from the output name.
-        test_name = re.sub(
-            r"(_(|toco-flex|forward-compat|edgetpu))?\.zip$", "", out, count=1
-        )
+        test_name = re.sub(r"(_(|toco-flex|forward-compat|edgetpu))?\.zip$",
+                           "",
+                           out,
+                           count=1)
 
     test_function_name = "make_%s_tests" % test_name
     test_function = get_test_function(test_function_name)
     if test_function is None:
         raise RuntimeError(
-            "Can't find a test function to create %r. Tried %r"
-            % (out, test_function_name)
-        )
+            "Can't find a test function to create %r. Tried %r" %
+            (out, test_function_name))
     if options.make_forward_compat_test:
         future_date = datetime.date.today() + datetime.timedelta(days=30)
-        with tf.compat.forward_compatibility_horizon(
-            future_date.year, future_date.month, future_date.day
-        ):
+        with tf.compat.forward_compatibility_horizon(future_date.year,
+                                                     future_date.month,
+                                                     future_date.day):
             test_function(options)
     else:
         test_function(options)
@@ -368,15 +367,12 @@ def generate_multi_set_examples(options, test_sets):
 
             # Remove suffix and set test_name to run proper test generation function.
             multi_gen_state.test_name = re.sub(
-                r"(_(|toco-flex|forward-compat))?$", "", test_name, count=1
-            )
+                r"(_(|toco-flex|forward-compat))?$", "", test_name, count=1)
             # Set label base path to write test data files with proper path.
             multi_gen_state.label_base_path = os.path.join(
-                os.path.dirname(zip_path), test_name + ".zip"
-            )
+                os.path.dirname(zip_path), test_name + ".zip")
 
             generate_examples(new_options)
 
-        archive.writestr(
-            "manifest.txt", "".join(multi_gen_state.zip_manifest), zipfile.ZIP_DEFLATED
-        )
+        archive.writestr("manifest.txt", "".join(multi_gen_state.zip_manifest),
+                         zipfile.ZIP_DEFLATED)
