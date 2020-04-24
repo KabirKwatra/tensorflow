@@ -15,20 +15,16 @@
 # ==============================================================================
 """Tests for the Python extension-based XLA client."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 import itertools
 import threading
 import unittest
 
-from absl import flags
-from absl.testing import absltest
-from absl.testing import parameterized
 import numpy as np
-
+from absl import flags
+from absl.testing import absltest, parameterized
 from tensorflow.compiler.xla.python import xla_client
 
 # pylint: disable=g-import-not-at-top

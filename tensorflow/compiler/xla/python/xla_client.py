@@ -15,9 +15,7 @@
 # ==============================================================================
 """An XLA client in Python."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import abc
 import collections
@@ -26,15 +24,15 @@ import inspect
 import os
 from typing import List, Sequence, Tuple, Union
 
-from absl import logging
 import numpy as np
+from absl import logging
+from tensorflow.compiler.xla.python import xla_extension as _xla
 
 # Note this module does *not* depend on any Python protocol buffers. The XLA
 # Python bindings are currently packaged both as part of jaxlib and as part
 # of TensorFlow. If we use protocol buffers here, then importing both jaxlib
 # and TensorFlow may fail with duplicate protocol buffer message definitions.
 
-from tensorflow.compiler.xla.python import xla_extension as _xla
 
 # Most functions are snake_case for consistency with other modules, some
 # method names are CamelCase for consistency with XLA.
