@@ -40,8 +40,8 @@ bool IsLegalNumpyRankedBroadcast(Value lhs, Value rhs,
 // binary elementwise op which broadcasts according to "numpy" semantics
 // (see above), returning an extents tensor of the resulting shape.
 Value ComputeBinaryElementwiseBroadcastingResultExtents(Location loc, Value lhs,
-                                                        Value rhs,
-                                                        OpBuilder& builder);
+        Value rhs,
+        OpBuilder& builder);
 
 }  // namespace xla
 }  // namespace mlir

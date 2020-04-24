@@ -22,27 +22,27 @@ namespace detail {
 
 // The storage class for ShapeAttr.
 struct ShapeAttrStorage : public AttributeStorage {
-  using KeyTy = std::pair<ArrayRef<int64_t>, bool>;
+    using KeyTy = std::pair<ArrayRef<int64_t>, bool>;
 
-  explicit ShapeAttrStorage(ArrayRef<int64_t> shape, bool unranked = false)
-      : shape(shape), unranked(unranked) {}
+    explicit ShapeAttrStorage(ArrayRef<int64_t> shape, bool unranked = false)
+        : shape(shape), unranked(unranked) {}
 
-  bool operator==(const KeyTy& key) const {
-    return key == KeyTy(shape, unranked);
-  }
-  static unsigned hashKey(const KeyTy& key) {
-    return llvm::hash_combine(key.first, static_cast<char>(key.second));
-  }
+    bool operator==(const KeyTy& key) const {
+        return key == KeyTy(shape, unranked);
+    }
+    static unsigned hashKey(const KeyTy& key) {
+        return llvm::hash_combine(key.first, static_cast<char>(key.second));
+    }
 
-  // NOLINTNEXTLINE
-  static ShapeAttrStorage* construct(mlir::AttributeStorageAllocator& allocator,
-                                     const KeyTy& key) {
-    return new (allocator.allocate<ShapeAttrStorage>())
-        ShapeAttrStorage(allocator.copyInto(key.first), key.second);
-  }
+    // NOLINTNEXTLINE
+    static ShapeAttrStorage* construct(mlir::AttributeStorageAllocator& allocator,
+                                       const KeyTy& key) {
+        return new (allocator.allocate<ShapeAttrStorage>())
+               ShapeAttrStorage(allocator.copyInto(key.first), key.second);
+    }
 
-  ArrayRef<int64_t> shape;
-  bool unranked = false;
+    ArrayRef<int64_t> shape;
+    bool unranked = false;
 };
 
 }  // namespace detail
@@ -50,39 +50,41 @@ struct ShapeAttrStorage : public AttributeStorage {
 // Get or create a shape attribute.
 ShapeAttr ShapeAttr::get(mlir::MLIRContext* context,
                          llvm::Optional<ArrayRef<int64_t>> shape) {
-  if (shape)
-    return Base::get(context, AttrKind::SHAPE, *shape,
-                     /*unranked=*/false);
+    if (shape)
+        return Base::get(context, AttrKind::SHAPE, *shape,
+                         /*unranked=*/false);
 
-  return Base::get(context, AttrKind::SHAPE, ArrayRef<int64_t>(),
-                   /*unranked=*/true);
+    return Base::get(context, AttrKind::SHAPE, ArrayRef<int64_t>(),
+                     /*unranked=*/true);
 }
 
 llvm::Optional<ArrayRef<int64_t>> ShapeAttr::getValue() const {
-  if (hasRank()) return getShape();
-  return llvm::None;
+    if (hasRank()) return getShape();
+    return llvm::None;
 }
 
-bool ShapeAttr::hasRank() const { return !getImpl()->unranked; }
+bool ShapeAttr::hasRank() const {
+    return !getImpl()->unranked;
+}
 
 int64_t ShapeAttr::getRank() const {
-  assert(hasRank());
-  return getImpl()->shape.size();
+    assert(hasRank());
+    return getImpl()->shape.size();
 }
 
 ArrayRef<int64_t> ShapeAttr::getShape() const {
-  assert(hasRank());
-  return getImpl()->shape;
+    assert(hasRank());
+    return getImpl()->shape;
 }
 
 bool ShapeAttr::hasStaticShape() const {
-  if (!hasRank()) return false;
+    if (!hasRank()) return false;
 
-  for (auto dim : getShape()) {
-    if (dim < 0) return false;
-  }
+    for (auto dim : getShape()) {
+        if (dim < 0) return false;
+    }
 
-  return true;
+    return true;
 }
 
 }  // namespace TF

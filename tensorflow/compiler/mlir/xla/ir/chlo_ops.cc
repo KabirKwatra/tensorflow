@@ -26,7 +26,7 @@ namespace xla_chlo {
 
 template <typename T>
 static LogicalResult Verify(T op) {
-  return success();
+    return success();
 }
 
 //===----------------------------------------------------------------------===//
@@ -37,127 +37,127 @@ namespace {
 // Gets the resulting type from a broadcast between two types.
 static Type GetBroadcastType(Type x, Type y, Type element_type,
                              DenseIntElementsAttr broadcast_dimensions_attr) {
-  auto x_ranked = x.dyn_cast<RankedTensorType>();
-  auto y_ranked = y.dyn_cast<RankedTensorType>();
-  if (!x_ranked || !y_ranked) {
-    return UnrankedTensorType::get(element_type);
-  }
-
-  auto shape_x = x_ranked.getShape();
-  auto shape_y = y_ranked.getShape();
-
-  if (shape_x.size() == shape_y.size()) {
-    llvm::SmallVector<int64_t, 4> out_shape(shape_x.size());
-    for (int i = 0; i < shape_x.size(); i++) {
-      auto x_val = shape_x[i];
-      auto y_val = shape_y[i];
-      if (x_val == -1 || y_val == -1) {
-        out_shape[i] = -1;
-      } else {
-        out_shape[i] = std::max(x_val, y_val);
-      }
+    auto x_ranked = x.dyn_cast<RankedTensorType>();
+    auto y_ranked = y.dyn_cast<RankedTensorType>();
+    if (!x_ranked || !y_ranked) {
+        return UnrankedTensorType::get(element_type);
     }
+
+    auto shape_x = x_ranked.getShape();
+    auto shape_y = y_ranked.getShape();
+
+    if (shape_x.size() == shape_y.size()) {
+        llvm::SmallVector<int64_t, 4> out_shape(shape_x.size());
+        for (int i = 0; i < shape_x.size(); i++) {
+            auto x_val = shape_x[i];
+            auto y_val = shape_y[i];
+            if (x_val == -1 || y_val == -1) {
+                out_shape[i] = -1;
+            } else {
+                out_shape[i] = std::max(x_val, y_val);
+            }
+        }
+        return RankedTensorType::get(out_shape, element_type);
+    }
+
+    auto shape_large = shape_x.size() > shape_y.size() ? shape_x : shape_y;
+    auto shape_small = shape_x.size() <= shape_y.size() ? shape_x : shape_y;
+
+    llvm::SmallVector<int64_t, 4> broadcast_dimensions;
+    if (broadcast_dimensions_attr) {
+        // Explicit broadcast dimensions.
+        for (const APInt& int_value : broadcast_dimensions_attr.getIntValues()) {
+            broadcast_dimensions.push_back(int_value.getSExtValue());
+        }
+        if (broadcast_dimensions.size() != shape_small.size()) {
+            // Signal illegal broadcast_dimensions as unranked.
+            return UnrankedTensorType::get(element_type);
+        }
+    } else {
+        // If no broadcast dimensions, assume "numpy" broadcasting.
+        broadcast_dimensions = llvm::to_vector<4>(llvm::seq<int64_t>(
+                                   shape_large.size() - shape_small.size(), shape_large.size()));
+    }
+
+    llvm::SmallVector<int64_t, 4> out_shape(shape_large.begin(),
+                                            shape_large.end());
+
+    // Update according to the broadcast dimensions.
+    for (auto index_pair : llvm::enumerate(broadcast_dimensions)) {
+        auto old_value = out_shape[index_pair.value()];
+        auto new_value = shape_small[index_pair.index()];
+        if (old_value != -1 && (new_value == -1 || new_value > old_value)) {
+            out_shape[index_pair.value()] = new_value;
+        }
+    }
+
     return RankedTensorType::get(out_shape, element_type);
-  }
-
-  auto shape_large = shape_x.size() > shape_y.size() ? shape_x : shape_y;
-  auto shape_small = shape_x.size() <= shape_y.size() ? shape_x : shape_y;
-
-  llvm::SmallVector<int64_t, 4> broadcast_dimensions;
-  if (broadcast_dimensions_attr) {
-    // Explicit broadcast dimensions.
-    for (const APInt& int_value : broadcast_dimensions_attr.getIntValues()) {
-      broadcast_dimensions.push_back(int_value.getSExtValue());
-    }
-    if (broadcast_dimensions.size() != shape_small.size()) {
-      // Signal illegal broadcast_dimensions as unranked.
-      return UnrankedTensorType::get(element_type);
-    }
-  } else {
-    // If no broadcast dimensions, assume "numpy" broadcasting.
-    broadcast_dimensions = llvm::to_vector<4>(llvm::seq<int64_t>(
-        shape_large.size() - shape_small.size(), shape_large.size()));
-  }
-
-  llvm::SmallVector<int64_t, 4> out_shape(shape_large.begin(),
-                                          shape_large.end());
-
-  // Update according to the broadcast dimensions.
-  for (auto index_pair : llvm::enumerate(broadcast_dimensions)) {
-    auto old_value = out_shape[index_pair.value()];
-    auto new_value = shape_small[index_pair.index()];
-    if (old_value != -1 && (new_value == -1 || new_value > old_value)) {
-      out_shape[index_pair.value()] = new_value;
-    }
-  }
-
-  return RankedTensorType::get(out_shape, element_type);
 }
 
 LogicalResult InferBroadcastBinaryOpReturnTypeComponents(
     MLIRContext* context, Optional<Location> location, ValueRange operands,
     ArrayRef<NamedAttribute> attributes,
     SmallVectorImpl<ShapedTypeComponents>& inferedReturnShapes) {
-  // Find broadcast_dimensions.
-  DenseIntElementsAttr broadcast_dimensions;
-  for (auto attr : attributes) {
-    if (attr.first == "broadcast_dimensions") {
-      broadcast_dimensions = attr.second.dyn_cast<DenseIntElementsAttr>();
-      break;
+    // Find broadcast_dimensions.
+    DenseIntElementsAttr broadcast_dimensions;
+    for (auto attr : attributes) {
+        if (attr.first == "broadcast_dimensions") {
+            broadcast_dimensions = attr.second.dyn_cast<DenseIntElementsAttr>();
+            break;
+        }
     }
-  }
 
-  ShapedType lhs_type = operands[0].getType().dyn_cast<ShapedType>();
-  ShapedType rhs_type = operands[1].getType().dyn_cast<ShapedType>();
-  if (!lhs_type || !rhs_type ||
-      lhs_type.getElementType() != rhs_type.getElementType()) {
-    return emitOptionalError(location, "mismatched operand types");
-  }
-  Type element_type = lhs_type.getElementType();
-  Type result_type =
-      GetBroadcastType(lhs_type, rhs_type, element_type, broadcast_dimensions);
+    ShapedType lhs_type = operands[0].getType().dyn_cast<ShapedType>();
+    ShapedType rhs_type = operands[1].getType().dyn_cast<ShapedType>();
+    if (!lhs_type || !rhs_type ||
+            lhs_type.getElementType() != rhs_type.getElementType()) {
+        return emitOptionalError(location, "mismatched operand types");
+    }
+    Type element_type = lhs_type.getElementType();
+    Type result_type =
+        GetBroadcastType(lhs_type, rhs_type, element_type, broadcast_dimensions);
 
-  if (auto ranked_result_type = result_type.dyn_cast<RankedTensorType>()) {
-    inferedReturnShapes.emplace_back(ranked_result_type.getShape(),
-                                     element_type);
+    if (auto ranked_result_type = result_type.dyn_cast<RankedTensorType>()) {
+        inferedReturnShapes.emplace_back(ranked_result_type.getShape(),
+                                         element_type);
+        return success();
+    }
+
+    // TODO(laurenzo): This should be constructing with `element_type` but that
+    // constructor variant needs to be added upstream.
+    inferedReturnShapes.emplace_back(/* element_type */);
     return success();
-  }
-
-  // TODO(laurenzo): This should be constructing with `element_type` but that
-  // constructor variant needs to be added upstream.
-  inferedReturnShapes.emplace_back(/* element_type */);
-  return success();
 }
 
 LogicalResult ReifyBroadcastBinaryOpReturnTypeShapes(
     OpBuilder& builder, Operation* op,
     SmallVectorImpl<Value>& reifiedReturnShapes) {
-  auto loc = op->getLoc();
-  auto lhs = op->getOperand(0);
-  auto rhs = op->getOperand(1);
+    auto loc = op->getLoc();
+    auto lhs = op->getOperand(0);
+    auto rhs = op->getOperand(1);
 
-  // Check for "numpy"-style rank broadcast.
-  auto broadcast_dimensions = op->getAttr("broadcast_dimensions")
-                                  .dyn_cast_or_null<DenseIntElementsAttr>();
-  if (broadcast_dimensions &&
-      !xla::IsLegalNumpyRankedBroadcast(lhs, rhs, broadcast_dimensions)) {
-    // Note: It is unclear whether the general specification of explicit
-    // broadcast_dimensions on binary ops is a feature we want to carry
-    // forward. While it can technically be implemented for ranked-dynamic,
-    // it is incompatible with unranked inputs. If this warning is emitted
-    // in real programs, it is an indication that the feature should be
-    // implemented versus just falling back on the more standard definition
-    // of numpy-like prefix-padding.
-    return op->emitWarning()
-           << "unsupported non prefix-padded dynamic rank "
-           << "broadcast_dimensions = " << broadcast_dimensions;
-  }
+    // Check for "numpy"-style rank broadcast.
+    auto broadcast_dimensions = op->getAttr("broadcast_dimensions")
+                                .dyn_cast_or_null<DenseIntElementsAttr>();
+    if (broadcast_dimensions &&
+            !xla::IsLegalNumpyRankedBroadcast(lhs, rhs, broadcast_dimensions)) {
+        // Note: It is unclear whether the general specification of explicit
+        // broadcast_dimensions on binary ops is a feature we want to carry
+        // forward. While it can technically be implemented for ranked-dynamic,
+        // it is incompatible with unranked inputs. If this warning is emitted
+        // in real programs, it is an indication that the feature should be
+        // implemented versus just falling back on the more standard definition
+        // of numpy-like prefix-padding.
+        return op->emitWarning()
+               << "unsupported non prefix-padded dynamic rank "
+               << "broadcast_dimensions = " << broadcast_dimensions;
+    }
 
-  Value computed_shape = xla::ComputeBinaryElementwiseBroadcastingResultExtents(
-      loc, lhs, rhs, builder);
-  if (!computed_shape) return failure();
-  reifiedReturnShapes.push_back(computed_shape);
-  return success();
+    Value computed_shape = xla::ComputeBinaryElementwiseBroadcastingResultExtents(
+                               loc, lhs, rhs, builder);
+    if (!computed_shape) return failure();
+    reifiedReturnShapes.push_back(computed_shape);
+    return success();
 }
 
 }  // namespace
@@ -219,10 +219,10 @@ BROADCAST_INFER_SHAPE_TYPE_OP_DEFS(BroadcastComplexOp);
 
 XlaHloClientDialect::XlaHloClientDialect(MLIRContext* context)
     : Dialect(getDialectNamespace(), context) {
-  addOperations<
+    addOperations<
 #define GET_OP_LIST
 #include "tensorflow/compiler/mlir/xla/ir/chlo_ops.cc.inc"
-      >();
+    >();
 }
 
 }  // namespace xla_chlo

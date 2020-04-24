@@ -28,46 +28,46 @@ namespace xla {
 
 bool IsLegalNumpyRankedBroadcast(Value lhs, Value rhs,
                                  DenseIntElementsAttr broadcast_dims) {
-  RankedTensorType lhs_type = lhs.getType().dyn_cast<RankedTensorType>();
-  RankedTensorType rhs_type = rhs.getType().dyn_cast<RankedTensorType>();
-  if (!lhs_type || !rhs_type) return false;
-  if (lhs_type.getRank() == rhs_type.getRank()) return true;
+    RankedTensorType lhs_type = lhs.getType().dyn_cast<RankedTensorType>();
+    RankedTensorType rhs_type = rhs.getType().dyn_cast<RankedTensorType>();
+    if (!lhs_type || !rhs_type) return false;
+    if (lhs_type.getRank() == rhs_type.getRank()) return true;
 
-  // Otherwise, verify that broadcast_dims strictly performs left-padding.
-  auto smaller_rank = std::min(lhs_type.getRank(), rhs_type.getRank());
-  auto larger_rank = std::max(lhs_type.getRank(), rhs_type.getRank());
+    // Otherwise, verify that broadcast_dims strictly performs left-padding.
+    auto smaller_rank = std::min(lhs_type.getRank(), rhs_type.getRank());
+    auto larger_rank = std::max(lhs_type.getRank(), rhs_type.getRank());
 
-  if (smaller_rank != broadcast_dims.getNumElements()) {
-    return false;
-  }
-  auto expected_extents =
-      llvm::seq<int64_t>(larger_rank - smaller_rank, larger_rank);
-  return std::equal(expected_extents.begin(), expected_extents.end(),
-                    broadcast_dims.getIntValues().begin());
+    if (smaller_rank != broadcast_dims.getNumElements()) {
+        return false;
+    }
+    auto expected_extents =
+        llvm::seq<int64_t>(larger_rank - smaller_rank, larger_rank);
+    return std::equal(expected_extents.begin(), expected_extents.end(),
+                      broadcast_dims.getIntValues().begin());
 }
 
 Value ComputeBinaryElementwiseBroadcastingResultExtents(Location loc, Value lhs,
-                                                        Value rhs,
-                                                        OpBuilder& builder) {
-  auto lhs_type = lhs.getType().dyn_cast<RankedTensorType>();
-  auto rhs_type = rhs.getType().dyn_cast<RankedTensorType>();
-  if (!lhs_type || !rhs_type) {
-    emitError(loc) << "shape computation for broadcasting elementwise ops "
-                   << "is only implemented for ranked tensors";
-    return nullptr;
-  }
+        Value rhs,
+        OpBuilder& builder) {
+    auto lhs_type = lhs.getType().dyn_cast<RankedTensorType>();
+    auto rhs_type = rhs.getType().dyn_cast<RankedTensorType>();
+    if (!lhs_type || !rhs_type) {
+        emitError(loc) << "shape computation for broadcasting elementwise ops "
+                       << "is only implemented for ranked tensors";
+        return nullptr;
+    }
 
-  int64_t result_rank = std::max(lhs_type.getRank(), rhs_type.getRank());
-  auto shape_type = shape::ShapeType::get(builder.getContext());
-  Value lhs_shape_v =
-      builder.createOrFold<shape::ShapeOfOp>(loc, shape_type, lhs);
-  Value rhs_shape_v =
-      builder.createOrFold<shape::ShapeOfOp>(loc, shape_type, rhs);
-  Value result_shape_v = builder.createOrFold<shape::BroadcastOp>(
-      loc, shape_type, lhs_shape_v, rhs_shape_v, nullptr /* error */);
-  return builder.createOrFold<shape::ToExtentTensorOp>(
-      loc, RankedTensorType::get({result_rank}, builder.getIndexType()),
-      result_shape_v);
+    int64_t result_rank = std::max(lhs_type.getRank(), rhs_type.getRank());
+    auto shape_type = shape::ShapeType::get(builder.getContext());
+    Value lhs_shape_v =
+        builder.createOrFold<shape::ShapeOfOp>(loc, shape_type, lhs);
+    Value rhs_shape_v =
+        builder.createOrFold<shape::ShapeOfOp>(loc, shape_type, rhs);
+    Value result_shape_v = builder.createOrFold<shape::BroadcastOp>(
+                               loc, shape_type, lhs_shape_v, rhs_shape_v, nullptr /* error */);
+    return builder.createOrFold<shape::ToExtentTensorOp>(
+               loc, RankedTensorType::get({result_rank}, builder.getIndexType()),
+               result_shape_v);
 }
 
 }  // namespace xla
