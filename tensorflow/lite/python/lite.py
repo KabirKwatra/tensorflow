@@ -14,8 +14,9 @@
 # limitations under the License.
 # ==============================================================================
 """TensorFlow Lite tooling helper functionality."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import enum
 import warnings
@@ -25,22 +26,24 @@ from absl import logging
 from google.protobuf import text_format as _text_format
 from google.protobuf.message import DecodeError
 from six import PY2
+
 from tensorflow.core.framework import graph_pb2 as _graph_pb2
 from tensorflow.lite.experimental.examples.lstm.rnn import \
     dynamic_rnn  # pylint: disable=unused-import
-from tensorflow.lite.experimental.examples.lstm.rnn_cell import (  # pylint: disable=unused-import; pylint: disable=unused-import
-    TFLiteLSTMCell, TfLiteRNNCell)
+from tensorflow.lite.experimental.examples.lstm.rnn_cell import TFLiteLSTMCell
+from tensorflow.lite.experimental.examples.lstm.rnn_cell import TfLiteRNNCell
 from tensorflow.lite.experimental.microfrontend.python.ops import \
     audio_microfrontend_op  # pylint: disable=unused-import
 from tensorflow.lite.experimental.tensorboard.ops_util import \
     get_potentially_supported_ops  # pylint: disable=unused-import
 from tensorflow.lite.python import lite_constants as constants
-from tensorflow.lite.python.convert import \
-    toco_convert  # pylint: disable=unused-import; pylint: disable=unused-import; pylint: disable=unused-import; pylint: disable=unused-import
-from tensorflow.lite.python.convert import (ConverterError, OpsSet,
-                                            build_toco_convert_protos)
+from tensorflow.lite.python.convert import build_toco_convert_protos
+from tensorflow.lite.python.convert import ConverterError
 from tensorflow.lite.python.convert import mlir_quantize as _mlir_quantize
 from tensorflow.lite.python.convert import mlir_sparsify as _mlir_sparsify
+from tensorflow.lite.python.convert import OpsSet
+from tensorflow.lite.python.convert import \
+    toco_convert  # pylint: disable=unused-import; pylint: disable=unused-import; pylint: disable=unused-import; pylint: disable=unused-import
 from tensorflow.lite.python.convert import \
     toco_convert_graph_def as _toco_convert_graph_def
 from tensorflow.lite.python.convert import \
@@ -48,13 +51,13 @@ from tensorflow.lite.python.convert import \
 from tensorflow.lite.python.convert import toco_convert_protos
 from tensorflow.lite.python.convert_saved_model import \
     freeze_saved_model as _freeze_saved_model
-from tensorflow.lite.python.interpreter import (  # pylint: disable=unused-import; pylint: disable=unused-import
-    Interpreter, load_delegate)
-from tensorflow.lite.python.op_hint import \
-    OpHint  # pylint: disable=unused-import; pylint: disable=unused-import
+from tensorflow.lite.python.interpreter import Interpreter
+from tensorflow.lite.python.interpreter import load_delegate
 from tensorflow.lite.python.op_hint import convert_op_hints_to_stubs
 from tensorflow.lite.python.op_hint import \
     is_ophint_converted as _is_ophint_converted
+from tensorflow.lite.python.op_hint import \
+    OpHint  # pylint: disable=unused-import; pylint: disable=unused-import
 from tensorflow.lite.python.optimize import calibrator as _calibrator
 from tensorflow.lite.python.util import \
     build_debug_info_func as _build_debug_info_func

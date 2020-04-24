@@ -13,13 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 """SavedModel integration tests."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 
-import tensorflow.compat.v2 as tf
 from absl.testing import parameterized
+
+import tensorflow.compat.v2 as tf
 from tensorflow.examples.saved_model.integration_tests import \
     distribution_strategy_utils as ds_utils
 from tensorflow.examples.saved_model.integration_tests import \

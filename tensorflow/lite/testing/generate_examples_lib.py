@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Generate a series of TensorFlow graphs that become tflite test cases.
 
 Usage:
@@ -24,8 +23,9 @@ bazel run //tensorflow/lite/testing:generate_examples
 To more easily debug failures use (or override) the --save_graphdefs flag to
 place text proto graphdefs into the generated zip files.
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import copy
 import datetime
@@ -39,10 +39,14 @@ from tensorflow.lite.testing.op_tests.add_n import make_add_n_tests
 from tensorflow.lite.testing.op_tests.arg_min_max import make_arg_min_max_tests
 from tensorflow.lite.testing.op_tests.batch_to_space_nd import \
     make_batch_to_space_nd_tests
-from tensorflow.lite.testing.op_tests.binary_op import (
-    make_add_tests, make_div_tests, make_floor_div_tests, make_floor_mod_tests,
-    make_mul_tests, make_pow_tests, make_squared_difference_tests,
-    make_sub_tests)
+from tensorflow.lite.testing.op_tests.binary_op import make_add_tests
+from tensorflow.lite.testing.op_tests.binary_op import make_div_tests
+from tensorflow.lite.testing.op_tests.binary_op import make_floor_div_tests
+from tensorflow.lite.testing.op_tests.binary_op import make_floor_mod_tests
+from tensorflow.lite.testing.op_tests.binary_op import make_mul_tests
+from tensorflow.lite.testing.op_tests.binary_op import make_pow_tests
+from tensorflow.lite.testing.op_tests.binary_op import make_squared_difference_tests
+from tensorflow.lite.testing.op_tests.binary_op import make_sub_tests
 from tensorflow.lite.testing.op_tests.cast import make_cast_tests
 from tensorflow.lite.testing.op_tests.ceil import make_ceil_tests
 from tensorflow.lite.testing.op_tests.concat import make_concat_tests
@@ -51,8 +55,9 @@ from tensorflow.lite.testing.op_tests.control_dep import make_control_dep_tests
 from tensorflow.lite.testing.op_tests.conv import make_conv_tests
 from tensorflow.lite.testing.op_tests.conv2d_transpose import \
     make_conv2d_transpose_tests
-from tensorflow.lite.testing.op_tests.conv_activation import (
-    make_conv_relu1_tests, make_conv_relu6_tests, make_conv_relu_tests)
+from tensorflow.lite.testing.op_tests.conv_activation import make_conv_relu1_tests
+from tensorflow.lite.testing.op_tests.conv_activation import make_conv_relu6_tests
+from tensorflow.lite.testing.op_tests.conv_activation import make_conv_relu_tests
 from tensorflow.lite.testing.op_tests.conv_to_depthwiseconv_with_shared_weights import \
     make_conv_to_depthwiseconv_with_shared_weights_tests
 from tensorflow.lite.testing.op_tests.conv_with_shared_weights import \
@@ -62,11 +67,11 @@ from tensorflow.lite.testing.op_tests.depth_to_space import \
     make_depth_to_space_tests
 from tensorflow.lite.testing.op_tests.depthwiseconv import \
     make_depthwiseconv_tests
-from tensorflow.lite.testing.op_tests.elementwise import (make_log_tests,
-                                                          make_rsqrt_tests,
-                                                          make_sin_tests,
-                                                          make_sqrt_tests,
-                                                          make_square_tests)
+from tensorflow.lite.testing.op_tests.elementwise import make_log_tests
+from tensorflow.lite.testing.op_tests.elementwise import make_rsqrt_tests
+from tensorflow.lite.testing.op_tests.elementwise import make_sin_tests
+from tensorflow.lite.testing.op_tests.elementwise import make_sqrt_tests
+from tensorflow.lite.testing.op_tests.elementwise import make_square_tests
 from tensorflow.lite.testing.op_tests.elu import make_elu_tests
 from tensorflow.lite.testing.op_tests.embedding_lookup import \
     make_embedding_lookup_tests
@@ -100,9 +105,9 @@ from tensorflow.lite.testing.op_tests.less_equal import make_less_equal_tests
 from tensorflow.lite.testing.op_tests.local_response_norm import \
     make_local_response_norm_tests
 from tensorflow.lite.testing.op_tests.log_softmax import make_log_softmax_tests
-from tensorflow.lite.testing.op_tests.logic import (make_logical_and_tests,
-                                                    make_logical_or_tests,
-                                                    make_logical_xor_tests)
+from tensorflow.lite.testing.op_tests.logic import make_logical_and_tests
+from tensorflow.lite.testing.op_tests.logic import make_logical_or_tests
+from tensorflow.lite.testing.op_tests.logic import make_logical_xor_tests
 from tensorflow.lite.testing.op_tests.lstm import make_lstm_tests
 from tensorflow.lite.testing.op_tests.matrix_diag import make_matrix_diag_tests
 from tensorflow.lite.testing.op_tests.matrix_set_diag import \
@@ -120,18 +125,18 @@ from tensorflow.lite.testing.op_tests.pad import make_pad_tests
 from tensorflow.lite.testing.op_tests.padv2 import make_padv2_tests
 from tensorflow.lite.testing.op_tests.placeholder_with_default import \
     make_placeholder_with_default_tests
-from tensorflow.lite.testing.op_tests.pool import (make_avg_pool_tests,
-                                                   make_l2_pool_tests,
-                                                   make_max_pool_tests)
+from tensorflow.lite.testing.op_tests.pool import make_avg_pool_tests
+from tensorflow.lite.testing.op_tests.pool import make_l2_pool_tests
+from tensorflow.lite.testing.op_tests.pool import make_max_pool_tests
 from tensorflow.lite.testing.op_tests.prelu import make_prelu_tests
 from tensorflow.lite.testing.op_tests.range import make_range_tests
 from tensorflow.lite.testing.op_tests.rank import make_rank_tests
-from tensorflow.lite.testing.op_tests.reduce import (make_mean_tests,
-                                                     make_reduce_any_tests,
-                                                     make_reduce_max_tests,
-                                                     make_reduce_min_tests,
-                                                     make_reduce_prod_tests,
-                                                     make_sum_tests)
+from tensorflow.lite.testing.op_tests.reduce import make_mean_tests
+from tensorflow.lite.testing.op_tests.reduce import make_reduce_any_tests
+from tensorflow.lite.testing.op_tests.reduce import make_reduce_max_tests
+from tensorflow.lite.testing.op_tests.reduce import make_reduce_min_tests
+from tensorflow.lite.testing.op_tests.reduce import make_reduce_prod_tests
+from tensorflow.lite.testing.op_tests.reduce import make_sum_tests
 from tensorflow.lite.testing.op_tests.relu import make_relu_tests
 from tensorflow.lite.testing.op_tests.relu1 import make_relu1_tests
 from tensorflow.lite.testing.op_tests.relu6 import make_relu6_tests
@@ -163,8 +168,8 @@ from tensorflow.lite.testing.op_tests.splitv import make_splitv_tests
 from tensorflow.lite.testing.op_tests.squeeze import make_squeeze_tests
 from tensorflow.lite.testing.op_tests.squeeze_transpose import \
     make_squeeze_transpose_tests
-from tensorflow.lite.testing.op_tests.strided_slice import (
-    make_strided_slice_1d_exhaustive_tests, make_strided_slice_tests)
+from tensorflow.lite.testing.op_tests.strided_slice import make_strided_slice_1d_exhaustive_tests
+from tensorflow.lite.testing.op_tests.strided_slice import make_strided_slice_tests
 from tensorflow.lite.testing.op_tests.strided_slice_np_style import \
     make_strided_slice_np_style_tests
 from tensorflow.lite.testing.op_tests.tanh import make_tanh_tests
