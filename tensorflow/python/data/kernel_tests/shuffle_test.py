@@ -13,29 +13,21 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for `tf.data.Dataset.shuffle()`."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import functools
 
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python import tf2
 from tensorflow.python.compat import compat
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import function
-from tensorflow.python.framework import combinations
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import random_seed
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import check_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.framework import (combinations, dtypes, errors, ops,
+                                         random_seed)
+from tensorflow.python.ops import array_ops, check_ops, variables
 from tensorflow.python.platform import test
 
 

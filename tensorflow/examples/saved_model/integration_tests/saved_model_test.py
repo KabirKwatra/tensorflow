@@ -14,22 +14,18 @@
 # ==============================================================================
 """SavedModel integration tests."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 
-from absl.testing import parameterized
 import tensorflow.compat.v2 as tf
-
-from tensorflow.examples.saved_model.integration_tests import (
-    distribution_strategy_utils as ds_utils,
-)
-from tensorflow.examples.saved_model.integration_tests import (
-    integration_scripts as scripts,
-)
-from tensorflow.python.distribute import combinations as distribute_combinations
+from absl.testing import parameterized
+from tensorflow.examples.saved_model.integration_tests import \
+    distribution_strategy_utils as ds_utils
+from tensorflow.examples.saved_model.integration_tests import \
+    integration_scripts as scripts
+from tensorflow.python.distribute import \
+    combinations as distribute_combinations
 from tensorflow.python.framework import combinations
 
 

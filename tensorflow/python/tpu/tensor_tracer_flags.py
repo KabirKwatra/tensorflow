@@ -14,17 +14,13 @@
 # ========================================================================
 """Utilities to handle tensor tracer parameters."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
+from __future__ import absolute_import, division, print_function
 
 import os
 import os.path
 import re
 
-from tensorflow.python.ops import linalg_ops
-from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import linalg_ops, math_ops
 from tensorflow.python.platform import tf_logging as logging
 
 TRACE_MODE_NAN_INF = "nan-inf"

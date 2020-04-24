@@ -14,13 +14,10 @@
 # ,============================================================================
 """Tests for `get_config` backwards compatibility."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras.engine import sequential
-from tensorflow.python.keras.engine import training
+from tensorflow.python.keras.engine import sequential, training
 from tensorflow.python.keras.tests import get_config_samples
 from tensorflow.python.platform import test
 
