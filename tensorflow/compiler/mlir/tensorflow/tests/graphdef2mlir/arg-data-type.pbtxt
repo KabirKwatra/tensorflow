@@ -48,4 +48,3 @@ versions {
 # NONE: func @main(%arg0: tensor<i1>, %arg1: tensor<1xi32>) -> (tensor<i1>, tensor<1xi32>)
 
 # CHECK: func @main(%arg0: tensor<i32>, %arg1: tensor<1xi1>) -> (tensor<i32>, tensor<1xi1>)
-

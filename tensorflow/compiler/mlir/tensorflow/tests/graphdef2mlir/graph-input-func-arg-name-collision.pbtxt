@@ -301,4 +301,3 @@ versions {
   producer: 27
   min_consumer: 12
 }
-
