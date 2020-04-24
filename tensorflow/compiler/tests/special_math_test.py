@@ -15,26 +15,20 @@
 
 """Tests for special math operations."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
-
-from absl import flags
-from absl.testing import parameterized
 
 import numpy as np
 import scipy.special as sps
 import six
-
+from absl import flags
+from absl.testing import parameterized
 from tensorflow.compiler.tests import xla_test
 from tensorflow.python.eager import def_function
 from tensorflow.python.framework import constant_op
-from tensorflow.python.ops import gen_math_ops
-from tensorflow.python.ops import gen_random_ops
-from tensorflow.python.ops import gradient_checker_v2
-from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import (gen_math_ops, gen_random_ops,
+                                   gradient_checker_v2, math_ops)
 from tensorflow.python.platform import test
 
 flags.DEFINE_bool(
