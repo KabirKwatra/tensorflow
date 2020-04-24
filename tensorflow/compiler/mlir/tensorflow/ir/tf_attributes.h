@@ -28,9 +28,9 @@ namespace AttrKind {
 // List of supported custom TensorFlow Attributes kinds, necessary for
 // isa/dyn_cast.
 enum Kind {
-    FIRST_USED_TENSORFLOW_ATTR = Attribute::FIRST_TENSORFLOW_ATTR,
-    SHAPE = FIRST_USED_TENSORFLOW_ATTR,
-    LAST_USED_TENSORFLOW_ATTR,
+  FIRST_USED_TENSORFLOW_ATTR = Attribute::FIRST_TENSORFLOW_ATTR,
+  SHAPE = FIRST_USED_TENSORFLOW_ATTR,
+  LAST_USED_TENSORFLOW_ATTR,
 };
 
 }  // namespace AttrKind
@@ -42,35 +42,33 @@ struct ShapeAttrStorage;
 }  // namespace detail
 
 class ShapeAttr : public Attribute::AttrBase<ShapeAttr, Attribute,
-    detail::ShapeAttrStorage> {
-public:
-    using Base::Base;
+                                             detail::ShapeAttrStorage> {
+ public:
+  using Base::Base;
 
-    // Get or create a shape attribute. If shape is llvm::None, then it is
-    // unranked. Otherwise it is ranked. And for ranked shapes, the value of the
-    // dimension size must be >= -1. The value of -1 means the dimension is
-    // dynamic. Otherwise, the dimension is static.
-    static ShapeAttr get(mlir::MLIRContext* context,
-                         llvm::Optional<ArrayRef<int64_t>> shape);
+  // Get or create a shape attribute. If shape is llvm::None, then it is
+  // unranked. Otherwise it is ranked. And for ranked shapes, the value of the
+  // dimension size must be >= -1. The value of -1 means the dimension is
+  // dynamic. Otherwise, the dimension is static.
+  static ShapeAttr get(mlir::MLIRContext* context,
+                       llvm::Optional<ArrayRef<int64_t>> shape);
 
-    llvm::Optional<ArrayRef<int64_t>> getValue() const;
+  llvm::Optional<ArrayRef<int64_t>> getValue() const;
 
-    bool hasRank() const;
+  bool hasRank() const;
 
-    // If this is ranked, return the rank. Otherwise, abort.
-    int64_t getRank() const;
+  // If this is ranked, return the rank. Otherwise, abort.
+  int64_t getRank() const;
 
-    // If this is ranked, return the shape. Otherwise, abort.
-    ArrayRef<int64_t> getShape() const;
+  // If this is ranked, return the shape. Otherwise, abort.
+  ArrayRef<int64_t> getShape() const;
 
-    // If this is unranked type or any dimension has unknown size (<0), it doesn't
-    // have static shape. If all dimensions have known size (>= 0), it has static
-    // shape.
-    bool hasStaticShape() const;
+  // If this is unranked type or any dimension has unknown size (<0), it doesn't
+  // have static shape. If all dimensions have known size (>= 0), it has static
+  // shape.
+  bool hasStaticShape() const;
 
-    static bool kindof(unsigned kind) {
-        return kind == AttrKind::SHAPE;
-    }
+  static bool kindof(unsigned kind) { return kind == AttrKind::SHAPE; }
 };
 
 }  // namespace TF
