@@ -29,33 +29,33 @@ namespace xla {
 namespace cpu {
 namespace {
 class CpuExternalConstantsTest : public CpuCodegenTest {
- public:
-  void TestWithArray(int64 rows, int64 cols, const char* filecheck_pattern) {
-    HloComputation::Builder builder(TestName());
+public:
+    void TestWithArray(int64 rows, int64 cols, const char* filecheck_pattern) {
+        HloComputation::Builder builder(TestName());
 
-    Array2D<float> backing_array(rows, cols);
-    backing_array.FillUnique();
+        Array2D<float> backing_array(rows, cols);
+        backing_array.FillUnique();
 
-    auto shape = ShapeUtil::MakeShape(F32, {rows, cols});
+        auto shape = ShapeUtil::MakeShape(F32, {rows, cols});
 
-    HloInstruction* constant =
-        builder.AddInstruction(HloInstruction::CreateConstant(
-            LiteralUtil::CreateR2FromArray2D(backing_array)));
-    HloInstruction* param =
-        builder.AddInstruction(HloInstruction::CreateParameter(0, shape, "x"));
-    builder.AddInstruction(
-        HloInstruction::CreateBinary(shape, HloOpcode::kAdd, param, constant));
+        HloInstruction* constant =
+            builder.AddInstruction(HloInstruction::CreateConstant(
+                                       LiteralUtil::CreateR2FromArray2D(backing_array)));
+        HloInstruction* param =
+            builder.AddInstruction(HloInstruction::CreateParameter(0, shape, "x"));
+        builder.AddInstruction(
+            HloInstruction::CreateBinary(shape, HloOpcode::kAdd, param, constant));
 
-    std::unique_ptr<HloModule> module = CreateNewVerifiedModule();
-    module->AddEntryComputation(builder.Build());
+        std::unique_ptr<HloModule> module = CreateNewVerifiedModule();
+        module->AddEntryComputation(builder.Build());
 
-    CompileAndVerifyIr(std::move(module), filecheck_pattern,
-                       /*match_optimized_ir=*/false);
-  }
+        CompileAndVerifyIr(std::move(module), filecheck_pattern,
+                           /*match_optimized_ir=*/false);
+    }
 };
 
 TEST_F(CpuExternalConstantsTest, Basic) {
-  TestWithArray(/*rows=*/1024, /*cols=*/1024, R"(
+    TestWithArray(/*rows=*/1024, /*cols=*/1024, R"(
 CHECK-NOT: @constant_global_0 = external unnamed_addr constant [1024 x [1024 x float]], align 16
 CHECK: @0 = private unnamed_addr constant [4194304 x i8] {{.*}}, align 16
 )");
