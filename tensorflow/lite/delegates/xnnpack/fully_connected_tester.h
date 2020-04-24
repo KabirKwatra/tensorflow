@@ -16,12 +16,13 @@ limitations under the License.
 #ifndef TENSORFLOW_LITE_DELEGATES_XNNPACK_FULLY_CONNECTED_TESTER_H_
 #define TENSORFLOW_LITE_DELEGATES_XNNPACK_FULLY_CONNECTED_TESTER_H_
 
+#include <gtest/gtest.h>
+
 #include <cstdint>
 #include <functional>
 #include <random>
 #include <vector>
 
-#include <gtest/gtest.h>
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
@@ -29,93 +30,83 @@ namespace tflite {
 namespace xnnpack {
 
 class FullyConnectedTester {
-public:
-    FullyConnectedTester() = default;
-    FullyConnectedTester(const FullyConnectedTester&) = delete;
-    FullyConnectedTester& operator=(const FullyConnectedTester&) = delete;
+ public:
+  FullyConnectedTester() = default;
+  FullyConnectedTester(const FullyConnectedTester&) = delete;
+  FullyConnectedTester& operator=(const FullyConnectedTester&) = delete;
 
-    inline FullyConnectedTester& InputShape(
-        std::initializer_list<int32_t> shape) {
-        for (auto it = shape.begin(); it != shape.end(); ++it) {
-            EXPECT_GT(*it, 0);
-        }
-        input_shape_ = std::vector<int32_t>(shape.begin(), shape.end());
-        input_size_ = ComputeSize(input_shape_);
-        return *this;
+  inline FullyConnectedTester& InputShape(
+      std::initializer_list<int32_t> shape) {
+    for (auto it = shape.begin(); it != shape.end(); ++it) {
+      EXPECT_GT(*it, 0);
     }
+    input_shape_ = std::vector<int32_t>(shape.begin(), shape.end());
+    input_size_ = ComputeSize(input_shape_);
+    return *this;
+  }
 
-    inline const std::vector<int32_t>& InputShape() const {
-        return input_shape_;
-    }
+  inline const std::vector<int32_t>& InputShape() const { return input_shape_; }
 
-    inline int32_t InputSize() const {
-        return input_size_;
-    }
+  inline int32_t InputSize() const { return input_size_; }
 
-    inline FullyConnectedTester& InputChannels(int32_t input_channels) {
-        EXPECT_GT(input_channels, 0);
-        input_channels_ = input_channels;
-        return *this;
-    }
+  inline FullyConnectedTester& InputChannels(int32_t input_channels) {
+    EXPECT_GT(input_channels, 0);
+    input_channels_ = input_channels;
+    return *this;
+  }
 
-    inline int32_t InputChannels() const {
-        return input_channels_;
-    }
+  inline int32_t InputChannels() const { return input_channels_; }
 
-    inline FullyConnectedTester& OutputChannels(int32_t output_channels) {
-        EXPECT_GT(output_channels, 0);
-        output_channels_ = output_channels;
-        return *this;
-    }
+  inline FullyConnectedTester& OutputChannels(int32_t output_channels) {
+    EXPECT_GT(output_channels, 0);
+    output_channels_ = output_channels;
+    return *this;
+  }
 
-    inline int32_t OutputChannels() const {
-        return output_channels_;
-    }
+  inline int32_t OutputChannels() const { return output_channels_; }
 
-    std::vector<int32_t> OutputShape() const;
+  std::vector<int32_t> OutputShape() const;
 
-    inline FullyConnectedTester& KeepDims(bool keep_dims) {
-        keep_dims_ = keep_dims;
-        return *this;
-    }
+  inline FullyConnectedTester& KeepDims(bool keep_dims) {
+    keep_dims_ = keep_dims;
+    return *this;
+  }
 
-    inline bool KeepDims() const {
-        return keep_dims_;
-    }
+  inline bool KeepDims() const { return keep_dims_; }
 
-    inline FullyConnectedTester& ReluActivation() {
-        activation_ = ::tflite::ActivationFunctionType_RELU;
-        return *this;
-    }
+  inline FullyConnectedTester& ReluActivation() {
+    activation_ = ::tflite::ActivationFunctionType_RELU;
+    return *this;
+  }
 
-    inline FullyConnectedTester& Relu6Activation() {
-        activation_ = ::tflite::ActivationFunctionType_RELU6;
-        return *this;
-    }
+  inline FullyConnectedTester& Relu6Activation() {
+    activation_ = ::tflite::ActivationFunctionType_RELU6;
+    return *this;
+  }
 
-    inline FullyConnectedTester& ReluMinus1To1Activation() {
-        activation_ = ::tflite::ActivationFunctionType_RELU_N1_TO_1;
-        return *this;
-    }
+  inline FullyConnectedTester& ReluMinus1To1Activation() {
+    activation_ = ::tflite::ActivationFunctionType_RELU_N1_TO_1;
+    return *this;
+  }
 
-    void Test(TfLiteDelegate* delegate) const;
+  void Test(TfLiteDelegate* delegate) const;
 
-private:
-    std::vector<char> CreateTfLiteModel() const;
+ private:
+  std::vector<char> CreateTfLiteModel() const;
 
-    inline ::tflite::ActivationFunctionType Activation() const {
-        return activation_;
-    }
+  inline ::tflite::ActivationFunctionType Activation() const {
+    return activation_;
+  }
 
-    static int32_t ComputeSize(const std::vector<int32_t>& shape);
+  static int32_t ComputeSize(const std::vector<int32_t>& shape);
 
-    std::vector<int32_t> input_shape_;
-    int32_t input_size_ = 1;
-    int32_t input_channels_ = 1;
-    int32_t output_channels_ = 1;
-    bool keep_dims_ = false;
-    ::tflite::ActivationFunctionType activation_ =
-        ::tflite::ActivationFunctionType_NONE;
+  std::vector<int32_t> input_shape_;
+  int32_t input_size_ = 1;
+  int32_t input_channels_ = 1;
+  int32_t output_channels_ = 1;
+  bool keep_dims_ = false;
+  ::tflite::ActivationFunctionType activation_ =
+      ::tflite::ActivationFunctionType_NONE;
 };
 
 }  // namespace xnnpack
