@@ -12,20 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 """Tests for ram_file_system.h."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
+
 from tensorflow.python.estimator.estimator import Estimator
 from tensorflow.python.estimator.model_fn import EstimatorSpec
 from tensorflow.python.estimator.run_config import RunConfig
-from tensorflow.python.framework import constant_op, dtypes, test_util
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import test_util
 from tensorflow.python.layers import core as core_layers
 from tensorflow.python.ops.losses import losses
-from tensorflow.python.platform import gfile, test
-from tensorflow.python.training import adam, training_util
+from tensorflow.python.platform import gfile
+from tensorflow.python.platform import test
+from tensorflow.python.training import adam
+from tensorflow.python.training import training_util
 
 
 class RamFilesystemTest(test_util.TensorFlowTestCase):
