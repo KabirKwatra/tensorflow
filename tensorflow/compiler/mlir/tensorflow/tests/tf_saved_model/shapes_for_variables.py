@@ -39,12 +39,12 @@ class TestModule(tf.Module):
     # CHECK:      tf_saved_model.exported_names = ["some_function"]
     def __init__(self):
         super(TestModule, self).__init__()
-        self.my_variable = tf.Variable(42.)
+        self.my_variable = tf.Variable(42.0)
 
     @tf.function(input_signature=[])
     def some_function(self):
         return self.my_variable
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     common.do_test(TestModule)

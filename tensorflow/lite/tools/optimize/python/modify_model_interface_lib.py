@@ -21,7 +21,9 @@ from __future__ import print_function
 
 from tensorflow.lite.python import schema_py_generated as schema_fb
 from tensorflow.lite.tools.optimize.python import _pywrap_modify_model_interface
-from tensorflow.lite.tools.optimize.python import modify_model_interface_constants as mmi_constants
+from tensorflow.lite.tools.optimize.python import (
+    modify_model_interface_constants as mmi_constants,
+)
 
 
 def _parse_type_to_int(dtype, flag):
@@ -41,7 +43,9 @@ def _parse_type_to_int(dtype, flag):
     if dtype not in mmi_constants.TFLITE_TYPES:
         raise ValueError(
             "Unsupported value '{0}' for {1}. Only {2} are supported.".format(
-                dtype, flag, mmi_constants.TFLITE_TYPES))
+                dtype, flag, mmi_constants.TFLITE_TYPES
+            )
+        )
 
     dtype_str = mmi_constants.TFLITE_TO_STR_TYPES[dtype]
     dtype_int = schema_fb.TensorType.__dict__[dtype_str]
@@ -64,16 +68,19 @@ def modify_model_interface(input_file, output_file, input_type, output_type):
 
     """
     # Map the interface types to integer values
-    input_type_int = _parse_type_to_int(input_type, 'input_type')
-    output_type_int = _parse_type_to_int(output_type, 'output_type')
+    input_type_int = _parse_type_to_int(input_type, "input_type")
+    output_type_int = _parse_type_to_int(output_type, "output_type")
 
     # Invoke the function to modify the model interface
     status = _pywrap_modify_model_interface.modify_model_interface(
-        input_file, output_file, input_type_int, output_type_int)
+        input_file, output_file, input_type_int, output_type_int
+    )
 
     # Throw an exception if the return status is an error.
     if status != 0:
         raise RuntimeError(
-            'Error occured when trying to modify the model input type from float '
-            'to {input_type} and output type from float to {output_type}.'.format(
-                input_type=input_type, output_type=output_type))
+            "Error occured when trying to modify the model input type from float "
+            "to {input_type} and output type from float to {output_type}.".format(
+                input_type=input_type, output_type=output_type
+            )
+        )

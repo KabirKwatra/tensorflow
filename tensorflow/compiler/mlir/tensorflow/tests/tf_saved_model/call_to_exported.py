@@ -25,7 +25,6 @@ from tensorflow.compiler.mlir.tensorflow.tests.tf_saved_model import common
 
 
 class TestModule(tf.Module):
-
     def __init__(self):
         super(TestModule, self).__init__()
         self.v = tf.Variable(42.0)
@@ -74,5 +73,5 @@ class TestModule(tf.Module):
         return self.callee(x)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     common.do_test(TestModule)

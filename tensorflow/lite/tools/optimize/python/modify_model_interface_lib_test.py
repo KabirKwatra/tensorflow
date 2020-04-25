@@ -31,12 +31,13 @@ from tensorflow.python.platform import test
 def build_tflite_model_with_full_integer_quantization():
     # Define TF model
     input_size = 3
-    model = tf.keras.Sequential([
-        tf.keras.layers.InputLayer(
-            input_shape=(input_size,), dtype=tf.float32),
-        tf.keras.layers.Dense(units=5, activation=tf.nn.relu),
-        tf.keras.layers.Dense(units=2, activation=tf.nn.softmax)
-    ])
+    model = tf.keras.Sequential(
+        [
+            tf.keras.layers.InputLayer(input_shape=(input_size,), dtype=tf.float32),
+            tf.keras.layers.Dense(units=5, activation=tf.nn.relu),
+            tf.keras.layers.Dense(units=2, activation=tf.nn.softmax),
+        ]
+    )
 
     # Convert TF Model to a Quantized TFLite Model
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
@@ -54,22 +55,22 @@ def build_tflite_model_with_full_integer_quantization():
 
 
 class ModifyModelInterfaceTest(test_util.TensorFlowTestCase):
-
     def testInt8Interface(self):
         # 1. SETUP
         # Define the temporary directory and files
         temp_dir = self.get_temp_dir()
-        initial_file = os.path.join(temp_dir, 'initial_model.tflite')
-        final_file = os.path.join(temp_dir, 'final_model.tflite')
+        initial_file = os.path.join(temp_dir, "initial_model.tflite")
+        final_file = os.path.join(temp_dir, "final_model.tflite")
         # Define initial model
         initial_model = build_tflite_model_with_full_integer_quantization()
-        with open(initial_file, 'wb') as model_file:
+        with open(initial_file, "wb") as model_file:
             model_file.write(initial_model)
 
         # 2. INVOKE
         # Invoke the modify_model_interface function
-        modify_model_interface_lib.modify_model_interface(initial_file, final_file,
-                                                          tf.int8, tf.int8)
+        modify_model_interface_lib.modify_model_interface(
+            initial_file, final_file, tf.int8, tf.int8
+        )
 
         # 3. VALIDATE
         # Load TFLite model and allocate tensors.
@@ -79,12 +80,10 @@ class ModifyModelInterfaceTest(test_util.TensorFlowTestCase):
         final_interpreter.allocate_tensors()
 
         # Get input and output types.
-        initial_input_dtype = initial_interpreter.get_input_details()[
-            0]['dtype']
-        initial_output_dtype = initial_interpreter.get_output_details()[
-            0]['dtype']
-        final_input_dtype = final_interpreter.get_input_details()[0]['dtype']
-        final_output_dtype = final_interpreter.get_output_details()[0]['dtype']
+        initial_input_dtype = initial_interpreter.get_input_details()[0]["dtype"]
+        initial_output_dtype = initial_interpreter.get_output_details()[0]["dtype"]
+        final_input_dtype = final_interpreter.get_input_details()[0]["dtype"]
+        final_output_dtype = final_interpreter.get_output_details()[0]["dtype"]
 
         # Validate the model interfaces
         self.assertEqual(initial_input_dtype, np.float32)
@@ -96,17 +95,18 @@ class ModifyModelInterfaceTest(test_util.TensorFlowTestCase):
         # 1. SETUP
         # Define the temporary directory and files
         temp_dir = self.get_temp_dir()
-        initial_file = os.path.join(temp_dir, 'initial_model.tflite')
-        final_file = os.path.join(temp_dir, 'final_model.tflite')
+        initial_file = os.path.join(temp_dir, "initial_model.tflite")
+        final_file = os.path.join(temp_dir, "final_model.tflite")
         # Define initial model
         initial_model = build_tflite_model_with_full_integer_quantization()
-        with open(initial_file, 'wb') as model_file:
+        with open(initial_file, "wb") as model_file:
             model_file.write(initial_model)
 
         # 2. INVOKE
         # Invoke the modify_model_interface function
-        modify_model_interface_lib.modify_model_interface(initial_file, final_file,
-                                                          tf.uint8, tf.uint8)
+        modify_model_interface_lib.modify_model_interface(
+            initial_file, final_file, tf.uint8, tf.uint8
+        )
 
         # 3. VALIDATE
         # Load TFLite model and allocate tensors.
@@ -116,12 +116,10 @@ class ModifyModelInterfaceTest(test_util.TensorFlowTestCase):
         final_interpreter.allocate_tensors()
 
         # Get input and output types.
-        initial_input_dtype = initial_interpreter.get_input_details()[
-            0]['dtype']
-        initial_output_dtype = initial_interpreter.get_output_details()[
-            0]['dtype']
-        final_input_dtype = final_interpreter.get_input_details()[0]['dtype']
-        final_output_dtype = final_interpreter.get_output_details()[0]['dtype']
+        initial_input_dtype = initial_interpreter.get_input_details()[0]["dtype"]
+        initial_output_dtype = initial_interpreter.get_output_details()[0]["dtype"]
+        final_input_dtype = final_interpreter.get_input_details()[0]["dtype"]
+        final_output_dtype = final_interpreter.get_output_details()[0]["dtype"]
 
         # Validate the model interfaces
         self.assertEqual(initial_input_dtype, np.float32)
@@ -130,5 +128,5 @@ class ModifyModelInterfaceTest(test_util.TensorFlowTestCase):
         self.assertEqual(final_output_dtype, np.uint8)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

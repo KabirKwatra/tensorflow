@@ -22,13 +22,13 @@ from __future__ import print_function
 from tensorflow.lite.python import lite_constants
 
 STR_TO_TFLITE_TYPES = {
-    'INT8': lite_constants.INT8,
-    'UINT8': lite_constants.QUANTIZED_UINT8
+    "INT8": lite_constants.INT8,
+    "UINT8": lite_constants.QUANTIZED_UINT8,
 }
 TFLITE_TO_STR_TYPES = {v: k for k, v in STR_TO_TFLITE_TYPES.items()}
 
 STR_TYPES = STR_TO_TFLITE_TYPES.keys()
 TFLITE_TYPES = STR_TO_TFLITE_TYPES.values()
 
-DEFAULT_STR_TYPE = 'INT8'
+DEFAULT_STR_TYPE = "INT8"
 DEFAULT_TFLITE_TYPE = STR_TO_TFLITE_TYPES[DEFAULT_STR_TYPE]
