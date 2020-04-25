@@ -14,31 +14,20 @@
 # ==============================================================================
 """Tests for remote eager execution."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 import threading
 
-from absl.testing import parameterized
 import numpy as np
-
-from tensorflow.core.protobuf import cluster_pb2
-from tensorflow.core.protobuf import tensorflow_server_pb2
+from absl.testing import parameterized
+from tensorflow.core.protobuf import cluster_pb2, tensorflow_server_pb2
 from tensorflow.python import pywrap_tfe
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import executor
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.eager import context, def_function, executor
+from tensorflow.python.framework import errors, ops, test_util
+from tensorflow.python.ops import array_ops, math_ops, variables
 from tensorflow.python.platform import test
-from tensorflow.python.training import coordinator
-from tensorflow.python.training import server_lib
+from tensorflow.python.training import coordinator, server_lib
 
 JOB_NAME = "remote_device"
 

@@ -14,52 +14,38 @@
 # ==============================================================================
 """Training-related part of the Keras engine.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 import itertools
 
 from tensorflow.python.distribute import distribute_coordinator as dc
-from tensorflow.python.distribute import distribute_coordinator_context as dc_context
-from tensorflow.python.distribute import distribution_strategy_context as ds_context
+from tensorflow.python.distribute import \
+    distribute_coordinator_context as dc_context
+from tensorflow.python.distribute import \
+    distribution_strategy_context as ds_context
 from tensorflow.python.distribute import parameter_server_strategy
 from tensorflow.python.distribute import values as ds_values
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import monitoring
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.eager import backprop, context, def_function, monitoring
+from tensorflow.python.framework import ops, sparse_tensor
 from tensorflow.python.keras import callbacks as callbacks_module
 from tensorflow.python.keras import optimizers
-from tensorflow.python.keras.distribute import distributed_training_utils as dist_utils
-from tensorflow.python.keras.engine import compile_utils
-from tensorflow.python.keras.engine import data_adapter
-from tensorflow.python.keras.engine import network
-from tensorflow.python.keras.engine import training_utils
-from tensorflow.python.keras.mixed_precision.experimental import (
-    loss_scale_optimizer as lso,
-)
+from tensorflow.python.keras.distribute import \
+    distributed_training_utils as dist_utils
+from tensorflow.python.keras.engine import (compile_utils, data_adapter,
+                                            network, training_utils)
+from tensorflow.python.keras.mixed_precision.experimental import \
+    loss_scale_optimizer as lso
 from tensorflow.python.keras.saving.saved_model import model_serialization
-from tensorflow.python.keras.utils import tf_utils
-from tensorflow.python.keras.utils import version_utils
+from tensorflow.python.keras.utils import tf_utils, version_utils
 from tensorflow.python.keras.utils.mode_keys import ModeKeys
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import sparse_ops
-from tensorflow.python.ops import summary_ops_v2
-from tensorflow.python.ops import variables
-from tensorflow.python.ops.ragged import ragged_concat_ops
-from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.ops import (array_ops, math_ops, sparse_ops,
+                                   summary_ops_v2, variables)
+from tensorflow.python.ops.ragged import ragged_concat_ops, ragged_tensor
 from tensorflow.python.profiler import trace
 from tensorflow.python.training.tracking import base as trackable
-from tensorflow.python.util import deprecation
-from tensorflow.python.util import nest
-from tensorflow.python.util import tf_decorator
+from tensorflow.python.util import deprecation, nest, tf_decorator
 from tensorflow.python.util.tf_export import keras_export
-
 
 _keras_api_gauge = monitoring.BoolGauge(
     "/tensorflow/api/keras", "keras api usage", "method"

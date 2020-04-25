@@ -16,13 +16,10 @@
 # RUN: %p/basic | FileCheck %s
 
 # pylint: disable=missing-docstring,line-too-long
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import tensorflow.compat.v2 as tf
 from tensorflow.compiler.mlir.tensorflow.tests.tf_saved_model import common
-
 
 # Verify that the tf.versions attribute exists. It is difficult to enforce
 # contents, since the version numbers change over time. The conversion logic
