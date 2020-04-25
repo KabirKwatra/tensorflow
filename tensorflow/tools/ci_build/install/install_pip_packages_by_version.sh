@@ -67,4 +67,3 @@ fi
 "$PIP" "install" "--upgrade" "pip"
 
 "${PIP_INSTALL[@]}" "${PACKAGES[@]}"
-
