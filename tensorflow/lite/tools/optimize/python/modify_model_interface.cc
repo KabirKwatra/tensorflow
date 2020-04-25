@@ -25,16 +25,16 @@ limitations under the License.
 namespace pybind11 {
 
 PYBIND11_MODULE(_pywrap_modify_model_interface, m) {
-  // An anonymous function that invokes the C++ function
-  // after applying transformations to the python function arguments
-  m.def("modify_model_interface",
-        [](const std::string& input_file, const std::string& output_file,
-           const int input_type, const int output_type) -> int {
-          return tflite::optimize::ModifyModelInterface(
-              input_file, output_file,
-              static_cast<tflite::TensorType>(input_type),
-              static_cast<tflite::TensorType>(input_type));
-        });
+    // An anonymous function that invokes the C++ function
+    // after applying transformations to the python function arguments
+    m.def("modify_model_interface",
+          [](const std::string& input_file, const std::string& output_file,
+    const int input_type, const int output_type) -> int {
+        return tflite::optimize::ModifyModelInterface(
+            input_file, output_file,
+            static_cast<tflite::TensorType>(input_type),
+            static_cast<tflite::TensorType>(input_type));
+    });
 }
 
 }  // namespace pybind11
