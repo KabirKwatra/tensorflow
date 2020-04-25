@@ -13,11 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for training routines."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 from absl.testing import parameterized
+
 from tensorflow.python import keras
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import context

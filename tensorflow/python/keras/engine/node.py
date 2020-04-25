@@ -14,19 +14,23 @@
 # ==============================================================================
 # pylint: disable=protected-access
 """Contains the `Node` class."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import copy
 import json
 
 import numpy as np
+
 from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.engine import base_layer_utils
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.util import nest, serialization
+from tensorflow.python.util import nest
+from tensorflow.python.util import serialization
 
 
 class Node(object):

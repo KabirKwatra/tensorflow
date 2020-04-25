@@ -13,22 +13,34 @@
 # limitations under the License.
 # ,============================================================================
 """Tests for layer graphs construction & handling."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
+
 from tensorflow.python.eager import context
-from tensorflow.python.framework import constant_op, dtypes, ops, tensor_shape
-from tensorflow.python.keras import (backend, combinations, initializers,
-                                     keras_parameterized, layers, models,
-                                     testing_utils)
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.keras import backend
+from tensorflow.python.keras import combinations
+from tensorflow.python.keras import initializers
+from tensorflow.python.keras import keras_parameterized
+from tensorflow.python.keras import layers
+from tensorflow.python.keras import models
+from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.engine import base_layer
 from tensorflow.python.keras.engine import input_layer as input_layer_lib
 from tensorflow.python.keras.engine import network as network_lib
 from tensorflow.python.keras.engine import sequential
 from tensorflow.python.keras.engine import training as training_lib
-from tensorflow.python.keras.utils import layer_utils, tf_utils
-from tensorflow.python.ops import array_ops, math_ops, state_ops
+from tensorflow.python.keras.utils import layer_utils
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import state_ops
 from tensorflow.python.ops.ragged import ragged_factory_ops
 from tensorflow.python.platform import test
 from tensorflow.python.training.tracking.util import Checkpoint

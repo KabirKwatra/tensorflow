@@ -14,7 +14,9 @@
 # ==============================================================================
 # pylint: disable=protected-access
 """Contains the base Layer class, from which all layers inherit."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import copy
 import functools
@@ -26,33 +28,49 @@ import numpy as np
 import six
 from google.protobuf import json_format
 from six.moves import zip  # pylint: disable=redefined-builtin
+
 from tensorflow.core.framework import node_def_pb2
 from tensorflow.python import tf2
 from tensorflow.python.autograph.core import ag_ctx
 from tensorflow.python.autograph.impl import api as autograph
 from tensorflow.python.distribute import \
     distribution_strategy_context as ds_context
-from tensorflow.python.eager import context, execute, function, monitoring
-from tensorflow.python.framework import (auto_control_deps, constant_op,
-                                         dtypes, errors, func_graph, ops,
-                                         sparse_tensor, tensor_spec,
-                                         tensor_util)
-from tensorflow.python.keras import (backend, constraints, initializers,
-                                     regularizers)
-from tensorflow.python.keras.engine import base_layer_utils, input_spec
+from tensorflow.python.eager import context
+from tensorflow.python.eager import execute
+from tensorflow.python.eager import function
+from tensorflow.python.eager import monitoring
+from tensorflow.python.framework import auto_control_deps
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import func_graph
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.keras import backend
+from tensorflow.python.keras import constraints
+from tensorflow.python.keras import initializers
+from tensorflow.python.keras import regularizers
+from tensorflow.python.keras.engine import base_layer_utils
+from tensorflow.python.keras.engine import input_spec
 from tensorflow.python.keras.engine import node as node_module
-from tensorflow.python.keras.mixed_precision.experimental import (
-    autocast_variable, loss_scale_optimizer, policy)
+from tensorflow.python.keras.mixed_precision.experimental import autocast_variable
+from tensorflow.python.keras.mixed_precision.experimental import loss_scale_optimizer
+from tensorflow.python.keras.mixed_precision.experimental import policy
 from tensorflow.python.keras.saving.saved_model import layer_serialization
-from tensorflow.python.keras.utils import (generic_utils, layer_utils,
-                                           tf_utils, version_utils)
-# A module that only depends on `keras.layers` import these from here.
+from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.keras.utils import layer_utils
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.keras.utils import version_utils
 from tensorflow.python.keras.utils.generic_utils import \
     to_snake_case  # pylint: disable=unused-import
 from tensorflow.python.keras.utils.tf_utils import \
     is_tensor_or_tensor_list  # pylint: disable=unused-import
 from tensorflow.python.module import module
-from tensorflow.python.ops import array_ops, math_ops, resource_variable_ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.ops import variables as tf_variables
 from tensorflow.python.ops.ragged import ragged_tensor
 from tensorflow.python.platform import tf_logging
@@ -61,10 +79,14 @@ from tensorflow.python.training.tracking import data_structures
 from tensorflow.python.training.tracking import \
     layer_utils as trackable_layer_utils
 from tensorflow.python.training.tracking import tracking
-from tensorflow.python.util import (compat, deprecation, nest, object_identity,
-                                    tf_inspect)
+from tensorflow.python.util import compat
+from tensorflow.python.util import deprecation
+from tensorflow.python.util import nest
+from tensorflow.python.util import object_identity
+from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import keras_export
 from tensorflow.tools.docs import doc_controls
+# A module that only depends on `keras.layers` import these from here.
 
 # Prefix that is added to the TF op layer names.
 _TF_OP_LAYER_NAME_PREFIX = "tf_op_layer_"

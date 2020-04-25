@@ -20,32 +20,48 @@ loading from the SavedModel.
 
 Tests that focus on the model structure should go in revive_structure_test.py
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 import shutil
 
 import numpy as np
 from absl.testing import parameterized
-from tensorflow.core.example import example_pb2, feature_pb2
-from tensorflow.python import keras, tf2
+
+from tensorflow.core.example import example_pb2
+from tensorflow.core.example import feature_pb2
+from tensorflow.python import keras
+from tensorflow.python import tf2
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.distribute import mirrored_strategy
-from tensorflow.python.eager import context, def_function
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
 from tensorflow.python.feature_column import feature_column_v2 as fc
 from tensorflow.python.feature_column.dense_features import DenseFeatures
-from tensorflow.python.framework import constant_op, dtypes, ops, tensor_spec
-from tensorflow.python.keras import (combinations, keras_parameterized,
-                                     regularizers, testing_utils)
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.keras import combinations
+from tensorflow.python.keras import keras_parameterized
+from tensorflow.python.keras import regularizers
+from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.saving.saved_model import load as keras_load
 from tensorflow.python.keras.saving.saved_model import save_impl as keras_save
-from tensorflow.python.keras.utils import generic_utils, tf_utils
-from tensorflow.python.ops import (array_ops, init_ops, math_ops, parsing_ops,
-                                   variables)
+from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import parsing_ops
+from tensorflow.python.ops import variables
 from tensorflow.python.platform import test
 from tensorflow.python.saved_model import load as tf_load
 from tensorflow.python.saved_model import save as tf_save
-from tensorflow.python.util import tf_contextlib, tf_inspect
+from tensorflow.python.util import tf_contextlib
+from tensorflow.python.util import tf_inspect
 
 
 class LayerWithLearningPhase(keras.engine.base_layer.Layer):
