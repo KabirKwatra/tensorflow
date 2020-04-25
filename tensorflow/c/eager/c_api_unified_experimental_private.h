@@ -29,65 +29,73 @@ namespace internal {
 // =============================================================================
 
 struct AbstractTensor {
-  enum AbstractTensorKind { kGraphTensor, kEagerTensor, kMLIRTensor };
-  explicit AbstractTensor(AbstractTensorKind kind) : k(kind) {}
-  AbstractTensorKind getKind() const { return k; }
-  virtual ~AbstractTensor() = default;
+    enum AbstractTensorKind { kGraphTensor, kEagerTensor, kMLIRTensor };
+    explicit AbstractTensor(AbstractTensorKind kind) : k(kind) {}
+    AbstractTensorKind getKind() const {
+        return k;
+    }
+    virtual ~AbstractTensor() = default;
 
- private:
-  const AbstractTensorKind k;
+private:
+    const AbstractTensorKind k;
 };
 
 struct OutputList {
-  std::vector<AbstractTensor*> outputs;
-  int expected_num_outputs = -1;
+    std::vector<AbstractTensor*> outputs;
+    int expected_num_outputs = -1;
 };
 
 struct AbstractFunction {
-  enum AbstractFunctionKind { kGraphFunc };
-  explicit AbstractFunction(AbstractFunctionKind kind) : k(kind) {}
-  AbstractFunctionKind getKind() const { return k; }
-  virtual ~AbstractFunction() = default;
+    enum AbstractFunctionKind { kGraphFunc };
+    explicit AbstractFunction(AbstractFunctionKind kind) : k(kind) {}
+    AbstractFunctionKind getKind() const {
+        return k;
+    }
+    virtual ~AbstractFunction() = default;
 
-  // Temporary API till we figure the right abstraction for AbstractFunction
-  virtual TF_Function* GetTfFunction(TF_Status* s) = 0;
+    // Temporary API till we figure the right abstraction for AbstractFunction
+    virtual TF_Function* GetTfFunction(TF_Status* s) = 0;
 
- private:
-  const AbstractFunctionKind k;
+private:
+    const AbstractFunctionKind k;
 };
 
 struct AbstractOp {
-  // Needed to implement our own version of RTTI since dynamic_cast is not
-  // supported in mobile builds.
-  enum AbstractOpKind { kGraphOp, kEagerOp };
-  explicit AbstractOp(AbstractOpKind kind) : k(kind) {}
-  AbstractOpKind getKind() const { return k; }
-  virtual void SetOpType(const char* const op_type, TF_Status* s) = 0;
-  virtual void SetOpName(const char* const op_name, TF_Status* s) = 0;
-  virtual void SetAttrType(const char* const attr_name, TF_DataType value,
-                           TF_Status* s) = 0;
-  virtual ~AbstractOp() {}
+    // Needed to implement our own version of RTTI since dynamic_cast is not
+    // supported in mobile builds.
+    enum AbstractOpKind { kGraphOp, kEagerOp };
+    explicit AbstractOp(AbstractOpKind kind) : k(kind) {}
+    AbstractOpKind getKind() const {
+        return k;
+    }
+    virtual void SetOpType(const char* const op_type, TF_Status* s) = 0;
+    virtual void SetOpName(const char* const op_name, TF_Status* s) = 0;
+    virtual void SetAttrType(const char* const attr_name, TF_DataType value,
+                             TF_Status* s) = 0;
+    virtual ~AbstractOp() {}
 
- private:
-  const AbstractOpKind k;
+private:
+    const AbstractOpKind k;
 };
 
 struct ExecutionContext {
-  // Needed to implement our own version of RTTI since dynamic_cast is not
-  // supported in mobile builds.
-  enum ExecutionContextKind { kGraphContext, kEagerContext };
-  explicit ExecutionContext(ExecutionContextKind kind) : k(kind) {}
-  ExecutionContextKind getKind() const { return k; }
+    // Needed to implement our own version of RTTI since dynamic_cast is not
+    // supported in mobile builds.
+    enum ExecutionContextKind { kGraphContext, kEagerContext };
+    explicit ExecutionContext(ExecutionContextKind kind) : k(kind) {}
+    ExecutionContextKind getKind() const {
+        return k;
+    }
 
-  virtual void ExecuteOperation(AbstractOp* op, int num_inputs,
-                                AbstractTensor* const* inputs, OutputList* o,
-                                TF_Status* s) = 0;
-  virtual AbstractOp* CreateOperation() = 0;
-  virtual void RegisterFunction(AbstractFunction* func, TF_Status* s) = 0;
-  virtual ~ExecutionContext() = default;
+    virtual void ExecuteOperation(AbstractOp* op, int num_inputs,
+                                  AbstractTensor* const* inputs, OutputList* o,
+                                  TF_Status* s) = 0;
+    virtual AbstractOp* CreateOperation() = 0;
+    virtual void RegisterFunction(AbstractFunction* func, TF_Status* s) = 0;
+    virtual ~ExecutionContext() = default;
 
- private:
-  const ExecutionContextKind k;
+private:
+    const ExecutionContextKind k;
 };
 
 // Create utilities to wrap/unwrap: this convert from the C opaque types to the
@@ -114,10 +122,10 @@ MAKE_WRAP_UNWRAP(TF_OutputList, OutputList)
 
 template <typename T, typename S>
 T* dynamic_cast_helper(S source) {
-  if (source->getKind() != T::kKind) {
-    return nullptr;
-  }
-  return tensorflow::down_cast<T*>(source);
+    if (source->getKind() != T::kKind) {
+        return nullptr;
+    }
+    return tensorflow::down_cast<T*>(source);
 }
 
 }  // namespace internal

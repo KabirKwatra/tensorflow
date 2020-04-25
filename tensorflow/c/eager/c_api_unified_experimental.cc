@@ -32,57 +32,67 @@ using tensorflow::internal::OutputList;
 using tensorflow::internal::unwrap;
 using tensorflow::internal::wrap;
 
-void TF_DeleteExecutionContext(TF_ExecutionContext* c) { delete unwrap(c); }
+void TF_DeleteExecutionContext(TF_ExecutionContext* c) {
+    delete unwrap(c);
+}
 
 TF_AbstractOp* TF_NewAbstractOp(TF_ExecutionContext* c) {
-  return wrap(unwrap(c)->CreateOperation());
+    return wrap(unwrap(c)->CreateOperation());
 }
 
-void TF_DeleteAbstractOp(TF_AbstractOp* op) { delete unwrap(op); }
+void TF_DeleteAbstractOp(TF_AbstractOp* op) {
+    delete unwrap(op);
+}
 
-void TF_DeleteAbstractTensor(TF_AbstractTensor* t) { delete unwrap(t); }
+void TF_DeleteAbstractTensor(TF_AbstractTensor* t) {
+    delete unwrap(t);
+}
 
-TF_OutputList* TF_NewOutputList() { return wrap(new OutputList); }
-void TF_DeleteOutputList(TF_OutputList* o) { delete unwrap(o); }
+TF_OutputList* TF_NewOutputList() {
+    return wrap(new OutputList);
+}
+void TF_DeleteOutputList(TF_OutputList* o) {
+    delete unwrap(o);
+}
 void TF_OutputListSetNumOutputs(TF_OutputList* o, int num_outputs,
                                 TF_Status* s) {
-  unwrap(o)->expected_num_outputs = num_outputs;
+    unwrap(o)->expected_num_outputs = num_outputs;
 }
 int TF_OutputListNumOutputs(TF_OutputList* o) {
-  return unwrap(o)->outputs.size();
+    return unwrap(o)->outputs.size();
 }
 TF_AbstractTensor* TF_OutputListGet(TF_OutputList* o, int i) {
-  return wrap(unwrap(o)->outputs[i]);
+    return wrap(unwrap(o)->outputs[i]);
 }
 
 void TF_AbstractOpSetOpType(TF_AbstractOp* op, const char* const op_type,
                             TF_Status* s) {
-  unwrap(op)->SetOpType(op_type, s);
+    unwrap(op)->SetOpType(op_type, s);
 }
 
 void TF_AbstractOpSetOpName(TF_AbstractOp* op, const char* const op_name,
                             TF_Status* s) {
-  unwrap(op)->SetOpName(op_name, s);
+    unwrap(op)->SetOpName(op_name, s);
 }
 
 void TF_AbstractOpSetAttrType(TF_AbstractOp* op, const char* const attr_name,
                               TF_DataType value, TF_Status* s) {
-  unwrap(op)->SetAttrType(attr_name, value, s);
+    unwrap(op)->SetAttrType(attr_name, value, s);
 }
 
 void TF_ExecuteOperation(TF_AbstractOp* op, int num_inputs,
                          TF_AbstractTensor* const* inputs, TF_OutputList* o,
                          TF_ExecutionContext* ctx, TF_Status* s) {
-  unwrap(ctx)->ExecuteOperation(unwrap(op), num_inputs, &unwrap(*inputs),
-                                unwrap(o), s);
+    unwrap(ctx)->ExecuteOperation(unwrap(op), num_inputs, &unwrap(*inputs),
+                                  unwrap(o), s);
 }
 
 void TF_DeleteAbstractFunction(TF_AbstractFunction* func) {
-  delete unwrap(func);
+    delete unwrap(func);
 }
 
 void TF_ExecutionContextRegisterFunction(TF_ExecutionContext* ctx,
-                                         TF_AbstractFunction* func,
-                                         TF_Status* s) {
-  unwrap(ctx)->RegisterFunction(unwrap(func), s);
+        TF_AbstractFunction* func,
+        TF_Status* s) {
+    unwrap(ctx)->RegisterFunction(unwrap(func), s);
 }
