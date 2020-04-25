@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
 # RUN: %p/shapes_for_arguments | FileCheck %s
-
 # pylint: disable=missing-docstring,line-too-long
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import tensorflow.compat.v2 as tf
 from tensorflow.compiler.mlir.tensorflow.tests.tf_saved_model import common
