@@ -53,4 +53,3 @@ func @broadcast_add_ranked_components_r1x2(%arg0: tensor<?xf32>, %arg1: tensor<?
   %1 = "xla_test.get_return_type_components"(%0) : (tensor<?x3xf32>) -> tensor<?x3xf32>
   return %1 : tensor<?x3xf32>
 }
-
