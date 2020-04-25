@@ -43,7 +43,7 @@ typedef struct TF_AbstractOp TF_AbstractOp;
 
 TF_ExecutionContext* TF_NewGraphExecutionContext(TF_Status* s);
 TF_ExecutionContext* TF_NewEagerExecutionContext(TFE_ContextOptions*,
-        TF_Status* s);
+                                                 TF_Status* s);
 
 void TF_DeleteExecutionContext(TF_ExecutionContext*);
 
@@ -81,7 +81,7 @@ TF_AbstractFunction* TF_ExecutionContextToFunction(
     const TF_AbstractTensor* outputs, TF_Status* status);
 void TF_DeleteAbstractFunction(TF_AbstractFunction*);
 void TF_ExecutionContextRegisterFunction(TF_ExecutionContext*,
-        TF_AbstractFunction*, TF_Status*);
+                                         TF_AbstractFunction*, TF_Status*);
 
 // TF_ExecuteOperation will, if in eager mode, execute, if in graph mode, maybe
 // capture some inputs and then add a node in the graph, and after
@@ -98,9 +98,9 @@ void TF_ExecuteOperation(TF_AbstractOp* op, int num_inputs,
 // Temporary APIs till we figure out how to create scalar valued Eager
 // tensors and how to get value out of eager abstract tensors.
 TF_AbstractTensor* TF_CreateAbstractTensorFromEagerTensor(TFE_TensorHandle* t,
-        TF_Status* s);
+                                                          TF_Status* s);
 TFE_TensorHandle* TF_AbstractTensorGetEagerTensor(TF_AbstractTensor* at,
-        TF_Status* s);
+                                                  TF_Status* s);
 TFE_Context* TF_ExecutionContextGetTFEContext(TF_ExecutionContext*);
 
 #ifdef __cplusplus
