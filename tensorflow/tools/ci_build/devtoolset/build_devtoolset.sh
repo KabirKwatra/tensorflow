@@ -20,7 +20,7 @@
 VERSION="$1"
 TARGET="$2"
 
-case "${VERSION}" in
+case "$VERSION" in
 devtoolset-7)
   LIBSTDCXX_VERSION="6.0.24"
   ;;
@@ -33,43 +33,43 @@ devtoolset-8)
   ;;
 esac
 
-mkdir -p "${TARGET}"
+mkdir -p "$TARGET"
 # Download binary glibc 2.12 release.
 wget "http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/libc6_2.12.1-0ubuntu6_amd64.deb" && \
     unar "libc6_2.12.1-0ubuntu6_amd64.deb" && \
-    tar -C "${TARGET}" -xvzf "libc6_2.12.1-0ubuntu6_amd64/data.tar.gz" && \
+    tar -C "$TARGET" -xvzf "libc6_2.12.1-0ubuntu6_amd64/data.tar.gz" && \
     rm -rf "libc6_2.12.1-0ubuntu6_amd64.deb" "libc6_2.12.1-0ubuntu6_amd64"
 wget "http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/libc6-dev_2.12.1-0ubuntu6_amd64.deb" && \
     unar "libc6-dev_2.12.1-0ubuntu6_amd64.deb" && \
-    tar -C "${TARGET}" -xvzf "libc6-dev_2.12.1-0ubuntu6_amd64/data.tar.gz" && \
+    tar -C "$TARGET" -xvzf "libc6-dev_2.12.1-0ubuntu6_amd64/data.tar.gz" && \
     rm -rf "libc6-dev_2.12.1-0ubuntu6_amd64.deb" "libc6-dev_2.12.1-0ubuntu6_amd64"
 
 # Put the current kernel headers from ubuntu in place.
-ln -s "/usr/include/linux" "/${TARGET}/usr/include/linux"
-ln -s "/usr/include/asm-generic" "/${TARGET}/usr/include/asm-generic"
-ln -s "/usr/include/x86_64-linux-gnu/asm" "/${TARGET}/usr/include/asm"
+ln -s "/usr/include/linux" "/$TARGET/usr/include/linux"
+ln -s "/usr/include/asm-generic" "/$TARGET/usr/include/asm-generic"
+ln -s "/usr/include/x86_64-linux-gnu/asm" "/$TARGET/usr/include/asm"
 
 # Symlinks in the binary distribution are set up for installation in /usr, we
 # need to fix up all the links to stay within /${TARGET}.
-/fixlinks.sh "/${TARGET}"
+/fixlinks.sh "/$TARGET"
 
 # Patch to allow non-glibc 2.12 compatible builds to work.
-sed -i '54i#define TCP_USER_TIMEOUT 18' "/${TARGET}/usr/include/netinet/tcp.h"
+sed -i '54i#define TCP_USER_TIMEOUT 18' "/$TARGET/usr/include/netinet/tcp.h"
 
 # Download binary libstdc++ 4.4 release we are going to link against.
 # We only need the shared library, as we're going to develop against the
 # libstdc++ provided by devtoolset.
 wget "http://old-releases.ubuntu.com/ubuntu/pool/main/g/gcc-4.4/libstdc++6_4.4.3-4ubuntu5_amd64.deb" && \
     unar "libstdc++6_4.4.3-4ubuntu5_amd64.deb" && \
-    tar -C "/${TARGET}" -xvzf "libstdc++6_4.4.3-4ubuntu5_amd64/data.tar.gz" "./usr/lib/libstdc++.so.6.0.13" && \
+    tar -C "/$TARGET" -xvzf "libstdc++6_4.4.3-4ubuntu5_amd64/data.tar.gz" "./usr/lib/libstdc++.so.6.0.13" && \
     rm -rf "libstdc++6_4.4.3-4ubuntu5_amd64.deb" "libstdc++6_4.4.3-4ubuntu5_amd64"
 
-mkdir -p "${TARGET}-src"
-cd "${TARGET}-src"
+mkdir -p "$TARGET-src"
+cd "$TARGET-src"
 
 # Build a devtoolset cross-compiler based on our glibc 2.12 sysroot setup.
 
-case "${VERSION}" in
+case "$VERSION" in
 devtoolset-7)
   wget "http://vault.centos.org/centos/6/sclo/Source/rh/devtoolset-7/devtoolset-7-gcc-7.3.1-5.15.el6.src.rpm"
   rpm2cpio "devtoolset-7-gcc-7.3.1-5.15.el6.src.rpm" |cpio -idmv
@@ -87,12 +87,12 @@ esac
 
 ./contrib/download_prerequisites
 
-mkdir -p "${TARGET}-build"
-cd "${TARGET}-build"
+mkdir -p "$TARGET-build"
+cd "$TARGET-build"
 
-"${TARGET}-src/configure" \
-      --prefix=/"${TARGET}/usr" \
-      --with-sysroot="/${TARGET}" \
+"$TARGET-src/configure" \
+      --prefix=/"$TARGET/usr" \
+      --with-sysroot="/$TARGET" \
       --disable-bootstrap \
       --disable-libmpx \
       --disable-libsanitizer \
@@ -119,21 +119,21 @@ cd "${TARGET}-build"
 
 # Create the devtoolset libstdc++ linkerscript that links dynamically against
 # the system libstdc++ 4.4 and provides all other symbols statically.
-mv "/${TARGET}/usr/lib/libstdc++.so.${LIBSTDCXX_VERSION}" \
-   "/${TARGET}/usr/lib/libstdc++.so.${LIBSTDCXX_VERSION}.backup"
+mv "/$TARGET/usr/lib/libstdc++.so.$LIBSTDCXX_VERSION" \
+   "/$TARGET/usr/lib/libstdc++.so.$LIBSTDCXX_VERSION.backup"
 echo -e "OUTPUT_FORMAT(elf64-x86-64)\nINPUT ( libstdc++.so.6.0.13 -lstdc++_nonshared44 )" \
-   > "/${TARGET}/usr/lib/libstdc++.so.${LIBSTDCXX_VERSION}"
+   > "/$TARGET/usr/lib/libstdc++.so.$LIBSTDCXX_VERSION"
 cp "./x86_64-pc-linux-gnu/libstdc++-v3/src/.libs/libstdc++_nonshared44.a" \
-   "/${TARGET}/usr/lib"
+   "/$TARGET/usr/lib"
 
 # Link in architecture specific includes from the system; note that we cannot
 # link in the whole x86_64-linux-gnu folder, as otherwise we're overlaying
 # system gcc paths that we do not want to find.
 # TODO(klimek): Automate linking in all non-gcc / non-kernel include
 # directories.
-mkdir -p "/${TARGET}/usr/include/x86_64-linux-gnu"
+mkdir -p "/$TARGET/usr/include/x86_64-linux-gnu"
 PYTHON_VERSIONS=("python2.7" "python3.5m" "python3.6m" "python3.7m" "python3.8")
 for v in "${PYTHON_VERSIONS[@]}"; do
-  ln -s "/usr/local/include/${v}" "/${TARGET}/usr/include/x86_64-linux-gnu/${v}"
+  ln -s "/usr/local/include/$v" "/$TARGET/usr/include/x86_64-linux-gnu/$v"
 done
 
