@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for the input_lib library."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import json
@@ -22,24 +23,34 @@ import threading
 
 import numpy as np
 from absl.testing import parameterized
+
 from tensorflow.python import tf2
 from tensorflow.python.compat import compat
 from tensorflow.python.data.experimental.ops.distribute_options import \
     AutoShardPolicy
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.distribute import (collective_all_reduce_strategy,
-                                          combinations)
+from tensorflow.python.distribute import collective_all_reduce_strategy
+from tensorflow.python.distribute import combinations
 from tensorflow.python.distribute import \
     cross_device_ops as cross_device_ops_lib
-from tensorflow.python.distribute import (device_util, distribute_lib,
-                                          input_lib, mirrored_strategy,
-                                          multi_worker_test_base,
-                                          parameter_server_strategy,
-                                          reduce_util, strategy_combinations,
-                                          values)
-from tensorflow.python.eager import context, def_function, test
-from tensorflow.python.framework import errors, ops, sparse_tensor
-from tensorflow.python.ops import control_flow_ops, math_ops, sparse_ops
+from tensorflow.python.distribute import device_util
+from tensorflow.python.distribute import distribute_lib
+from tensorflow.python.distribute import input_lib
+from tensorflow.python.distribute import mirrored_strategy
+from tensorflow.python.distribute import multi_worker_test_base
+from tensorflow.python.distribute import parameter_server_strategy
+from tensorflow.python.distribute import reduce_util
+from tensorflow.python.distribute import strategy_combinations
+from tensorflow.python.distribute import values
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.eager import test
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import sparse_ops
 from tensorflow.python.ops.ragged import ragged_tensor as ragged_tensor_lib
 from tensorflow.python.util import nest
 

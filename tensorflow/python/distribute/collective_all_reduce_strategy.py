@@ -13,25 +13,33 @@
 # limitations under the License.
 # ==============================================================================
 """Class CollectiveAllReduceStrategy implementing DistributionStrategy."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import copy
 import weakref
 
-from tensorflow.core.protobuf import (config_pb2, rewriter_config_pb2,
-                                      tensorflow_server_pb2)
+from tensorflow.core.protobuf import config_pb2
+from tensorflow.core.protobuf import rewriter_config_pb2
+from tensorflow.core.protobuf import tensorflow_server_pb2
 from tensorflow.python.distribute import \
     cross_device_ops as cross_device_ops_lib
-from tensorflow.python.distribute import (cross_device_utils, device_util,
-                                          distribute_lib, input_lib,
-                                          mirrored_strategy, multi_worker_util,
-                                          numpy_dataset, reduce_util, values)
-from tensorflow.python.distribute.cluster_resolver import (
-    SimpleClusterResolver, TFConfigClusterResolver)
+from tensorflow.python.distribute import cross_device_utils
+from tensorflow.python.distribute import device_util
+from tensorflow.python.distribute import distribute_lib
+from tensorflow.python.distribute import input_lib
+from tensorflow.python.distribute import mirrored_strategy
+from tensorflow.python.distribute import multi_worker_util
+from tensorflow.python.distribute import numpy_dataset
+from tensorflow.python.distribute import reduce_util
+from tensorflow.python.distribute import values
+from tensorflow.python.distribute.cluster_resolver import SimpleClusterResolver
+from tensorflow.python.distribute.cluster_resolver import TFConfigClusterResolver
 from tensorflow.python.eager import context
 from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops, collective_ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import collective_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util.tf_export import tf_export
 
