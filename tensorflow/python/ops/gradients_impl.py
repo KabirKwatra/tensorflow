@@ -43,15 +43,15 @@ from tensorflow.python.util.tf_export import tf_export
 
 @tf_export(v1=["gradients"])
 def gradients(
-    ys,
-    xs,
-    grad_ys=None,
-    name="gradients",
-    colocate_gradients_with_ops=False,
-    gate_gradients=False,
-    aggregation_method=None,
-    stop_gradients=None,
-    unconnected_gradients=UnconnectedGradients.NONE,
+        ys,
+        xs,
+        grad_ys=None,
+        name="gradients",
+        colocate_gradients_with_ops=False,
+        gate_gradients=False,
+        aggregation_method=None,
+        stop_gradients=None,
+        unconnected_gradients=UnconnectedGradients.NONE,
 ):
     """Constructs symbolic derivatives of sum of `ys` w.r.t. x in `xs`.
 
@@ -185,14 +185,14 @@ def gradients(
 
 @tf_export("gradients", v1=[])
 def gradients_v2(
-    ys,  # pylint: disable=invalid-name
-    xs,
-    grad_ys=None,
-    name="gradients",
-    gate_gradients=False,
-    aggregation_method=None,
-    stop_gradients=None,
-    unconnected_gradients=UnconnectedGradients.NONE,
+        ys,  # pylint: disable=invalid-name
+        xs,
+        grad_ys=None,
+        name="gradients",
+        gate_gradients=False,
+        aggregation_method=None,
+        stop_gradients=None,
+        unconnected_gradients=UnconnectedGradients.NONE,
 ):
     """Constructs symbolic derivatives of sum of `ys` w.r.t. x in `xs`.
 
@@ -384,8 +384,7 @@ def _hessian_vector_product(ys, xs, v):
     assert len(grads) == length
     elemwise_products = [
         math_ops.multiply(grad_elem, array_ops.stop_gradient(v_elem))
-        for grad_elem, v_elem in zip(grads, v)
-        if grad_elem is not None
+        for grad_elem, v_elem in zip(grads, v) if grad_elem is not None
     ]
 
     # Second backprop
@@ -394,12 +393,12 @@ def _hessian_vector_product(ys, xs, v):
 
 @tf_export(v1=["hessians"])
 def hessians(
-    ys,
-    xs,
-    name="hessians",
-    colocate_gradients_with_ops=False,
-    gate_gradients=False,
-    aggregation_method=None,
+        ys,
+        xs,
+        name="hessians",
+        colocate_gradients_with_ops=False,
+        gate_gradients=False,
+        aggregation_method=None,
 ):
     """Constructs the Hessian of sum of `ys` with respect to `x` in `xs`.
 
@@ -449,20 +448,25 @@ def hessians(
         # derivatives.
         _, hessian = control_flow_ops.while_loop(
             lambda j, _: j < n,
-            lambda j, result: (j + 1, result.write(j, gradients(gradient[j], x)[0])),
+            lambda j, result: (j + 1,
+                               result.write(j,
+                                            gradients(gradient[j], x)[0])),
             loop_vars,
         )
 
         _shape = array_ops.shape(x)
         _reshaped_hessian = array_ops.reshape(
-            hessian.stack(), array_ops.concat((_shape, _shape), 0)
-        )
+            hessian.stack(), array_ops.concat((_shape, _shape), 0))
         hessians.append(_reshaped_hessian)
     return hessians
 
 
 @tf_export("hessians", v1=[])
-def HessiansV2(ys, xs, gate_gradients=False, aggregation_method=None, name="hessians"):
+def HessiansV2(ys,
+               xs,
+               gate_gradients=False,
+               aggregation_method=None,
+               name="hessians"):
     return hessians(
         ys,
         xs,
