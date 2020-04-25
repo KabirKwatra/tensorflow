@@ -56,7 +56,8 @@ class FileIO(object):
         mode = mode.replace("b", "")
         if mode not in ("r", "w", "a", "r+", "w+", "a+"):
             raise errors.InvalidArgumentError(
-                None, None, "mode is not 'r' or 'w' or 'a' or 'r+' or 'w+' or 'a+'")
+                None, None, "mode is not 'r' or 'w' or 'a' or 'r+' or 'w+' or 'a+'"
+            )
         self._read_check_passed = mode in ("r", "r+", "a+", "w+")
         self._write_check_passed = mode in ("a", "w", "r+", "a+", "w+")
 
@@ -73,18 +74,22 @@ class FileIO(object):
     def _preread_check(self):
         if not self._read_buf:
             if not self._read_check_passed:
-                raise errors.PermissionDeniedError(None, None,
-                                                   "File isn't open for reading")
+                raise errors.PermissionDeniedError(
+                    None, None, "File isn't open for reading"
+                )
             self._read_buf = _pywrap_file_io.BufferedInputStream(
-                self.__name, 1024 * 512)
+                self.__name, 1024 * 512
+            )
 
     def _prewrite_check(self):
         if not self._writable_file:
             if not self._write_check_passed:
-                raise errors.PermissionDeniedError(None, None,
-                                                   "File isn't open for writing")
+                raise errors.PermissionDeniedError(
+                    None, None, "File isn't open for writing"
+                )
             self._writable_file = _pywrap_file_io.WritableFile(
-                compat.as_bytes(self.__name), compat.as_bytes(self.__mode))
+                compat.as_bytes(self.__name), compat.as_bytes(self.__mode)
+            )
 
     def _prepare_value(self, val):
         if self._binary_mode:
@@ -121,8 +126,8 @@ class FileIO(object):
         return self._prepare_value(self._read_buf.read(length))
 
     @deprecation.deprecated_args(
-        None, "position is deprecated in favor of the offset argument.",
-        "position")
+        None, "position is deprecated in favor of the offset argument.", "position"
+    )
     def seek(self, offset=None, whence=0, position=None):
         # TODO(jhseu): Delete later. Used to omit `position` from docs.
         # pylint: disable=g-doc-args
@@ -145,8 +150,9 @@ class FileIO(object):
         if offset is None and position is None:
             raise TypeError("seek(): offset argument required")
         if offset is not None and position is not None:
-            raise TypeError("seek(): offset and position may not be set "
-                            "simultaneously.")
+            raise TypeError(
+                "seek(): offset and position may not be set " "simultaneously."
+            )
 
         if position is not None:
             offset = position
@@ -159,9 +165,12 @@ class FileIO(object):
             offset += self.size()
         else:
             raise errors.InvalidArgumentError(
-                None, None,
+                None,
+                None,
                 "Invalid whence argument: {}. Valid values are 0, 1, or 2.".format(
-                    whence))
+                    whence
+                ),
+            )
         self._read_buf.seek(offset)
 
     def readline(self):
@@ -406,16 +415,19 @@ def get_matching_files_v2(pattern):
             # Convert the filenames to string from bytes.
             compat.as_str_any(matching_filename)
             for matching_filename in _pywrap_file_io.GetMatchingFiles(
-                compat.as_bytes(pattern))
+                compat.as_bytes(pattern)
+            )
         ]
     else:
         return [
             # Convert the filenames to string from bytes.
             compat.as_str_any(
-                matching_filename)  # pylint: disable=g-complex-comprehension
+                matching_filename
+            )  # pylint: disable=g-complex-comprehension
             for single_filename in pattern
             for matching_filename in _pywrap_file_io.GetMatchingFiles(
-                compat.as_bytes(single_filename))
+                compat.as_bytes(single_filename)
+            )
         ]
 
 
@@ -510,8 +522,7 @@ def copy_v2(src, dst, overwrite=False):
     Raises:
       errors.OpError: If the operation fails.
     """
-    _pywrap_file_io.CopyFile(
-        compat.as_bytes(src), compat.as_bytes(dst), overwrite)
+    _pywrap_file_io.CopyFile(compat.as_bytes(src), compat.as_bytes(dst), overwrite)
 
 
 @tf_export(v1=["gfile.Rename"])
@@ -543,8 +554,7 @@ def rename_v2(src, dst, overwrite=False):
     Raises:
       errors.OpError: If the operation fails.
     """
-    _pywrap_file_io.RenameFile(
-        compat.as_bytes(src), compat.as_bytes(dst), overwrite)
+    _pywrap_file_io.RenameFile(compat.as_bytes(src), compat.as_bytes(dst), overwrite)
 
 
 def atomic_write_string_to_file(filename, contents, overwrite=True):
@@ -690,9 +700,8 @@ def list_directory_v2(path):
     """
     if not is_directory(path):
         raise errors.NotFoundError(
-            node_def=None,
-            op=None,
-            message="Could not find directory {}".format(path))
+            node_def=None, op=None, message="Could not find directory {}".format(path)
+        )
 
     # Convert each element to string, since the return values of the
     # vector of string should be interpreted as strings, not bytes.
