@@ -13,27 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for the private `_AutoShardDataset` transformation."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from absl.testing import parameterized
-
-from tensorflow.python.data.experimental.kernel_tests import (
-    reader_dataset_ops_test_base,
-)
-from tensorflow.python.data.experimental.ops import cardinality
-from tensorflow.python.data.experimental.ops import distribute
-from tensorflow.python.data.experimental.ops import distribute_options
-from tensorflow.python.data.experimental.ops import interleave_ops
-from tensorflow.python.data.experimental.ops import readers
-from tensorflow.python.data.experimental.ops import testing
-from tensorflow.python.data.experimental.ops import unique
+from tensorflow.python.data.experimental.kernel_tests import \
+    reader_dataset_ops_test_base
+from tensorflow.python.data.experimental.ops import (cardinality, distribute,
+                                                     distribute_options,
+                                                     interleave_ops, readers,
+                                                     testing, unique)
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.data.ops import readers as core_readers
-from tensorflow.python.framework import combinations
-from tensorflow.python.framework import errors
+from tensorflow.python.framework import combinations, errors
 from tensorflow.python.ops import string_ops
 from tensorflow.python.platform import test
 

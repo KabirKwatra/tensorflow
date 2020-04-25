@@ -14,28 +14,24 @@
 # ==============================================================================
 """Implements the graph generation for computation of gradients."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
+from tensorflow.python.framework import dtypes, ops
 from tensorflow.python.ops import array_grad  # pylint: disable=unused-import
-from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import check_ops  # pylint: disable=unused-import
-from tensorflow.python.ops import control_flow_grad  # pylint: disable=unused-import
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import gradients_util
+from tensorflow.python.ops import \
+    control_flow_grad  # pylint: disable=unused-import
 from tensorflow.python.ops import image_grad  # pylint: disable=unused-import
 from tensorflow.python.ops import linalg_grad  # pylint: disable=unused-import
 from tensorflow.python.ops import linalg_ops  # pylint: disable=unused-import
 from tensorflow.python.ops import logging_ops  # pylint: disable=unused-import
 from tensorflow.python.ops import manip_grad  # pylint: disable=unused-import
 from tensorflow.python.ops import math_grad  # pylint: disable=unused-import
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import optional_grad  # pylint: disable=unused-import
+from tensorflow.python.ops import \
+    optional_grad  # pylint: disable=unused-import
 from tensorflow.python.ops import random_grad  # pylint: disable=unused-import
-from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.ops import (array_ops, control_flow_ops, gradients_util,
+                                   math_ops, tensor_array_ops)
 from tensorflow.python.ops.unconnected_gradients import UnconnectedGradients
 from tensorflow.python.util.tf_export import tf_export
 

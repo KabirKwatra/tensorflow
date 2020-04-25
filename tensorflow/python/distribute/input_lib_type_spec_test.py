@@ -14,26 +14,17 @@
 # ==============================================================================
 """Tests for the input_lib library which tests iterator type specs."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python import tf2
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import distribute_lib
-from tensorflow.python.distribute import strategy_combinations
-from tensorflow.python.distribute import values
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import test
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_spec
+from tensorflow.python.distribute import (combinations, distribute_lib,
+                                          strategy_combinations, values)
+from tensorflow.python.eager import def_function, test
+from tensorflow.python.framework import (dtypes, sparse_tensor, tensor_shape,
+                                         tensor_spec)
 from tensorflow.python.ops.ragged import ragged_tensor as ragged_tensor_lib
 
 
