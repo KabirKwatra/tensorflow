@@ -14,28 +14,22 @@
 # ==============================================================================
 """Class implementing a multi-worker parameter server tf.distribute strategy."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 
-
-from tensorflow.python.distribute import cross_device_ops as cross_device_ops_lib
-from tensorflow.python.distribute import device_util
-from tensorflow.python.distribute import distribute_lib
-from tensorflow.python.distribute import input_lib
-from tensorflow.python.distribute import mirrored_run
-from tensorflow.python.distribute import multi_worker_util
-from tensorflow.python.distribute import numpy_dataset
-from tensorflow.python.distribute import values
-from tensorflow.python.distribute.cluster_resolver import SimpleClusterResolver
-from tensorflow.python.distribute.cluster_resolver import TFConfigClusterResolver
+from tensorflow.python.distribute import \
+    cross_device_ops as cross_device_ops_lib
+from tensorflow.python.distribute import (device_util, distribute_lib,
+                                          input_lib, mirrored_run,
+                                          multi_worker_util, numpy_dataset,
+                                          values)
+from tensorflow.python.distribute.cluster_resolver import (
+    SimpleClusterResolver, TFConfigClusterResolver)
 from tensorflow.python.eager import context
 from tensorflow.python.framework import device as tf_device
 from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.ops import array_ops, resource_variable_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training import device_setter

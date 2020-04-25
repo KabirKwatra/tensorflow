@@ -13,20 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 """File IO methods that wrap the C++ FileSystem API."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import binascii
 import os
 import uuid
 
 import six
-
 from tensorflow.python import _pywrap_file_io
 from tensorflow.python.framework import errors
-from tensorflow.python.util import compat
-from tensorflow.python.util import deprecation
+from tensorflow.python.util import compat, deprecation
 from tensorflow.python.util.tf_export import tf_export
 
 # A good default block size depends on the system in question.
