@@ -34,14 +34,11 @@ from tensorflow.python.platform import test
 def np_split_squeeze(array, axis):
     axis_len = array.shape[axis]
     return [
-        np.squeeze(
-            arr, axis=(axis,)) for arr in np.split(
-                array, axis_len, axis=axis)
+        np.squeeze(arr, axis=(axis,)) for arr in np.split(array, axis_len, axis=axis)
     ]
 
 
 class StackOpTest(test.TestCase):
-
     def randn(self, shape, dtype):
         data = np.random.randn(*shape)
         if dtype == np.bool:
@@ -156,8 +153,7 @@ class StackOpTest(test.TestCase):
                     # TODO(irving): Remove list() once we handle maps correctly
                     xs = list(map(constant_op.constant, data))
                     c = array_ops.stack(xs)
-                    err = gradient_checker.compute_gradient_error(
-                        xs, shapes, c, shape)
+                    err = gradient_checker.compute_gradient_error(xs, shapes, c, shape)
                     self.assertLess(err, 1e-6)
 
     @test_util.run_deprecated_v1
@@ -173,8 +169,9 @@ class StackOpTest(test.TestCase):
                     # TODO(irving): Remove list() once we handle maps correctly
                     xs = list(map(constant_op.constant, data))
                     c = array_ops.stack(xs, axis=1)
-                    err = gradient_checker.compute_gradient_error(xs, shapes, c,
-                                                                  out_shape)
+                    err = gradient_checker.compute_gradient_error(
+                        xs, shapes, c, out_shape
+                    )
                     self.assertLess(err, 1e-6)
 
     @test_util.run_deprecated_v1
@@ -206,8 +203,7 @@ class StackOpTest(test.TestCase):
     @test_util.run_deprecated_v1
     def testAxis0DefaultCPU(self):
         with self.session(use_gpu=False):
-            t = [constant_op.constant([1, 2, 3]),
-                 constant_op.constant([4, 5, 6])]
+            t = [constant_op.constant([1, 2, 3]), constant_op.constant([4, 5, 6])]
             stacked = array_ops.stack(t).eval()
             parallel_stacked = array_ops.parallel_stack(t).eval()
 
@@ -218,8 +214,7 @@ class StackOpTest(test.TestCase):
     @test_util.run_deprecated_v1
     def testAxis0DefaultGPU(self):
         with self.session(use_gpu=True):
-            t = [constant_op.constant([1, 2, 3]),
-                 constant_op.constant([4, 5, 6])]
+            t = [constant_op.constant([1, 2, 3]), constant_op.constant([4, 5, 6])]
             stacked = array_ops.stack(t).eval()
             parallel_stacked = array_ops.parallel_stack(t).eval()
 
@@ -239,20 +234,15 @@ class StackOpTest(test.TestCase):
 
                     with self.cached_session(use_gpu=True):
                         with self.subTest(shape=shape, dtype=dtype, axis=axis):
-                            actual_pack = array_ops.stack(
-                                test_arrays, axis=axis)
-                            self.assertEqual(
-                                expected.shape, actual_pack.get_shape())
+                            actual_pack = array_ops.stack(test_arrays, axis=axis)
+                            self.assertEqual(expected.shape, actual_pack.get_shape())
                             actual_pack = self.evaluate(actual_pack)
 
-                            actual_stack = array_ops.stack(
-                                test_arrays, axis=axis)
-                            self.assertEqual(
-                                expected.shape, actual_stack.get_shape())
+                            actual_stack = array_ops.stack(test_arrays, axis=axis)
+                            self.assertEqual(expected.shape, actual_stack.get_shape())
                             actual_stack = self.evaluate(actual_stack)
 
-                            self.assertNDArrayNear(
-                                expected, actual_stack, 1e-6)
+                            self.assertNDArrayNear(expected, actual_stack, 1e-6)
 
     def testDimOutOfRange(self):
         t = [constant_op.constant([1, 2, 3]), constant_op.constant([4, 5, 6])]
@@ -277,37 +267,47 @@ class StackOpTest(test.TestCase):
 
 
 class AutomaticStackingTest(test.TestCase):
-
     @test_util.run_deprecated_v1
     def testSimple(self):
         with self.session(use_gpu=True):
             self.assertAllEqual(
-                [1, 0, 2],
-                ops.convert_to_tensor([1, constant_op.constant(0), 2]).eval())
-            self.assertAllEqual([[0, 0, 0], [0, 1, 0], [0, 0, 0]],
-                                ops.convert_to_tensor(
-                                    [[0, 0, 0], [0, constant_op.constant(1), 0],
-                                     [0, 0, 0]]).eval())
-            self.assertAllEqual([[0, 0, 0], [0, 1, 0], [0, 0, 0]],
-                                ops.convert_to_tensor(
-                                    [[0, 0, 0], constant_op.constant([0, 1, 0]),
-                                     [0, 0, 0]]).eval())
-            self.assertAllEqual([[0, 0, 0], [0, 1, 0], [0, 0, 0]],
-                                ops.convert_to_tensor([
-                                    constant_op.constant([0, 0, 0]),
-                                    constant_op.constant([0, 1, 0]),
-                                    constant_op.constant([0, 0, 0])
-                                ]).eval())
+                [1, 0, 2], ops.convert_to_tensor([1, constant_op.constant(0), 2]).eval()
+            )
+            self.assertAllEqual(
+                [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+                ops.convert_to_tensor(
+                    [[0, 0, 0], [0, constant_op.constant(1), 0], [0, 0, 0]]
+                ).eval(),
+            )
+            self.assertAllEqual(
+                [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+                ops.convert_to_tensor(
+                    [[0, 0, 0], constant_op.constant([0, 1, 0]), [0, 0, 0]]
+                ).eval(),
+            )
+            self.assertAllEqual(
+                [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+                ops.convert_to_tensor(
+                    [
+                        constant_op.constant([0, 0, 0]),
+                        constant_op.constant([0, 1, 0]),
+                        constant_op.constant([0, 0, 0]),
+                    ]
+                ).eval(),
+            )
 
     def testWithNDArray(self):
         with self.session(use_gpu=True):
-            result = ops.convert_to_tensor([[[0., 0.],
-                                             constant_op.constant([1., 1.])],
-                                            np.array(
-                                                [[2., 2.], [3., 3.]],
-                                                dtype=np.float32)])
-            self.assertAllEqual([[[0., 0.], [1., 1.]], [[2., 2.], [3., 3.]]],
-                                self.evaluate(result))
+            result = ops.convert_to_tensor(
+                [
+                    [[0.0, 0.0], constant_op.constant([1.0, 1.0])],
+                    np.array([[2.0, 2.0], [3.0, 3.0]], dtype=np.float32),
+                ]
+            )
+            self.assertAllEqual(
+                [[[0.0, 0.0], [1.0, 1.0]], [[2.0, 2.0], [3.0, 3.0]]],
+                self.evaluate(result),
+            )
 
     @test_util.run_deprecated_v1
     def testVariable(self):
@@ -315,47 +315,60 @@ class AutomaticStackingTest(test.TestCase):
             v = variables.Variable(17)
             result = ops.convert_to_tensor([[0, 0, 0], [0, v, 0], [0, 0, 0]])
             v.initializer.run()
-            self.assertAllEqual([[0, 0, 0], [0, 17, 0], [0, 0, 0]],
-                                self.evaluate(result))
+            self.assertAllEqual(
+                [[0, 0, 0], [0, 17, 0], [0, 0, 0]], self.evaluate(result)
+            )
 
             v.assign(38).op.run()
-            self.assertAllEqual([[0, 0, 0], [0, 38, 0], [0, 0, 0]],
-                                self.evaluate(result))
+            self.assertAllEqual(
+                [[0, 0, 0], [0, 38, 0], [0, 0, 0]], self.evaluate(result)
+            )
 
     def testDtype(self):
-        t_0 = ops.convert_to_tensor([[0., 0., 0.], [0., 0., 0.], [0., 0., 0.]])
+        t_0 = ops.convert_to_tensor([[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
         self.assertEqual(dtypes.float32, t_0.dtype)
 
-        t_1 = ops.convert_to_tensor([[0., 0., 0.], constant_op.constant(
-            [0., 0., 0.], dtype=dtypes.float64), [0., 0., 0.]])
+        t_1 = ops.convert_to_tensor(
+            [
+                [0.0, 0.0, 0.0],
+                constant_op.constant([0.0, 0.0, 0.0], dtype=dtypes.float64),
+                [0.0, 0.0, 0.0],
+            ]
+        )
         self.assertEqual(dtypes.float64, t_1.dtype)
 
         t_2 = ops.convert_to_tensor(
-            [[0., 0., 0.], [0., 0., 0.], [0., 0., 0.]], dtype=dtypes.float64)
+            [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], dtype=dtypes.float64
+        )
         self.assertEqual(dtypes.float64, t_2.dtype)
 
         t_3 = ops.convert_to_tensor(
-            [[0., 0., 0.],
-             constant_op.constant([0., 0., 0.], dtype=dtypes.float64), [
-                0., 0., 0.]
-             ],
-            dtype=dtypes.float32)
+            [
+                [0.0, 0.0, 0.0],
+                constant_op.constant([0.0, 0.0, 0.0], dtype=dtypes.float64),
+                [0.0, 0.0, 0.0],
+            ],
+            dtype=dtypes.float32,
+        )
         self.assertEqual(dtypes.float32, t_3.dtype)
 
         t_4 = ops.convert_to_tensor(
-            [constant_op.constant([0., 0., 0.], dtype=dtypes.float64)],
-            dtype=dtypes.float32)
+            [constant_op.constant([0.0, 0.0, 0.0], dtype=dtypes.float64)],
+            dtype=dtypes.float32,
+        )
         self.assertEqual(dtypes.float32, t_4.dtype)
 
         with self.assertRaises(TypeError):
-            ops.convert_to_tensor([
-                constant_op.constant(
-                    [0., 0., 0.], dtype=dtypes.float32), constant_op.constant(
-                        [0., 0., 0.], dtype=dtypes.float64), [0., 0., 0.]
-            ])
+            ops.convert_to_tensor(
+                [
+                    constant_op.constant([0.0, 0.0, 0.0], dtype=dtypes.float32),
+                    constant_op.constant([0.0, 0.0, 0.0], dtype=dtypes.float64),
+                    [0.0, 0.0, 0.0],
+                ]
+            )
 
     def testDtypeConversionWhenTensorDtypeMismatch(self):
-        t_0 = ops.convert_to_tensor([0., 0., 0.])
+        t_0 = ops.convert_to_tensor([0.0, 0.0, 0.0])
         self.assertEqual(dtypes.float32, t_0.dtype)
 
         t_1 = ops.convert_to_tensor([0, 0, 0])
@@ -369,21 +382,23 @@ class AutomaticStackingTest(test.TestCase):
         with self.session(use_gpu=True):
             # Test using placeholder with a defined shape.
             ph_0 = array_ops.placeholder(dtypes.int32, shape=[])
-            result_0 = ops.convert_to_tensor(
-                [[0, 0, 0], [0, ph_0, 0], [0, 0, 0]])
+            result_0 = ops.convert_to_tensor([[0, 0, 0], [0, ph_0, 0], [0, 0, 0]])
             self.assertAllEqual(
-                [[0, 0, 0], [0, 1, 0], [0, 0, 0]], result_0.eval(feed_dict={ph_0: 1}))
+                [[0, 0, 0], [0, 1, 0], [0, 0, 0]], result_0.eval(feed_dict={ph_0: 1})
+            )
             self.assertAllEqual(
-                [[0, 0, 0], [0, 2, 0], [0, 0, 0]], result_0.eval(feed_dict={ph_0: 2}))
+                [[0, 0, 0], [0, 2, 0], [0, 0, 0]], result_0.eval(feed_dict={ph_0: 2})
+            )
 
             # Test using placeholder with an undefined shape.
             ph_1 = array_ops.placeholder(dtypes.int32)
-            result_1 = ops.convert_to_tensor(
-                [[0, 0, 0], [0, ph_1, 0], [0, 0, 0]])
+            result_1 = ops.convert_to_tensor([[0, 0, 0], [0, ph_1, 0], [0, 0, 0]])
             self.assertAllEqual(
-                [[0, 0, 0], [0, 1, 0], [0, 0, 0]], result_1.eval(feed_dict={ph_1: 1}))
+                [[0, 0, 0], [0, 1, 0], [0, 0, 0]], result_1.eval(feed_dict={ph_1: 1})
+            )
             self.assertAllEqual(
-                [[0, 0, 0], [0, 2, 0], [0, 0, 0]], result_1.eval(feed_dict={ph_1: 2}))
+                [[0, 0, 0], [0, 2, 0], [0, 0, 0]], result_1.eval(feed_dict={ph_1: 2})
+            )
 
     @test_util.run_deprecated_v1
     def testShapeErrors(self):
