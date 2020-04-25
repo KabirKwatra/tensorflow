@@ -26,68 +26,68 @@ namespace xla {
 namespace {
 
 struct InferReturnTypeComponentsPattern : public RewritePattern {
-  InferReturnTypeComponentsPattern(MLIRContext *context)
-      : RewritePattern("xla_test.get_return_type_components", 1, context) {}
-  LogicalResult matchAndRewrite(Operation *op,
-                                PatternRewriter &rewriter) const override {
-    if (op->getNumOperands() != 1) return failure();
-    auto defining_op = op->getOperand(0).getDefiningOp();
-    auto defining_op_int =
-        llvm::dyn_cast_or_null<InferShapedTypeOpInterface>(defining_op);
-    if (!defining_op_int) return failure();
-    SmallVector<ShapedTypeComponents, 4> components;
-    if (failed(defining_op_int.inferReturnTypeComponents(
-            op->getContext(), op->getLoc(), defining_op->getOperands(),
-            defining_op->getAttrs(), defining_op->getRegions(), components))) {
-      return failure();
-    }
+    InferReturnTypeComponentsPattern(MLIRContext *context)
+        : RewritePattern("xla_test.get_return_type_components", 1, context) {}
+    LogicalResult matchAndRewrite(Operation *op,
+                                  PatternRewriter &rewriter) const override {
+        if (op->getNumOperands() != 1) return failure();
+        auto defining_op = op->getOperand(0).getDefiningOp();
+        auto defining_op_int =
+            llvm::dyn_cast_or_null<InferShapedTypeOpInterface>(defining_op);
+        if (!defining_op_int) return failure();
+        SmallVector<ShapedTypeComponents, 4> components;
+        if (failed(defining_op_int.inferReturnTypeComponents(
+                       op->getContext(), op->getLoc(), defining_op->getOperands(),
+                       defining_op->getAttrs(), defining_op->getRegions(), components))) {
+            return failure();
+        }
 
-    // Replace the op with another pass-through op with attributes added.
-    OperationState state(op->getLoc(), "xla_test.return_type_components",
-                         op->getOperands(), op->getResultTypes(),
-                         op->getAttrs());
-    auto new_op = rewriter.createOperation(state);
-    for (auto it : llvm::enumerate(components)) {
-      if (it.value().hasRank()) {
-        new_op->setAttr((StringRef("dims") + Twine(it.index())).str(),
-                        rewriter.getI64ArrayAttr(it.value().getDims()));
-      }
-      if (it.value().getElementType()) {
-        new_op->setAttr((Twine("element_type") + Twine(it.index())).str(),
-                        TypeAttr::get(it.value().getElementType()));
-      }
+        // Replace the op with another pass-through op with attributes added.
+        OperationState state(op->getLoc(), "xla_test.return_type_components",
+                             op->getOperands(), op->getResultTypes(),
+                             op->getAttrs());
+        auto new_op = rewriter.createOperation(state);
+        for (auto it : llvm::enumerate(components)) {
+            if (it.value().hasRank()) {
+                new_op->setAttr((StringRef("dims") + Twine(it.index())).str(),
+                                rewriter.getI64ArrayAttr(it.value().getDims()));
+            }
+            if (it.value().getElementType()) {
+                new_op->setAttr((Twine("element_type") + Twine(it.index())).str(),
+                                TypeAttr::get(it.value().getElementType()));
+            }
+        }
+        rewriter.replaceOp(op, {new_op->getResults()});
+        return success();
     }
-    rewriter.replaceOp(op, {new_op->getResults()});
-    return success();
-  }
 };
 
 struct ReifyReturnTypeShapesPattern : public RewritePattern {
-  ReifyReturnTypeShapesPattern(MLIRContext *context)
-      : RewritePattern("xla_test.reify_return_type_shapes", 1, context) {}
-  LogicalResult matchAndRewrite(Operation *op,
-                                PatternRewriter &rewriter) const override {
-    if (op->getNumOperands() != 1) return failure();
-    auto defining_op = llvm::dyn_cast_or_null<InferShapedTypeOpInterface>(
-        op->getOperand(0).getDefiningOp());
-    if (!defining_op) return failure();
-    SmallVector<Value, 4> return_shapes;
-    if (failed(defining_op.reifyReturnTypeShapes(rewriter, return_shapes))) {
-      return failure();
+    ReifyReturnTypeShapesPattern(MLIRContext *context)
+        : RewritePattern("xla_test.reify_return_type_shapes", 1, context) {}
+    LogicalResult matchAndRewrite(Operation *op,
+                                  PatternRewriter &rewriter) const override {
+        if (op->getNumOperands() != 1) return failure();
+        auto defining_op = llvm::dyn_cast_or_null<InferShapedTypeOpInterface>(
+                               op->getOperand(0).getDefiningOp());
+        if (!defining_op) return failure();
+        SmallVector<Value, 4> return_shapes;
+        if (failed(defining_op.reifyReturnTypeShapes(rewriter, return_shapes))) {
+            return failure();
+        }
+        rewriter.replaceOp(op, return_shapes);
+        return success();
     }
-    rewriter.replaceOp(op, return_shapes);
-    return success();
-  }
 };
 
 struct TestInferShapedTypeMethodsPass
     : public PassWrapper<TestInferShapedTypeMethodsPass, FunctionPass> {
-  void runOnFunction() override {
-    OwningRewritePatternList patterns;
-    patterns.insert<ReifyReturnTypeShapesPattern>(&getContext());
-    patterns.insert<InferReturnTypeComponentsPattern>(&getContext());
-    applyPatternsAndFoldGreedily(getFunction(), patterns);
-  }
+    void runOnFunction() override {
+        OwningRewritePatternList patterns;
+        patterns.insert<ReifyReturnTypeShapesPattern>(&getContext());
+        patterns.insert<InferReturnTypeComponentsPattern>(&getContext());
+        applyPatternsAndFoldGreedily(getFunction(), patterns);
+    }
 };
 
 }  // namespace
