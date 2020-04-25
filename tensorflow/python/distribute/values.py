@@ -13,23 +13,30 @@
 # limitations under the License.
 # ==============================================================================
 """Various classes representing distributed values."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import weakref
 
-from tensorflow.python.distribute import device_util, distribute_lib
+from tensorflow.python.distribute import device_util
+from tensorflow.python.distribute import distribute_lib
 from tensorflow.python.distribute import \
     distribution_strategy_context as ds_context
 from tensorflow.python.distribute import reduce_util
-from tensorflow.python.eager import context, tape
-from tensorflow.python.framework import (composite_tensor, ops, tensor_util,
-                                         type_spec)
-from tensorflow.python.ops import array_ops, control_flow_ops, math_ops
+from tensorflow.python.eager import context
+from tensorflow.python.eager import tape
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.framework import type_spec
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.ops import variables as variables_lib
-from tensorflow.python.training.saving import (saveable_object,
-                                               saveable_object_util)
+from tensorflow.python.training.saving import saveable_object
+from tensorflow.python.training.saving import saveable_object_util
 from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.util import nest
 from tensorflow.python.util.tf_export import tf_export
