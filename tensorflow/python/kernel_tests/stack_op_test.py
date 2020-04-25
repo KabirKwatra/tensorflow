@@ -14,20 +14,12 @@
 # ==============================================================================
 """Functional tests for Stack and ParallelStack Ops."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
-
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors_impl
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gradient_checker
-from tensorflow.python.ops import variables
+from tensorflow.python.framework import (constant_op, dtypes, errors_impl, ops,
+                                         test_util)
+from tensorflow.python.ops import array_ops, gradient_checker, variables
 from tensorflow.python.platform import test
 
 
