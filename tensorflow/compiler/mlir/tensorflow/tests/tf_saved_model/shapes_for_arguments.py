@@ -35,5 +35,5 @@ class TestModule(tf.Module):
         return x
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     common.do_test(TestModule)
