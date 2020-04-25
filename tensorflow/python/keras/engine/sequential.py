@@ -45,8 +45,7 @@ from tensorflow.python.util.tf_export import keras_export
 SINGLE_LAYER_OUTPUT_ERROR_MSG = (
     "All layers in a Sequential model should have "
     "a single output tensor. For multi-output "
-    "layers, use the functional API."
-)
+    "layers, use the functional API.")
 
 
 @keras_export("keras.Sequential", "keras.models.Sequential")
@@ -183,11 +182,9 @@ class Sequential(training.Model):
                 layer = origin_layer
 
         if not isinstance(layer, base_layer.Layer):
-            raise TypeError(
-                "The added layer must be "
-                "an instance of class Layer. "
-                "Found: " + str(layer)
-            )
+            raise TypeError("The added layer must be "
+                            "an instance of class Layer. "
+                            "Found: " + str(layer))
 
         tf_utils.assert_no_legacy_layers([layer])
         if not self._is_layer_name_unique(layer):
@@ -195,8 +192,7 @@ class Sequential(training.Model):
                 "All layers added to a Sequential model "
                 'should have unique names. Name "%s" is already the name'
                 " of a layer in this model. Update the `name` argument "
-                "to pass a unique name." % (layer.name,)
-            )
+                "to pass a unique name." % (layer.name, ))
 
         # This allows the added layer to broadcast mutations to the current
         # layer, which is necessary to ensure cache correctness.
@@ -209,12 +205,13 @@ class Sequential(training.Model):
                 # Case where the user passes an Input or InputLayer layer via `add`.
                 set_inputs = True
             else:
-                batch_shape, dtype = training_utils.get_input_shape_and_dtype(layer)
+                batch_shape, dtype = training_utils.get_input_shape_and_dtype(
+                    layer)
                 if batch_shape:
                     # Instantiate an input layer.
-                    x = input_layer.Input(
-                        batch_shape=batch_shape, dtype=dtype, name=layer.name + "_input"
-                    )
+                    x = input_layer.Input(batch_shape=batch_shape,
+                                          dtype=dtype,
+                                          name=layer.name + "_input")
                     # This will build the current layer
                     # and create the node connecting the current layer
                     # to the input layer we just created.
@@ -246,7 +243,8 @@ class Sequential(training.Model):
             self._layers.append(layer)
             self._handle_deferred_layer_dependencies([layer])
 
-        self._layer_call_argspecs[layer] = tf_inspect.getfullargspec(layer.call)
+        self._layer_call_argspecs[layer] = tf_inspect.getfullargspec(
+            layer.call)
         # Different Model types add to `._layers` in different ways, so for safety
         # we do a cache invalidation to make sure the changes are reflected.
         self._attribute_sentinel.invalidate_all()
@@ -278,23 +276,24 @@ class Sequential(training.Model):
             self.built = True
 
     @trackable.no_automatic_dependency_tracking
-    def _build_graph_network_for_inferred_shape(self, input_shape, input_dtype=None):
+    def _build_graph_network_for_inferred_shape(self,
+                                                input_shape,
+                                                input_dtype=None):
         if input_shape is None or not self.layers:
             return
         if not tf2.enabled() or not ops.executing_eagerly_outside_functions():
             # This behavior is disabled in V1 or when eager execution is disabled.
             return
-        if (
-            not self._has_explicit_input_shape
-            and not self._use_legacy_deferred_behavior
-        ):
+        if (not self._has_explicit_input_shape
+                and not self._use_legacy_deferred_behavior):
             # Determine whether the input shape is novel, i.e. whether the model
             # should be rebuilt.
             input_shape = tuple(input_shape)
             if self._inferred_input_shape is None:
                 new_shape = input_shape
             else:
-                new_shape = relax_input_shape(self._inferred_input_shape, input_shape)
+                new_shape = relax_input_shape(self._inferred_input_shape,
+                                              input_shape)
             if new_shape is not None and new_shape != self._inferred_input_shape:
                 # A novel shape has been received: we need to rebuild the model.
                 # In case we are inside a graph function, we step out of it.
@@ -315,7 +314,8 @@ class Sequential(training.Model):
                         # not to break shared layers added to Sequential models (which is
                         # technically illegal as per the `add()` docstring,
                         # but wasn't previously disabled).
-                        clear_previously_created_nodes(layer, self._created_nodes)
+                        clear_previously_created_nodes(layer,
+                                                       self._created_nodes)
                         try:
                             # Create Functional API connection by calling the current layer
                             layer_output = layer(layer_input)
@@ -349,7 +349,9 @@ class Sequential(training.Model):
                         # case, we fall back to the legacy deferred behavior.
                         # TODO(fchollet): consider raising here, as we should not be
                         # supporting such layers.
-                        self._init_graph_network(inputs, outputs, name=self.name)
+                        self._init_graph_network(inputs,
+                                                 outputs,
+                                                 name=self.name)
                         self._graph_initialized = True
                     except:  # pylint:disable=bare-except
                         self._use_legacy_deferred_behavior = True
@@ -369,9 +371,7 @@ class Sequential(training.Model):
                 super(Sequential, self).build(input_shape)
         self.built = True
 
-    def call(
-        self, inputs, training=None, mask=None
-    ):  # pylint: disable=redefined-outer-name
+    def call(self, inputs, training=None, mask=None):  # pylint: disable=redefined-outer-name
         # If applicable, update the static input shape of the model.
         if not self._has_explicit_input_shape:
             if not tensor_util.is_tensor(inputs):
@@ -379,21 +379,26 @@ class Sequential(training.Model):
                 # invalid use case of Sequential, but we tolerate it for backwards
                 # compatibility.
                 self._use_legacy_deferred_behavior = True
-                self._build_input_shape = nest.map_structure(_get_shape_tuple, inputs)
+                self._build_input_shape = nest.map_structure(
+                    _get_shape_tuple, inputs)
                 if tf2.enabled():
                     logging.warning(
                         "Layers in a Sequential model should only have a "
                         "single input tensor, but we receive a %s input: %s"
                         "\nConsider rewriting this model with the Functional "
-                        "API." % (type(inputs), inputs)
-                    )
+                        "API." % (type(inputs), inputs))
             else:
-                self._build_graph_network_for_inferred_shape(inputs.shape, inputs.dtype)
+                self._build_graph_network_for_inferred_shape(
+                    inputs.shape, inputs.dtype)
 
         if self._graph_initialized:
             if not self.built:
-                self._init_graph_network(self.inputs, self.outputs, name=self.name)
-            return super(Sequential, self).call(inputs, training=training, mask=mask)
+                self._init_graph_network(self.inputs,
+                                         self.outputs,
+                                         name=self.name)
+            return super(Sequential, self).call(inputs,
+                                                training=training,
+                                                mask=mask)
 
         outputs = inputs  # handle the corner case where self.layers is empty
         for layer in self.layers:
@@ -446,12 +451,10 @@ class Sequential(training.Model):
         """
         preds = self.predict(x, batch_size, verbose)
         if preds.min() < 0.0 or preds.max() > 1.0:
-            logging.warning(
-                "Network returning invalid probability values. "
-                "The last layer might not normalize predictions "
-                "into probabilities "
-                "(like softmax or sigmoid would)."
-            )
+            logging.warning("Network returning invalid probability values. "
+                            "The last layer might not normalize predictions "
+                            "into probabilities "
+                            "(like softmax or sigmoid would).")
         return preds
 
     @deprecated(
@@ -508,15 +511,11 @@ class Sequential(training.Model):
             layer_configs = config
         model = cls(name=name)
         for layer_config in layer_configs:
-            layer = layer_module.deserialize(
-                layer_config, custom_objects=custom_objects
-            )
+            layer = layer_module.deserialize(layer_config,
+                                             custom_objects=custom_objects)
             model.add(layer)
-        if (
-            not model.inputs
-            and build_input_shape
-            and isinstance(build_input_shape, (tuple, list))
-        ):
+        if (not model.inputs and build_input_shape
+                and isinstance(build_input_shape, (tuple, list))):
             model.build(build_input_shape)
         return model
 
@@ -562,7 +561,9 @@ def clear_previously_created_nodes(layer, created_nodes):
             prev_layer._outbound_nodes = [
                 n for n in prev_layer._outbound_nodes if n not in created_nodes
             ]
-    layer._inbound_nodes = [n for n in layer._inbound_nodes if n not in created_nodes]
+    layer._inbound_nodes = [
+        n for n in layer._inbound_nodes if n not in created_nodes
+    ]
 
 
 def track_nodes_created_by_last_call(layer, created_nodes):

@@ -54,14 +54,14 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
         dense = DummyLayer()
         a_2 = DummyTensor()
-        node_a = node_module.Node(layer=dense, call_args=(a,), outputs=a_2)
+        node_a = node_module.Node(layer=dense, call_args=(a, ), outputs=a_2)
         b_2 = DummyTensor()
-        node_b = node_module.Node(layer=dense, call_args=(b,), outputs=b_2)
+        node_b = node_module.Node(layer=dense, call_args=(b, ), outputs=b_2)
 
         # test the node attributes
         self.assertFalse(node_a.is_input)
         self.assertFalse(node_b.is_input)
-        self.assertEqual(node_a.call_args, (a,))
+        self.assertEqual(node_a.call_args, (a, ))
         self.assertEqual(node_a.call_kwargs, {})
         self.assertEqual(node_a.outputs, a_2)
 
@@ -83,13 +83,15 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
         dense = DummyLayer()
         a_2 = DummyTensor()
-        node_module.Node(layer=dense, call_args=(a,), outputs=a_2)
+        node_module.Node(layer=dense, call_args=(a, ), outputs=a_2)
         b_2 = DummyTensor()
-        node_module.Node(layer=dense, call_args=(b,), outputs=b_2)
+        node_module.Node(layer=dense, call_args=(b, ), outputs=b_2)
 
         concat_layer = DummyLayer()
         merged = DummyTensor()
-        node_module.Node(layer=concat_layer, call_args=([a_2, b_2],), outputs=merged)
+        node_module.Node(layer=concat_layer,
+                         call_args=([a_2, b_2], ),
+                         outputs=merged)
 
         merge_layer, merge_node_index, merge_tensor_index = merged._keras_history
 
@@ -100,7 +102,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertLen(merge_layer._outbound_nodes, 0)
 
         self.assertLen(merge_layer._inbound_nodes[0].input_tensors, 2)
-        self.assertEqual(merge_layer._inbound_nodes[0].input_tensors, [a_2, b_2])
+        self.assertEqual(merge_layer._inbound_nodes[0].input_tensors,
+                         [a_2, b_2])
         self.assertLen(merge_layer._inbound_nodes[0].inbound_layers, 2)
 
     def test_arg_and_kwarg_mix(self):
@@ -124,7 +127,10 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         node = node_module.Node(
             layer=merge_layer,
             call_args=([a, b], arg_2, arg_3),
-            call_kwargs={"x": kwarg_x, "y": kwarg_y},
+            call_kwargs={
+                "x": kwarg_x,
+                "y": kwarg_y
+            },
             outputs=merged,
         )
 
@@ -137,7 +143,8 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         # Only the inputs that were produced by input nodes should appear in
         # keras_tensors
         self.assertEqual({a, b, arg_3, kwarg_y}, set(node.keras_inputs))
-        self.assertEqual(set(node.parent_nodes), {node_a, node_b, node_c, node_d})
+        self.assertEqual(set(node.parent_nodes),
+                         {node_a, node_b, node_c, node_d})
 
         # Check the layer wirings
         self.assertEqual(merge_node_index, 0)
