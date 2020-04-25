@@ -26,25 +26,25 @@ from tensorflow.compiler.mlir.tensorflow.tests.tf_saved_model import common
 
 class TestModule(tf.Module):
 
-  # Check that we get shapes for variables used in the graph.
-  # In this case, what we are testing is that the return type of the function is
-  # correctly inferred, which requires understanding the shape of the variable
-  # (in particular, the ReadVariableOp that reads it and returns a tensor).
-  #
-  # We eventually want to move the shape inference to a pass separate from
-  # the initial import, in which case this test doesn't make much sense and
-  # will be superceded by MLIR->MLIR shape inference tests.
-  #
-  # CHECK:      func {{@[a-zA-Z_0-9]+}}({{.*}}) -> (tensor<f32> {{.*}})
-  # CHECK:      tf_saved_model.exported_names = ["some_function"]
-  def __init__(self):
-    super(TestModule, self).__init__()
-    self.my_variable = tf.Variable(42.)
+    # Check that we get shapes for variables used in the graph.
+    # In this case, what we are testing is that the return type of the function is
+    # correctly inferred, which requires understanding the shape of the variable
+    # (in particular, the ReadVariableOp that reads it and returns a tensor).
+    #
+    # We eventually want to move the shape inference to a pass separate from
+    # the initial import, in which case this test doesn't make much sense and
+    # will be superceded by MLIR->MLIR shape inference tests.
+    #
+    # CHECK:      func {{@[a-zA-Z_0-9]+}}({{.*}}) -> (tensor<f32> {{.*}})
+    # CHECK:      tf_saved_model.exported_names = ["some_function"]
+    def __init__(self):
+        super(TestModule, self).__init__()
+        self.my_variable = tf.Variable(42.)
 
-  @tf.function(input_signature=[])
-  def some_function(self):
-    return self.my_variable
+    @tf.function(input_signature=[])
+    def some_function(self):
+        return self.my_variable
 
 
 if __name__ == '__main__':
-  common.do_test(TestModule)
+    common.do_test(TestModule)
