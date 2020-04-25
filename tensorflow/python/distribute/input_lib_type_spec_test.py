@@ -37,9 +37,7 @@ from tensorflow.python.framework import tensor_spec
 from tensorflow.python.ops.ragged import ragged_tensor as ragged_tensor_lib
 
 
-class DistributedIteratorTest(test.TestCase,
-                              parameterized.TestCase):
-
+class DistributedIteratorTest(test.TestCase, parameterized.TestCase):
     @combinations.generate(
         combinations.combine(
             mode=["eager"],
@@ -48,16 +46,19 @@ class DistributedIteratorTest(test.TestCase,
                 strategy_combinations.mirrored_strategy_with_gpu_and_cpu,
                 strategy_combinations.tpu_strategy,
             ],
-            enable_get_next_as_optional=[True, False]))
-    def testTypeSpec(self, input_type, distribution,
-                     enable_get_next_as_optional):
+            enable_get_next_as_optional=[True, False],
+        )
+    )
+    def testTypeSpec(self, input_type, distribution, enable_get_next_as_optional):
         if not tf2.enabled():
-            self.skipTest("DistributedIterator has CompositeTensor support in "
-                          "TF 2 only.")
+            self.skipTest(
+                "DistributedIterator has CompositeTensor support in " "TF 2 only."
+            )
         dataset = dataset_ops.DatasetV2.range(10).batch(2)
 
         distribution.extended.experimental_enable_get_next_as_optional = (
-            enable_get_next_as_optional)
+            enable_get_next_as_optional
+        )
 
         dist_dataset = distribution.experimental_distribute_dataset(dataset)
         with distribution.scope():
@@ -65,11 +66,13 @@ class DistributedIteratorTest(test.TestCase,
 
         spec = iterator._type_spec
         self.assertEqual(spec._input_workers, iterator._input_workers)
-        self.assertEqual(spec._element_spec._value_specs,
-                         (tensor_spec.TensorSpec(shape=(None,), dtype=dtypes.int64,
-                                                 name=None),
-                          tensor_spec.TensorSpec(shape=(None,), dtype=dtypes.int64,
-                                                 name=None)))
+        self.assertEqual(
+            spec._element_spec._value_specs,
+            (
+                tensor_spec.TensorSpec(shape=(None,), dtype=dtypes.int64, name=None),
+                tensor_spec.TensorSpec(shape=(None,), dtype=dtypes.int64, name=None),
+            ),
+        )
 
     @combinations.generate(
         combinations.combine(
@@ -79,17 +82,23 @@ class DistributedIteratorTest(test.TestCase,
                 strategy_combinations.mirrored_strategy_with_gpu_and_cpu,
                 strategy_combinations.tpu_strategy,
             ],
-            enable_get_next_as_optional=[True, False]))
-    def testTypeSpecRoundTrip(self, input_type,
-                              distribution, enable_get_next_as_optional):
+            enable_get_next_as_optional=[True, False],
+        )
+    )
+    def testTypeSpecRoundTrip(
+        self, input_type, distribution, enable_get_next_as_optional
+    ):
         if not tf2.enabled():
-            self.skipTest("DistributedIterator CompositeTensor support is only "
-                          "present in TF 2.0 only.")
+            self.skipTest(
+                "DistributedIterator CompositeTensor support is only "
+                "present in TF 2.0 only."
+            )
 
         dataset = dataset_ops.DatasetV2.range(10).batch(2)
 
         distribution.extended.experimental_enable_get_next_as_optional = (
-            enable_get_next_as_optional)
+            enable_get_next_as_optional
+        )
 
         dist_dataset = distribution.experimental_distribute_dataset(dataset)
         with distribution.scope():
@@ -111,12 +120,17 @@ class DistributedIteratorTest(test.TestCase,
                 strategy_combinations.mirrored_strategy_with_gpu_and_cpu,
                 strategy_combinations.tpu_strategy,
             ],
-            enable_get_next_as_optional=[True, False]))
-    def testDoesNotTriggerFunctionTracing(self, input_type, distribution,
-                                          enable_get_next_as_optional):
+            enable_get_next_as_optional=[True, False],
+        )
+    )
+    def testDoesNotTriggerFunctionTracing(
+        self, input_type, distribution, enable_get_next_as_optional
+    ):
         if not tf2.enabled():
-            self.skipTest("DistributedIterator CompositeTensor support is only "
-                          "present in TF 2.0 only.")
+            self.skipTest(
+                "DistributedIterator CompositeTensor support is only "
+                "present in TF 2.0 only."
+            )
 
         trace_count = [0]
 
@@ -132,7 +146,8 @@ class DistributedIteratorTest(test.TestCase,
         dataset = dataset_ops.DatasetV2.range(10).batch(2)
 
         distribution.extended.experimental_enable_get_next_as_optional = (
-            enable_get_next_as_optional)
+            enable_get_next_as_optional
+        )
 
         dist_dataset = distribution.experimental_distribute_dataset(dataset)
         with distribution.scope():
@@ -145,7 +160,6 @@ class DistributedIteratorTest(test.TestCase,
 
 
 class InputTypeSpecTest(test.TestCase, parameterized.TestCase):
-
     @combinations.generate(
         combinations.combine(
             mode=["eager"],
@@ -157,20 +171,22 @@ class InputTypeSpecTest(test.TestCase, parameterized.TestCase):
                 strategy_combinations.central_storage_strategy_with_two_gpus,
             ],
             input_type=["dataset", "dataset_fn"],
-        ))
+        )
+    )
     def testInputSignatureForPerReplicaValues(self, distribution, input_type):
         def dataset_fn(ctx):
             del ctx  # unused
             return dataset_ops.DatasetV2.from_tensor_slices(
-                np.ones([10, 12]).astype(np.float32)).batch(4)
+                np.ones([10, 12]).astype(np.float32)
+            ).batch(4)
 
         if input_type == "dataset":
             ds = distribution.experimental_distribute_dataset(
-                dataset_fn(distribute_lib.InputContext()))
+                dataset_fn(distribute_lib.InputContext())
+            )
             type_spec = ds.element_spec
         else:
-            ds = distribution.experimental_distribute_datasets_from_function(
-                dataset_fn)
+            ds = distribution.experimental_distribute_datasets_from_function(dataset_fn)
             iterator = iter(ds)
             type_spec = iterator.element_spec
 
@@ -191,7 +207,8 @@ class InputTypeSpecTest(test.TestCase, parameterized.TestCase):
                 strategy_combinations.tpu_strategy,
                 strategy_combinations.central_storage_strategy_with_two_gpus,
             ],
-        ))
+        )
+    )
     def testInputSignatureForNestedPerReplicaValues(self, distribution):
         a = np.ones((10, 2)) * 5
         b = np.ones((10, 3)) * 6
@@ -207,36 +224,39 @@ class InputTypeSpecTest(test.TestCase, parameterized.TestCase):
             process_inputs(x)
 
 
-class RaggedTensorDistributedIteratorTest(test.TestCase,
-                                          parameterized.TestCase):
-
+class RaggedTensorDistributedIteratorTest(test.TestCase, parameterized.TestCase):
     @combinations.generate(
         combinations.combine(
             mode=["eager"],
-            distribution=[
-                strategy_combinations.mirrored_strategy_with_gpu_and_cpu,
-            ],
-            enable_get_next_as_optional=[True, False]))
+            distribution=[strategy_combinations.mirrored_strategy_with_gpu_and_cpu,],
+            enable_get_next_as_optional=[True, False],
+        )
+    )
     def testTypeSpec(self, distribution, enable_get_next_as_optional):
         if not tf2.enabled():
-            self.skipTest("DistributedIterator has CompositeTensor support in "
-                          "TF 2.0 only.")
+            self.skipTest(
+                "DistributedIterator has CompositeTensor support in " "TF 2.0 only."
+            )
         ctx = distribute_lib.InputContext()
         batch_size = ctx.get_per_replica_batch_size(8)
         # Use 20 which isn't divisible by 8 to test partial batch behavior.
         row_lengths = np.mod(np.arange(20), 4).astype(np.int64)
         ragged_tensor = ragged_tensor_lib.RaggedTensor.from_row_lengths(
-            np.repeat(np.arange(20, dtype=np.float32), row_lengths), row_lengths)
-        dataset = dataset_ops.DatasetV2.from_tensor_slices({
-            "dense": ragged_tensor.to_tensor(),
-            "ragged": ragged_tensor,
-            "sparse": ragged_tensor.to_sparse(),
-        })
+            np.repeat(np.arange(20, dtype=np.float32), row_lengths), row_lengths
+        )
+        dataset = dataset_ops.DatasetV2.from_tensor_slices(
+            {
+                "dense": ragged_tensor.to_tensor(),
+                "ragged": ragged_tensor,
+                "sparse": ragged_tensor.to_sparse(),
+            }
+        )
         dataset = dataset.shard(ctx.num_input_pipelines, ctx.input_pipeline_id)
         dataset = dataset.batch(batch_size)
 
         distribution.extended.experimental_enable_get_next_as_optional = (
-            enable_get_next_as_optional)
+            enable_get_next_as_optional
+        )
 
         dist_dataset = distribution.experimental_distribute_dataset(dataset)
         with distribution.scope():
@@ -245,30 +265,40 @@ class RaggedTensorDistributedIteratorTest(test.TestCase,
         spec = iterator._type_spec
         self.assertEqual(spec._input_workers, iterator._input_workers)
         self.assertEqual(
-            spec._element_spec, {
-                "sparse":
-                    values.PerReplicaSpec(
-                        sparse_tensor.SparseTensorSpec(
-                            tensor_shape.TensorShape([None, 3]), dtypes.float32),
-                        sparse_tensor.SparseTensorSpec(
-                            tensor_shape.TensorShape([None, 3]), dtypes.float32)),
-                "dense":
-                    values.PerReplicaSpec(
-                        tensor_spec.TensorSpec(
-                            shape=(None, 3), dtype=dtypes.float32, name=None),
-                        tensor_spec.TensorSpec(
-                            shape=(None, 3), dtype=dtypes.float32, name=None)),
-                "ragged":
-                    values.PerReplicaSpec(
-                        ragged_tensor_lib.RaggedTensorSpec(
-                            tensor_shape.TensorShape(
-                                [None, None]), dtypes.float32,
-                            1, dtypes.int64),
-                        ragged_tensor_lib.RaggedTensorSpec(
-                            tensor_shape.TensorShape(
-                                [None, None]), dtypes.float32,
-                            1, dtypes.int64))
-            })
+            spec._element_spec,
+            {
+                "sparse": values.PerReplicaSpec(
+                    sparse_tensor.SparseTensorSpec(
+                        tensor_shape.TensorShape([None, 3]), dtypes.float32
+                    ),
+                    sparse_tensor.SparseTensorSpec(
+                        tensor_shape.TensorShape([None, 3]), dtypes.float32
+                    ),
+                ),
+                "dense": values.PerReplicaSpec(
+                    tensor_spec.TensorSpec(
+                        shape=(None, 3), dtype=dtypes.float32, name=None
+                    ),
+                    tensor_spec.TensorSpec(
+                        shape=(None, 3), dtype=dtypes.float32, name=None
+                    ),
+                ),
+                "ragged": values.PerReplicaSpec(
+                    ragged_tensor_lib.RaggedTensorSpec(
+                        tensor_shape.TensorShape([None, None]),
+                        dtypes.float32,
+                        1,
+                        dtypes.int64,
+                    ),
+                    ragged_tensor_lib.RaggedTensorSpec(
+                        tensor_shape.TensorShape([None, None]),
+                        dtypes.float32,
+                        1,
+                        dtypes.int64,
+                    ),
+                ),
+            },
+        )
 
     @combinations.generate(
         combinations.combine(
@@ -277,28 +307,36 @@ class RaggedTensorDistributedIteratorTest(test.TestCase,
                 strategy_combinations.mirrored_strategy_with_gpu_and_cpu,
                 strategy_combinations.tpu_strategy,
             ],
-            enable_get_next_as_optional=[True, False]))
+            enable_get_next_as_optional=[True, False],
+        )
+    )
     def testTypeSpecRoundTrip(self, distribution, enable_get_next_as_optional):
         if not tf2.enabled():
-            self.skipTest("DistributedIterator CompositeTensor support is only "
-                          "present in TF 2.0 only.")
+            self.skipTest(
+                "DistributedIterator CompositeTensor support is only "
+                "present in TF 2.0 only."
+            )
 
         ctx = distribute_lib.InputContext()
         batch_size = ctx.get_per_replica_batch_size(8)
         # Use 20 which isn't divisible by 8 to test partial batch behavior.
         row_lengths = np.mod(np.arange(20), 4).astype(np.int64)
         ragged_tensor = ragged_tensor_lib.RaggedTensor.from_row_lengths(
-            np.repeat(np.arange(20, dtype=np.float32), row_lengths), row_lengths)
-        dataset = dataset_ops.DatasetV2.from_tensor_slices({
-            "dense": ragged_tensor.to_tensor(),
-            "ragged": ragged_tensor,
-            "sparse": ragged_tensor.to_sparse(),
-        })
+            np.repeat(np.arange(20, dtype=np.float32), row_lengths), row_lengths
+        )
+        dataset = dataset_ops.DatasetV2.from_tensor_slices(
+            {
+                "dense": ragged_tensor.to_tensor(),
+                "ragged": ragged_tensor,
+                "sparse": ragged_tensor.to_sparse(),
+            }
+        )
         dataset = dataset.shard(ctx.num_input_pipelines, ctx.input_pipeline_id)
         dataset = dataset.batch(batch_size)
 
         distribution.extended.experimental_enable_get_next_as_optional = (
-            enable_get_next_as_optional)
+            enable_get_next_as_optional
+        )
 
         dist_dataset = distribution.experimental_distribute_dataset(dataset)
         with distribution.scope():
@@ -319,12 +357,17 @@ class RaggedTensorDistributedIteratorTest(test.TestCase,
                 strategy_combinations.mirrored_strategy_with_gpu_and_cpu,
                 strategy_combinations.tpu_strategy,
             ],
-            enable_get_next_as_optional=[True, False]))
-    def testDoesNotTriggerFunctionTracing(self, distribution,
-                                          enable_get_next_as_optional):
+            enable_get_next_as_optional=[True, False],
+        )
+    )
+    def testDoesNotTriggerFunctionTracing(
+        self, distribution, enable_get_next_as_optional
+    ):
         if not tf2.enabled():
-            self.skipTest("DistributedIterator CompositeTensor support is only "
-                          "present in TF 2.0 only.")
+            self.skipTest(
+                "DistributedIterator CompositeTensor support is only "
+                "present in TF 2.0 only."
+            )
 
         trace_count = [0]
 
@@ -342,17 +385,21 @@ class RaggedTensorDistributedIteratorTest(test.TestCase,
         # Use 20 which isn't divisible by 8 to test partial batch behavior.
         row_lengths = np.mod(np.arange(50), 4).astype(np.int64)
         ragged_tensor = ragged_tensor_lib.RaggedTensor.from_row_lengths(
-            np.repeat(np.arange(50, dtype=np.float32), row_lengths), row_lengths)
-        dataset = dataset_ops.DatasetV2.from_tensor_slices({
-            "dense": ragged_tensor.to_tensor(),
-            "ragged": ragged_tensor,
-            "sparse": ragged_tensor.to_sparse(),
-        })
+            np.repeat(np.arange(50, dtype=np.float32), row_lengths), row_lengths
+        )
+        dataset = dataset_ops.DatasetV2.from_tensor_slices(
+            {
+                "dense": ragged_tensor.to_tensor(),
+                "ragged": ragged_tensor,
+                "sparse": ragged_tensor.to_sparse(),
+            }
+        )
         dataset = dataset.shard(ctx.num_input_pipelines, ctx.input_pipeline_id)
         dataset = dataset.batch(batch_size)
 
         distribution.extended.experimental_enable_get_next_as_optional = (
-            enable_get_next_as_optional)
+            enable_get_next_as_optional
+        )
 
         dist_dataset = distribution.experimental_distribute_dataset(dataset)
         with distribution.scope():

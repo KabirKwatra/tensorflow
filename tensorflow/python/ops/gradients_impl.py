@@ -41,15 +41,17 @@ from tensorflow.python.util.tf_export import tf_export
 
 
 @tf_export(v1=["gradients"])
-def gradients(ys,
-              xs,
-              grad_ys=None,
-              name="gradients",
-              colocate_gradients_with_ops=False,
-              gate_gradients=False,
-              aggregation_method=None,
-              stop_gradients=None,
-              unconnected_gradients=UnconnectedGradients.NONE):
+def gradients(
+    ys,
+    xs,
+    grad_ys=None,
+    name="gradients",
+    colocate_gradients_with_ops=False,
+    gate_gradients=False,
+    aggregation_method=None,
+    stop_gradients=None,
+    unconnected_gradients=UnconnectedGradients.NONE,
+):
     """Constructs symbolic derivatives of sum of `ys` w.r.t. x in `xs`.
 
     `ys` and `xs` are each a `Tensor` or a list of tensors.  `grad_ys`
@@ -167,21 +169,30 @@ def gradients(ys,
     # pylint: disable=protected-access
     with ops.get_default_graph()._mutation_lock():
         return gradients_util._GradientsHelper(
-            ys, xs, grad_ys, name, colocate_gradients_with_ops,
-            gate_gradients, aggregation_method, stop_gradients,
-            unconnected_gradients)
+            ys,
+            xs,
+            grad_ys,
+            name,
+            colocate_gradients_with_ops,
+            gate_gradients,
+            aggregation_method,
+            stop_gradients,
+            unconnected_gradients,
+        )
     # pylint: enable=protected-access
 
 
 @tf_export("gradients", v1=[])
-def gradients_v2(ys,  # pylint: disable=invalid-name
-                 xs,
-                 grad_ys=None,
-                 name="gradients",
-                 gate_gradients=False,
-                 aggregation_method=None,
-                 stop_gradients=None,
-                 unconnected_gradients=UnconnectedGradients.NONE):
+def gradients_v2(
+    ys,  # pylint: disable=invalid-name
+    xs,
+    grad_ys=None,
+    name="gradients",
+    gate_gradients=False,
+    aggregation_method=None,
+    stop_gradients=None,
+    unconnected_gradients=UnconnectedGradients.NONE,
+):
     """Constructs symbolic derivatives of sum of `ys` w.r.t. x in `xs`.
 
     `tf.gradients` is only valid in a graph context. In particular,
@@ -313,9 +324,16 @@ def gradients_v2(ys,  # pylint: disable=invalid-name
     # pylint: disable=protected-access
     with ops.get_default_graph()._mutation_lock():
         return gradients_util._GradientsHelper(
-            ys, xs, grad_ys, name, True, gate_gradients,
-            aggregation_method, stop_gradients,
-            unconnected_gradients)
+            ys,
+            xs,
+            grad_ys,
+            name,
+            True,
+            gate_gradients,
+            aggregation_method,
+            stop_gradients,
+            unconnected_gradients,
+        )
     # pylint: enable=protected-access
 
 
@@ -374,12 +392,14 @@ def _hessian_vector_product(ys, xs, v):
 
 
 @tf_export(v1=["hessians"])
-def hessians(ys,
-             xs,
-             name="hessians",
-             colocate_gradients_with_ops=False,
-             gate_gradients=False,
-             aggregation_method=None):
+def hessians(
+    ys,
+    xs,
+    name="hessians",
+    colocate_gradients_with_ops=False,
+    gate_gradients=False,
+    aggregation_method=None,
+):
     """Constructs the Hessian of sum of `ys` with respect to `x` in `xs`.
 
     `hessians()` adds ops to the graph to output the Hessian matrix of `ys`
@@ -409,7 +429,7 @@ def hessians(ys,
     kwargs = {
         "colocate_gradients_with_ops": colocate_gradients_with_ops,
         "gate_gradients": gate_gradients,
-        "aggregation_method": aggregation_method
+        "aggregation_method": aggregation_method,
     }
     # Compute first-order derivatives and iterate for each x in xs.
     hessians = []
@@ -422,32 +442,33 @@ def hessians(ys,
         n = array_ops.size(x)
         loop_vars = [
             array_ops.constant(0, dtypes.int32),
-            tensor_array_ops.TensorArray(x.dtype, n)
+            tensor_array_ops.TensorArray(x.dtype, n),
         ]
         # Iterate over all elements of the gradient and compute second order
         # derivatives.
         _, hessian = control_flow_ops.while_loop(
             lambda j, _: j < n,
-            lambda j, result: (j + 1,
-                               result.write(j, gradients(gradient[j], x)[0])),
-            loop_vars
+            lambda j, result: (j + 1, result.write(j, gradients(gradient[j], x)[0])),
+            loop_vars,
         )
 
         _shape = array_ops.shape(x)
-        _reshaped_hessian = array_ops.reshape(hessian.stack(),
-                                              array_ops.concat((_shape, _shape), 0))
+        _reshaped_hessian = array_ops.reshape(
+            hessian.stack(), array_ops.concat((_shape, _shape), 0)
+        )
         hessians.append(_reshaped_hessian)
     return hessians
 
 
 @tf_export("hessians", v1=[])
-def HessiansV2(ys,
-               xs,
-               gate_gradients=False,
-               aggregation_method=None,
-               name="hessians"):
-    return hessians(ys, xs, name=name, gate_gradients=gate_gradients,
-                    aggregation_method=aggregation_method)
+def HessiansV2(ys, xs, gate_gradients=False, aggregation_method=None, name="hessians"):
+    return hessians(
+        ys,
+        xs,
+        name=name,
+        gate_gradients=gate_gradients,
+        aggregation_method=aggregation_method,
+    )
 
 
 HessiansV2.__doc__ = hessians.__doc__
