@@ -23,17 +23,15 @@ python modify_model_interface_main.py \
   --output_type=INT8
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import argparse
 import sys
 
-from tensorflow.lite.tools.optimize.python import (
-    modify_model_interface_constants as mmi_constants,
-)
-from tensorflow.lite.tools.optimize.python import modify_model_interface_lib as mmi_lib
+from tensorflow.lite.tools.optimize.python import \
+    modify_model_interface_constants as mmi_constants
+from tensorflow.lite.tools.optimize.python import \
+    modify_model_interface_lib as mmi_lib
 from tensorflow.python.platform import app
 
 

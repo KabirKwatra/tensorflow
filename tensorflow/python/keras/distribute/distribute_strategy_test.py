@@ -13,44 +13,33 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for tf.keras models using tf.distribute.Strategy."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl.testing import parameterized
 import numpy as np
+from absl.testing import parameterized
 from tensorflow.python import keras
 from tensorflow.python.data.experimental.ops import cardinality
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import distribution_strategy_context
-from tensorflow.python.distribute import mirrored_strategy
-from tensorflow.python.distribute import parameter_server_strategy
-from tensorflow.python.distribute import reduce_util
-from tensorflow.python.distribute import strategy_combinations
-from tensorflow.python.distribute import tpu_strategy
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
+from tensorflow.python.distribute import (combinations,
+                                          distribution_strategy_context,
+                                          mirrored_strategy,
+                                          parameter_server_strategy,
+                                          reduce_util, strategy_combinations,
+                                          tpu_strategy)
+from tensorflow.python.eager import backprop, context, def_function
 from tensorflow.python.framework import sparse_tensor
 from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.distribute import distributed_training_utils
 from tensorflow.python.keras.engine import base_layer_utils
 from tensorflow.python.keras.mixed_precision.experimental import policy
-from tensorflow.python.keras.optimizer_v2 import (
-    gradient_descent as gradient_descent_keras,
-)
+from tensorflow.python.keras.optimizer_v2 import \
+    gradient_descent as gradient_descent_keras
 from tensorflow.python.keras.utils import np_utils
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import check_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import nn
-from tensorflow.python.ops import variables
+from tensorflow.python.ops import array_ops, check_ops, math_ops, nn, variables
 from tensorflow.python.ops.losses import loss_reduction
 from tensorflow.python.ops.ragged import ragged_tensor
 from tensorflow.python.platform import test
-from tensorflow.python.training import gradient_descent
-from tensorflow.python.training import rmsprop
+from tensorflow.python.training import gradient_descent, rmsprop
 from tensorflow.python.util import nest
 
 _RANDOM_SEED = 1337

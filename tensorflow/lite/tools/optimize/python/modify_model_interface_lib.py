@@ -15,15 +15,13 @@
 # ==============================================================================
 """Library to modify a quantized model's interface from float to integer."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from tensorflow.lite.python import schema_py_generated as schema_fb
-from tensorflow.lite.tools.optimize.python import _pywrap_modify_model_interface
-from tensorflow.lite.tools.optimize.python import (
-    modify_model_interface_constants as mmi_constants,
-)
+from tensorflow.lite.tools.optimize.python import \
+    _pywrap_modify_model_interface
+from tensorflow.lite.tools.optimize.python import \
+    modify_model_interface_constants as mmi_constants
 
 
 def _parse_type_to_int(dtype, flag):
