@@ -26,14 +26,14 @@ from tensorflow.compiler.mlir.tensorflow.tests.tf_saved_model import common
 
 class TestModule(tf.Module):
 
-  # Check that we get shapes annotated on function arguments.
-  #
-  # CHECK:      func {{@[a-zA-Z_0-9]+}}(%arg0: tensor<f32> {{.*}}) -> (tensor<*xf32> {{.*}})
-  # CHECK-SAME: attributes {{.*}} tf_saved_model.exported_names = ["some_function"]
-  @tf.function(input_signature=[tf.TensorSpec([], tf.float32)])
-  def some_function(self, x):
-    return x
+    # Check that we get shapes annotated on function arguments.
+    #
+    # CHECK:      func {{@[a-zA-Z_0-9]+}}(%arg0: tensor<f32> {{.*}}) -> (tensor<*xf32> {{.*}})
+    # CHECK-SAME: attributes {{.*}} tf_saved_model.exported_names = ["some_function"]
+    @tf.function(input_signature=[tf.TensorSpec([], tf.float32)])
+    def some_function(self, x):
+        return x
 
 
 if __name__ == '__main__':
-  common.do_test(TestModule)
+    common.do_test(TestModule)
