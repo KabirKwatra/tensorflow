@@ -27,44 +27,42 @@ namespace internal {
 // =============================================================================
 
 struct ExecutionContext {
-    // Needed to implement our own version of RTTI since dynamic_cast is not
-    // supported in mobile builds.
-    enum ExecutionContextKind { kGraphContext, kEagerContext };
-    explicit ExecutionContext(ExecutionContextKind kind) : k(kind) {}
-    ExecutionContextKind getKind() const {
-        return k;
-    }
+  // Needed to implement our own version of RTTI since dynamic_cast is not
+  // supported in mobile builds.
+  enum ExecutionContextKind { kGraphContext, kEagerContext };
+  explicit ExecutionContext(ExecutionContextKind kind) : k(kind) {}
+  ExecutionContextKind getKind() const { return k; }
 
-    virtual void ExecuteOperation(TF_AbstractOp* op, int num_inputs,
-                                  TF_AbstractTensor* const* inputs,
-                                  TF_OutputList* o, TF_Status* s) = 0;
-    virtual TF_AbstractOp* CreateOperation() = 0;
-    virtual void RegisterFunction(TF_AbstractFunction* func, TF_Status* s) = 0;
-    virtual ~ExecutionContext() = default;
+  virtual void ExecuteOperation(TF_AbstractOp* op, int num_inputs,
+                                TF_AbstractTensor* const* inputs,
+                                TF_OutputList* o, TF_Status* s) = 0;
+  virtual TF_AbstractOp* CreateOperation() = 0;
+  virtual void RegisterFunction(TF_AbstractFunction* func, TF_Status* s) = 0;
+  virtual ~ExecutionContext() = default;
 
-private:
-    const ExecutionContextKind k;
+ private:
+  const ExecutionContextKind k;
 };
 
 static inline ExecutionContext* unwrap(TF_ExecutionContext* ctx) {
-    return reinterpret_cast<ExecutionContext*>(ctx);
+  return reinterpret_cast<ExecutionContext*>(ctx);
 }
 static inline const ExecutionContext* unwrap(const TF_ExecutionContext* ctx) {
-    return reinterpret_cast<const ExecutionContext*>(ctx);
+  return reinterpret_cast<const ExecutionContext*>(ctx);
 }
 static inline TF_ExecutionContext* wrap(ExecutionContext* ctx) {
-    return reinterpret_cast<TF_ExecutionContext*>(ctx);
+  return reinterpret_cast<TF_ExecutionContext*>(ctx);
 }
 static inline const TF_ExecutionContext* wrap(const ExecutionContext* ctx) {
-    return reinterpret_cast<const TF_ExecutionContext*>(ctx);
+  return reinterpret_cast<const TF_ExecutionContext*>(ctx);
 }
 
 template <typename T, typename S>
 T* dynamic_cast_helper(S source) {
-    if (source->getKind() != T::kKind) {
-        return nullptr;
-    }
-    return tensorflow::down_cast<T*>(source);
+  if (source->getKind() != T::kKind) {
+    return nullptr;
+  }
+  return tensorflow::down_cast<T*>(source);
 }
 
 }  // namespace internal
