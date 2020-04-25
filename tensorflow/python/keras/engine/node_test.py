@@ -25,7 +25,6 @@ from tensorflow.python.platform import test
 
 
 class DummyTensor(object):
-
     def __init__(self, shape=None):
         self.shape = shape
 
@@ -35,7 +34,6 @@ class DummyLayer(base_layer.Layer):
 
 
 class NetworkConstructionTest(keras_parameterized.TestCase):
-
     def test_chained_node_construction(self):
         # test basics
         a = DummyTensor(shape=(None, 32))
@@ -92,8 +90,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
         concat_layer = DummyLayer()
         merged = DummyTensor()
-        node_module.Node(layer=concat_layer, call_args=([a_2, b_2],),
-                         outputs=merged)
+        node_module.Node(layer=concat_layer, call_args=([a_2, b_2],), outputs=merged)
 
         merge_layer, merge_node_index, merge_tensor_index = merged._keras_history
 
@@ -104,8 +101,7 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertLen(merge_layer._outbound_nodes, 0)
 
         self.assertLen(merge_layer._inbound_nodes[0].input_tensors, 2)
-        self.assertEqual(
-            merge_layer._inbound_nodes[0].input_tensors, [a_2, b_2])
+        self.assertEqual(merge_layer._inbound_nodes[0].input_tensors, [a_2, b_2])
         self.assertLen(merge_layer._inbound_nodes[0].inbound_layers, 2)
 
     def test_arg_and_kwarg_mix(self):
@@ -126,22 +122,23 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
 
         merge_layer = DummyLayer()
         merged = DummyTensor()
-        node = node_module.Node(layer=merge_layer,
-                                call_args=([a, b], arg_2, arg_3),
-                                call_kwargs={'x': kwarg_x, 'y': kwarg_y},
-                                outputs=merged)
+        node = node_module.Node(
+            layer=merge_layer,
+            call_args=([a, b], arg_2, arg_3),
+            call_kwargs={"x": kwarg_x, "y": kwarg_y},
+            outputs=merged,
+        )
 
         merge_layer, merge_node_index, merge_tensor_index = merged._keras_history
 
         # Check the saved call args/kwargs
         self.assertEqual(([a, b], arg_2, arg_3), node.call_args)
-        self.assertEqual({'x': kwarg_x, 'y': kwarg_y}, node.call_kwargs)
+        self.assertEqual({"x": kwarg_x, "y": kwarg_y}, node.call_kwargs)
 
         # Only the inputs that were produced by input nodes should appear in
         # keras_tensors
         self.assertEqual({a, b, arg_3, kwarg_y}, set(node.keras_inputs))
-        self.assertEqual(set(node.parent_nodes), {
-                         node_a, node_b, node_c, node_d})
+        self.assertEqual(set(node.parent_nodes), {node_a, node_b, node_c, node_d})
 
         # Check the layer wirings
         self.assertEqual(merge_node_index, 0)
@@ -158,5 +155,5 @@ class NetworkConstructionTest(keras_parameterized.TestCase):
         self.assertLen(merge_layer._inbound_nodes[0].inbound_layers, 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()

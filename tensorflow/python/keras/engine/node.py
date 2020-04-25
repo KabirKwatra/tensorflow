@@ -47,11 +47,7 @@ class Node(object):
         outputs: The outputs of the Layer.__call__
     """
 
-    def __init__(self,
-                 layer,
-                 call_args=None,
-                 call_kwargs=None,
-                 outputs=None):
+    def __init__(self, layer, call_args=None, call_kwargs=None, outputs=None):
         call_args = [] if call_args is None else call_args
         call_kwargs = {} if call_kwargs is None else call_kwargs
         outputs = [] if outputs is None else outputs
@@ -76,8 +72,9 @@ class Node(object):
 
         # Create TensorFlowOpLayers if needed.
         for obj in self._flat_arguments:
-            if (isinstance(obj, ops.Tensor) and
-                    base_layer_utils.needs_keras_history(obj, ignore_call_context=True)):
+            if isinstance(obj, ops.Tensor) and base_layer_utils.needs_keras_history(
+                obj, ignore_call_context=True
+            ):
                 base_layer_utils.create_keras_history(obj)
 
         self._keras_inputs = []
@@ -100,7 +97,8 @@ class Node(object):
         node_index = len(self.layer._inbound_nodes) - 1
         for i, tensor in enumerate(nest.flatten(outputs)):
             tensor._keras_history = KerasHistory(
-                layer=layer, node_index=node_index, tensor_index=i)
+                layer=layer, node_index=node_index, tensor_index=i
+            )
 
     @property
     def keras_inputs(self):
@@ -138,7 +136,8 @@ class Node(object):
             flat_arguments[kt_index] = tensor_dict[kt_id].pop()
 
         args, kwargs = nest.pack_sequence_as(
-            (self.call_args, self.call_kwargs), flat_arguments)
+            (self.call_args, self.call_kwargs), flat_arguments
+        )
         return args, kwargs
 
     def serialize(self, make_node_key, node_conversion_map):
@@ -157,12 +156,16 @@ class Node(object):
             json.dumps(kwargs, default=serialization.get_json_type)
         except TypeError:
             kwarg_types = nest.map_structure(type, kwargs)
-            logging.warning('Layer ' + self.layer.name +
-                            ' was passed non-JSON-serializable arguments. ' +
-                            'Arguments had types: ' +
-                            str(kwarg_types) + '. They will not be included '
-                            'in the serialized model (and thus will be missing '
-                            'at deserialization time).')
+            logging.warning(
+                "Layer "
+                + self.layer.name
+                + " was passed non-JSON-serializable arguments. "
+                + "Arguments had types: "
+                + str(kwarg_types)
+                + ". They will not be included "
+                "in the serialized model (and thus will be missing "
+                "at deserialization time)."
+            )
             kwargs = {}
 
         # `kwargs` is added to each Tensor in the first arg. This should be
@@ -201,8 +204,7 @@ class Node(object):
 
     @property
     def input_shapes(self):
-        input_shapes = nest.map_structure(
-            backend.int_shape, self.input_tensors)
+        input_shapes = nest.map_structure(backend.int_shape, self.input_tensors)
         if len(input_shapes) == 1 and not self.is_input:
             return input_shapes[0]
         return input_shapes
@@ -219,14 +221,15 @@ class Node(object):
     def inbound_layers(self):
         if self.is_input:
             return []
-        inbound_layers = nest.map_structure(lambda t: t._keras_history.layer,
-                                            self.call_args[0])
+        inbound_layers = nest.map_structure(
+            lambda t: t._keras_history.layer, self.call_args[0]
+        )
         return inbound_layers
 
 
 class KerasHistory(
-    collections.namedtuple('KerasHistory',
-                           ['layer', 'node_index', 'tensor_index'])):
+    collections.namedtuple("KerasHistory", ["layer", "node_index", "tensor_index"])
+):
     """Tracks the Layer call that created a Tensor, for Keras Graph Networks.
 
     During construction of Keras Graph Networks, this metadata is added to
@@ -244,18 +247,19 @@ class KerasHistory(
         that produced this Tensor only has one output. Nested structures of
         Tensors are deterministically assigned an index via `nest.flatten`.
     """
+
     # Added to maintain memory and performance characteristics of `namedtuple`
     # while subclassing.
     __slots__ = ()
 
 
 def is_keras_tensor(obj):
-    return hasattr(obj, '_keras_history')
+    return hasattr(obj, "_keras_history")
 
 
 def _serialize_keras_tensor(t):
     """Serializes a single Tensor passed to `call`."""
-    if hasattr(t, '_keras_history'):
+    if hasattr(t, "_keras_history"):
         kh = t._keras_history
         return [kh.layer.name, kh.node_index, kh.tensor_index]
 
