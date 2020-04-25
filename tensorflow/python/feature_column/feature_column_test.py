@@ -13,26 +13,42 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for feature_column."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import copy
 
 import numpy as np
-from tensorflow.core.example import example_pb2, feature_pb2
-from tensorflow.core.protobuf import config_pb2, rewriter_config_pb2
+
+from tensorflow.core.example import example_pb2
+from tensorflow.core.example import feature_pb2
+from tensorflow.core.protobuf import config_pb2
+from tensorflow.core.protobuf import rewriter_config_pb2
 from tensorflow.python.client import session
-from tensorflow.python.eager import backprop, context
+from tensorflow.python.eager import backprop
+from tensorflow.python.eager import context
 from tensorflow.python.feature_column import feature_column as fc
 from tensorflow.python.feature_column import feature_column_v2 as fc_new
-from tensorflow.python.feature_column.feature_column import (
-    InputLayer, _CategoricalColumn, _DenseColumn, _FeatureColumn, _LazyBuilder,
-    _LinearModel, _transform_features)
-from tensorflow.python.framework import (constant_op, dtypes, errors, ops,
-                                         sparse_tensor, test_util)
-from tensorflow.python.ops import (array_ops, lookup_ops, parsing_ops,
-                                   partitioned_variables, variable_scope)
+from tensorflow.python.feature_column.feature_column import _CategoricalColumn
+from tensorflow.python.feature_column.feature_column import _DenseColumn
+from tensorflow.python.feature_column.feature_column import _FeatureColumn
+from tensorflow.python.feature_column.feature_column import _LazyBuilder
+from tensorflow.python.feature_column.feature_column import _LinearModel
+from tensorflow.python.feature_column.feature_column import _transform_features
+from tensorflow.python.feature_column.feature_column import InputLayer
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import test_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import lookup_ops
+from tensorflow.python.ops import parsing_ops
+from tensorflow.python.ops import partitioned_variables
+from tensorflow.python.ops import variable_scope
 from tensorflow.python.ops import variables as variables_lib
 from tensorflow.python.platform import test
 
