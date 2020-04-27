@@ -13,17 +13,12 @@
 # limitations under the License.
 # ==============================================================================
 """Experimental `dataset` API for parsing example."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.data.util import structure
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.ops import gen_experimental_dataset_ops
-from tensorflow.python.ops import parsing_ops
+from tensorflow.python.framework import dtypes, sparse_tensor, tensor_spec
+from tensorflow.python.ops import gen_experimental_dataset_ops, parsing_ops
 from tensorflow.python.ops.ragged import ragged_tensor
 from tensorflow.python.util.tf_export import tf_export
 

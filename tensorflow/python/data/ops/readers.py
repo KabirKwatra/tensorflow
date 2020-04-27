@@ -13,19 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 """Python wrappers for reader Datasets."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from tensorflow.python import tf2
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.data.util import convert
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gen_dataset_ops
+from tensorflow.python.framework import dtypes, ops, tensor_shape, tensor_spec
+from tensorflow.python.ops import array_ops, gen_dataset_ops
 from tensorflow.python.ops import gen_experimental_dataset_ops as ged_ops
 from tensorflow.python.util.tf_export import tf_export
 
