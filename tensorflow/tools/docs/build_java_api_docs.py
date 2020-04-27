@@ -28,33 +28,38 @@ from tensorflow_docs.api_generator import gen_java
 FLAGS = flags.FLAGS
 
 # These flags are required by infrastructure, not all of them are used.
-flags.DEFINE_string('output_dir', None,
-                    ("Use this branch as the root version and don't"
-                     ' create in version directory'))
+flags.DEFINE_string(
+    "output_dir",
+    None,
+    ("Use this branch as the root version and don't" " create in version directory"),
+)
 
-flags.DEFINE_string('site_path', 'api_docs/java',
-                    'Path prefix in the _toc.yaml')
+flags.DEFINE_string("site_path", "api_docs/java", "Path prefix in the _toc.yaml")
 
-flags.DEFINE_string('code_url_prefix', None,
-                    '[UNUSED] The url prefix for links to code.')
+flags.DEFINE_string(
+    "code_url_prefix", None, "[UNUSED] The url prefix for links to code."
+)
 
 flags.DEFINE_bool(
-    'search_hints', True,
-    '[UNUSED] Include metadata search hints in the generated files')
+    "search_hints",
+    True,
+    "[UNUSED] Include metadata search hints in the generated files",
+)
 
 # __file__ is the path to this file
 DOCS_TOOLS_DIR = pathlib.Path(__file__).resolve().parent
 TENSORFLOW_ROOT = DOCS_TOOLS_DIR.parent.parent
-SOURCE_PATH = TENSORFLOW_ROOT / 'java/src/main/java'
+SOURCE_PATH = TENSORFLOW_ROOT / "java/src/main/java"
 
 
 def main(unused_argv):
     gen_java.gen_java_docs(
         source_path=SOURCE_PATH,
         output_dir=pathlib.Path(FLAGS.output_dir),
-        site_path=pathlib.Path(FLAGS.site_path))
+        site_path=pathlib.Path(FLAGS.site_path),
+    )
 
 
-if __name__ == '__main__':
-    flags.mark_flags_as_required(['output_dir'])
+if __name__ == "__main__":
+    flags.mark_flags_as_required(["output_dir"])
     app.run(main)
