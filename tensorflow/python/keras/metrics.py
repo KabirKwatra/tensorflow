@@ -16,43 +16,60 @@
 # pylint: disable=g-classes-have-attributes
 """Built-in metrics.
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import abc
 import types
 
 import numpy as np
 import six
+
 from tensorflow.python.distribute import \
     distribution_strategy_context as distribute_ctx
-from tensorflow.python.eager import context, def_function
-from tensorflow.python.framework import (constant_op, dtypes, ops,
-                                         tensor_shape, tensor_spec)
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.engine import base_layer, base_layer_utils
-from tensorflow.python.keras.losses import (binary_crossentropy,
-                                            categorical_crossentropy,
-                                            categorical_hinge, hinge,
-                                            kullback_leibler_divergence,
-                                            logcosh, mean_absolute_error,
-                                            mean_absolute_percentage_error,
-                                            mean_squared_error,
-                                            mean_squared_logarithmic_error,
-                                            poisson,
-                                            sparse_categorical_crossentropy,
-                                            squared_hinge)
+from tensorflow.python.keras.engine import base_layer
+from tensorflow.python.keras.engine import base_layer_utils
+from tensorflow.python.keras.losses import binary_crossentropy
+from tensorflow.python.keras.losses import categorical_crossentropy
+from tensorflow.python.keras.losses import categorical_hinge
+from tensorflow.python.keras.losses import hinge
+from tensorflow.python.keras.losses import kullback_leibler_divergence
+from tensorflow.python.keras.losses import logcosh
+from tensorflow.python.keras.losses import mean_absolute_error
+from tensorflow.python.keras.losses import mean_absolute_percentage_error
+from tensorflow.python.keras.losses import mean_squared_error
+from tensorflow.python.keras.losses import mean_squared_logarithmic_error
+from tensorflow.python.keras.losses import poisson
+from tensorflow.python.keras.losses import sparse_categorical_crossentropy
+from tensorflow.python.keras.losses import squared_hinge
 from tensorflow.python.keras.saving.saved_model import metric_serialization
 from tensorflow.python.keras.utils import metrics_utils
-from tensorflow.python.keras.utils.generic_utils import (
-    deserialize_keras_object, serialize_keras_object, to_list)
+from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
+from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
+from tensorflow.python.keras.utils.generic_utils import to_list
 from tensorflow.python.keras.utils.tf_utils import is_tensor_or_variable
-from tensorflow.python.ops import (array_ops, check_ops, confusion_matrix,
-                                   control_flow_ops, init_ops, math_ops, nn)
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import check_ops
+from tensorflow.python.ops import confusion_matrix
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import nn
 from tensorflow.python.ops import variables as tf_variables
 from tensorflow.python.ops import weights_broadcast_ops
 from tensorflow.python.ops.losses import util as tf_losses_utils
 from tensorflow.python.training.tracking import base as trackable
-from tensorflow.python.util import nest, tf_inspect
+from tensorflow.python.util import nest
+from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import keras_export
 from tensorflow.tools.docs import doc_controls
 

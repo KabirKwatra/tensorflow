@@ -13,22 +13,37 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for the `MapVectorization` optimization."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import functools
 import time
 
 import numpy as np
 from absl.testing import parameterized
-from tensorflow.core.example import example_pb2, feature_pb2
-from tensorflow.python.data.experimental.ops import batching, testing
+
+from tensorflow.core.example import example_pb2
+from tensorflow.core.example import feature_pb2
+from tensorflow.python.data.experimental.ops import batching
+from tensorflow.python.data.experimental.ops import testing
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.framework import (combinations, constant_op, dtypes,
-                                         errors, ops, sparse_tensor)
-from tensorflow.python.ops import (array_ops, bitwise_ops, check_ops, clip_ops,
-                                   control_flow_ops, math_ops, nn, parsing_ops,
-                                   script_ops)
+from tensorflow.python.framework import combinations
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import bitwise_ops
+from tensorflow.python.ops import check_ops
+from tensorflow.python.ops import clip_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import nn
+from tensorflow.python.ops import parsing_ops
+from tensorflow.python.ops import script_ops
 from tensorflow.python.platform import test
 
 
