@@ -29,8 +29,8 @@ from tensorflow.python.platform import tf_logging as logging
 
 
 class AllocationMaximum(
-    collections.namedtuple("AllocationMaximum", ("timestamp", "num_bytes", "tensors"))
-):
+        collections.namedtuple("AllocationMaximum",
+                               ("timestamp", "num_bytes", "tensors"))):
     """Stores the maximum allocation for a given allocator within the timelne.
 
     Parameters:
@@ -43,8 +43,8 @@ class AllocationMaximum(
 
 
 class StepStatsAnalysis(
-    collections.namedtuple("StepStatsAnalysis", ("chrome_trace", "allocator_maximums"))
-):
+        collections.namedtuple("StepStatsAnalysis",
+                               ("chrome_trace", "allocator_maximums"))):
     """Stores the step stats analysis output.
 
     Parameters:
@@ -167,9 +167,8 @@ class _ChromeTraceFormatter(object):
         event["id"] = object_id
         self._events.append(event)
 
-    def emit_obj_snapshot(
-        self, category, name, timestamp, pid, tid, object_id, snapshot
-    ):
+    def emit_obj_snapshot(self, category, name, timestamp, pid, tid, object_id,
+                          snapshot):
         """Adds an object snapshot event to the trace.
 
         Args:
@@ -407,7 +406,7 @@ class Timeline(object):
         start = label.find("@@")
         end = label.find("#")
         if start >= 0 and end >= 0 and start + 2 < end:
-            node_name = label[start + 2 : end]
+            node_name = label[start + 2:end]
         # Node names should always have the form 'name:op'.
         fields = node_name.split(":") + ["unknown"]
         name, op = fields[:2]
@@ -444,9 +443,8 @@ class Timeline(object):
         tid = nodestats.thread_id
         inputs = []
         if is_gputrace:
-            node_name, op = self._parse_kernel_label(
-                nodestats.timeline_label, node_name
-            )
+            node_name, op = self._parse_kernel_label(nodestats.timeline_label,
+                                                     node_name)
         elif node_name == "RecvTensor":
             # RPC tracing does not use the standard timeline_label format.
             op = "RecvTensor"
@@ -455,7 +453,8 @@ class Timeline(object):
         args = {"name": node_name, "op": op}
         for i, iname in enumerate(inputs):
             args["input%d" % i] = iname
-        self._chrome_trace.emit_region(start, duration, pid, tid, "Op", op, args)
+        self._chrome_trace.emit_region(start, duration, pid, tid, "Op", op,
+                                       args)
 
     def _emit_tensor_snapshot(self, tensor, timestamp, pid, tid, value):
         """Generate Chrome Trace snapshot event for a computed Tensor.
@@ -469,15 +468,15 @@ class Timeline(object):
         """
         desc = str(value.tensor_description).replace('"', "")
         snapshot = {"tensor_description": desc}
-        self._chrome_trace.emit_obj_snapshot(
-            "Tensor", tensor.name, timestamp, pid, tid, tensor.object_id, snapshot
-        )
+        self._chrome_trace.emit_obj_snapshot("Tensor", tensor.name, timestamp,
+                                             pid, tid, tensor.object_id,
+                                             snapshot)
 
-    def _produce_tensor(self, name, timestamp, tensors_pid, allocator, num_bytes):
+    def _produce_tensor(self, name, timestamp, tensors_pid, allocator,
+                        num_bytes):
         object_id = len(self._tensors)
-        tensor = _TensorTracker(
-            name, object_id, timestamp, tensors_pid, allocator, num_bytes
-        )
+        tensor = _TensorTracker(name, object_id, timestamp, tensors_pid,
+                                allocator, num_bytes)
         self._tensors[name] = tensor
         return tensor
 
@@ -496,8 +495,10 @@ class Timeline(object):
             self._device_pids[dev_stats.device] = device_pid
             tensors_pid = self._alloc_pid()
             self._tensor_pids[dev_stats.device] = tensors_pid
-            self._chrome_trace.emit_pid(dev_stats.device + " Compute", device_pid)
-            self._chrome_trace.emit_pid(dev_stats.device + " Tensors", tensors_pid)
+            self._chrome_trace.emit_pid(dev_stats.device + " Compute",
+                                        device_pid)
+            self._chrome_trace.emit_pid(dev_stats.device + " Tensors",
+                                        tensors_pid)
 
     def _analyze_tensors(self, show_memory):
         """Analyze tensor references to track dataflow."""
@@ -518,12 +519,13 @@ class Timeline(object):
                     allocation = output.tensor_description.allocation_description
                     num_bytes = allocation.requested_bytes
                     allocator_name = allocation.allocator_name
-                    tensor = self._produce_tensor(
-                        output_name, start_time, tensors_pid, allocator_name, num_bytes
-                    )
+                    tensor = self._produce_tensor(output_name, start_time,
+                                                  tensors_pid, allocator_name,
+                                                  num_bytes)
                     tensor.add_ref(start_time)
                     tensor.add_unref(end_time)
-                    self._flow_starts[output_name] = (end_time, device_pid, tid)
+                    self._flow_starts[output_name] = (end_time, device_pid,
+                                                      tid)
 
                     if show_memory:
                         self._chrome_trace.emit_obj_create(
@@ -534,9 +536,8 @@ class Timeline(object):
                             tid,
                             tensor.object_id,
                         )
-                        self._emit_tensor_snapshot(
-                            tensor, end_time - 1, tensors_pid, tid, output
-                        )
+                        self._emit_tensor_snapshot(tensor, end_time - 1,
+                                                   tensors_pid, tid, output)
 
     def _show_compute(self, show_dataflow):
         """Visualize the computation activity."""
@@ -573,8 +574,7 @@ class Timeline(object):
                         if show_dataflow:
                             # We use a different flow ID for every graph edge.
                             create_time, create_pid, create_tid = self._flow_starts[
-                                input_name
-                            ]
+                                input_name]
                             # Don't add flows when producer and consumer ops are on the same
                             # pid/tid since the horizontal arrows clutter the visualization.
                             if create_pid != device_pid or create_tid != tid:
@@ -587,12 +587,12 @@ class Timeline(object):
                                     flow_id,
                                 )
                                 self._chrome_trace.emit_flow_end(
-                                    input_name, start_time, device_pid, tid, flow_id
-                                )
+                                    input_name, start_time, device_pid, tid,
+                                    flow_id)
                     else:
-                        logging.vlog(
-                            1, "Can't find tensor %s - removed by CSE?", input_name
-                        )
+                        logging.vlog(1,
+                                     "Can't find tensor %s - removed by CSE?",
+                                     input_name)
 
     def _show_memory_counters(self):
         """Produce a counter series for each memory allocator."""
@@ -602,15 +602,17 @@ class Timeline(object):
         allocations = {}
         for name in self._tensors:
             tensor = self._tensors[name]
-            self._chrome_trace.emit_obj_delete(
-                "Tensor", name, tensor.last_unref, tensor.pid, 0, tensor.object_id
-            )
+            self._chrome_trace.emit_obj_delete("Tensor", name,
+                                               tensor.last_unref, tensor.pid,
+                                               0, tensor.object_id)
             allocator = tensor.allocator
             if allocator not in allocations:
                 allocations[allocator] = []
             num_bytes = tensor.num_bytes
-            allocations[allocator].append((tensor.create_time, num_bytes, name))
-            allocations[allocator].append((tensor.last_unref, -num_bytes, name))
+            allocations[allocator].append(
+                (tensor.create_time, num_bytes, name))
+            allocations[allocator].append(
+                (tensor.last_unref, -num_bytes, name))
 
         alloc_maxes = {}
 
@@ -620,12 +622,11 @@ class Timeline(object):
             alloc_list.sort()
             total_bytes = 0
             alloc_tensor_set = set()
-            alloc_maxes[allocator] = AllocationMaximum(
-                timestamp=0, num_bytes=0, tensors=set()
-            )
+            alloc_maxes[allocator] = AllocationMaximum(timestamp=0,
+                                                       num_bytes=0,
+                                                       tensors=set())
             for time, num_bytes, name in sorted(
-                alloc_list, key=lambda allocation: allocation[0]
-            ):
+                    alloc_list, key=lambda allocation: allocation[0]):
                 total_bytes += num_bytes
                 if num_bytes < 0:
                     alloc_tensor_set.discard(name)
@@ -680,9 +681,8 @@ class Timeline(object):
         op_gpu_end = {}
         for stats in stream_all_stats:
             for kernel in stats.node_stats:
-                name, _ = self._parse_kernel_label(
-                    kernel.timeline_label, kernel.node_name
-                )
+                name, _ = self._parse_kernel_label(kernel.timeline_label,
+                                                   kernel.node_name)
                 start = kernel.all_start_micros
                 end = kernel.all_start_micros + kernel.all_end_rel_micros
                 if name in op_gpu_start:
@@ -704,9 +704,10 @@ class Timeline(object):
                         op.all_start_micros = op_gpu_start[op.node_name]
                     op.all_end_rel_micros = end - op.all_start_micros
 
-    def analyze_step_stats(
-        self, show_dataflow=True, show_memory=True, op_time="schedule"
-    ):
+    def analyze_step_stats(self,
+                           show_dataflow=True,
+                           show_memory=True,
+                           op_time="schedule"):
         """Analyze the step stats and format it into Chrome Trace Format.
 
         Args:
@@ -732,13 +733,13 @@ class Timeline(object):
         self._show_compute(show_dataflow)
         if show_memory:
             self._show_memory_counters()
-        return StepStatsAnalysis(
-            chrome_trace=self._chrome_trace, allocator_maximums=self._allocator_maximums
-        )
+        return StepStatsAnalysis(chrome_trace=self._chrome_trace,
+                                 allocator_maximums=self._allocator_maximums)
 
-    def generate_chrome_trace_format(
-        self, show_dataflow=True, show_memory=False, op_time="schedule"
-    ):
+    def generate_chrome_trace_format(self,
+                                     show_dataflow=True,
+                                     show_memory=False,
+                                     op_time="schedule"):
         """Produces a trace in Chrome Trace Format.
 
         Args:
@@ -760,7 +761,8 @@ class Timeline(object):
           A JSON formatted string in Chrome Trace format.
         """
         step_stats_analysis = self.analyze_step_stats(
-            show_dataflow=show_dataflow, show_memory=show_memory, op_time=op_time
-        )
+            show_dataflow=show_dataflow,
+            show_memory=show_memory,
+            op_time=op_time)
 
         return step_stats_analysis.chrome_trace.format_to_string(pretty=True)
