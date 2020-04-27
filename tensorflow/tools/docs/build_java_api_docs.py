@@ -49,12 +49,12 @@ SOURCE_PATH = TENSORFLOW_ROOT / 'java/src/main/java'
 
 
 def main(unused_argv):
-  gen_java.gen_java_docs(
-      source_path=SOURCE_PATH,
-      output_dir=pathlib.Path(FLAGS.output_dir),
-      site_path=pathlib.Path(FLAGS.site_path))
+    gen_java.gen_java_docs(
+        source_path=SOURCE_PATH,
+        output_dir=pathlib.Path(FLAGS.output_dir),
+        site_path=pathlib.Path(FLAGS.site_path))
 
 
 if __name__ == '__main__':
-  flags.mark_flags_as_required(['output_dir'])
-  app.run(main)
+    flags.mark_flags_as_required(['output_dir'])
+    app.run(main)
