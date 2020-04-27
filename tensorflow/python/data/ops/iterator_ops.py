@@ -13,18 +13,27 @@
 # limitations under the License.
 # ==============================================================================
 """Python wrappers for Iterators."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import threading
 import warnings
 
 from tensorflow.python.data.experimental.ops import distribute_options
 from tensorflow.python.data.ops import optional_ops
-from tensorflow.python.data.util import nest, structure
+from tensorflow.python.data.util import nest
+from tensorflow.python.data.util import structure
 from tensorflow.python.eager import context
-from tensorflow.python.framework import (composite_tensor, dtypes, errors, ops,
-                                         tensor_shape, tensor_spec, type_spec)
-from tensorflow.python.ops import gen_dataset_ops, gen_experimental_dataset_ops
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import type_spec
+from tensorflow.python.ops import gen_dataset_ops
+from tensorflow.python.ops import gen_experimental_dataset_ops
 from tensorflow.python.training.saver import BaseSaverBuilder
 from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.util import deprecation
