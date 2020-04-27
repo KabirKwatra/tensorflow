@@ -30,14 +30,15 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(
     "output_dir",
     None,
-    ("Use this branch as the root version and don't" " create in version directory"),
+    ("Use this branch as the root version and don't"
+     " create in version directory"),
 )
 
-flags.DEFINE_string("site_path", "api_docs/java", "Path prefix in the _toc.yaml")
+flags.DEFINE_string("site_path", "api_docs/java",
+                    "Path prefix in the _toc.yaml")
 
-flags.DEFINE_string(
-    "code_url_prefix", None, "[UNUSED] The url prefix for links to code."
-)
+flags.DEFINE_string("code_url_prefix", None,
+                    "[UNUSED] The url prefix for links to code.")
 
 flags.DEFINE_bool(
     "search_hints",

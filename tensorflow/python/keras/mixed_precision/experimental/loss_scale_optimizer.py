@@ -131,53 +131,46 @@ class _DelegatingTrackableMixin(object):
     def _lookup_dependency(self, name):
         self._trackable._lookup_dependency(name)
 
-    def _add_variable_with_custom_getter(
-        self,
-        name,
-        shape=None,
-        dtype=dtypes.float32,
-        initializer=None,
-        getter=None,
-        overwrite=False,
-        **kwargs_for_getter
-    ):
+    def _add_variable_with_custom_getter(self,
+                                         name,
+                                         shape=None,
+                                         dtype=dtypes.float32,
+                                         initializer=None,
+                                         getter=None,
+                                         overwrite=False,
+                                         **kwargs_for_getter):
         return self._trackable._add_variable_with_custom_getter(
-            name, shape, dtype, initializer, getter, overwrite, **kwargs_for_getter
-        )
+            name, shape, dtype, initializer, getter, overwrite,
+            **kwargs_for_getter)
 
     def _preload_simple_restoration(self, name, shape):
         return self._trackable._preload_simple_restoration(name, shape)
 
-    def _track_trackable(
-        self, trackable, name, overwrite=False
-    ):  # pylint: disable=redefined-outer-name
+    def _track_trackable(self, trackable, name, overwrite=False):  # pylint: disable=redefined-outer-name
         return self._trackable._track_trackable(trackable, name, overwrite)
 
-    def _handle_deferred_dependencies(
-        self, name, trackable
-    ):  # pylint: disable=redefined-outer-name
+    def _handle_deferred_dependencies(self, name, trackable):  # pylint: disable=redefined-outer-name
         return self._trackable._handle_deferred_dependencies(name, trackable)
 
     def _restore_from_checkpoint_position(self, checkpoint_position):
-        return self._trackable._restore_from_checkpoint_position(checkpoint_position)
+        return self._trackable._restore_from_checkpoint_position(
+            checkpoint_position)
 
-    def _single_restoration_from_checkpoint_position(
-        self, checkpoint_position, visit_queue
-    ):
+    def _single_restoration_from_checkpoint_position(self, checkpoint_position,
+                                                     visit_queue):
         return self._trackable._single_restoration_from_checkpoint_position(
-            checkpoint_position, visit_queue
-        )
+            checkpoint_position, visit_queue)
 
     def _gather_saveables_for_checkpoint(self):
         return self._trackable._gather_saveables_for_checkpoint()
 
     def _list_extra_dependencies_for_serialization(self, serialization_cache):
         return self._trackable._list_extra_dependencies_for_serialization(
-            serialization_cache
-        )
+            serialization_cache)
 
     def _list_functions_for_serialization(self, serialization_cache):
-        return self._trackable._list_functions_for_serialization(serialization_cache)
+        return self._trackable._list_functions_for_serialization(
+            serialization_cache)
 
     # pylint: enable=protected-access
 
@@ -257,21 +250,17 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
         if not isinstance(optimizer, optimizer_v2.OptimizerV2):
             raise ValueError(
                 '"optimizer" must be an instance of OptimizerV2, but '
-                "got: %s" % optimizer
-            )
+                "got: %s" % optimizer)
         if optimizer.clipnorm is not None:
             raise ValueError(
                 "LossScaleOptimizer does not support wrapping "
                 "optimizers with a clipnorm. Optimizer %s has clipnorm "
-                "%s" % (optimizer, optimizer.clipnorm)
-            )
+                "%s" % (optimizer, optimizer.clipnorm))
 
         if optimizer.clipvalue is not None:
-            raise ValueError(
-                "LossScaleOptimizer does not support wrapping "
-                "optimizers with a clipvalue. Optimizer %s has "
-                "clipvalue %s" % (optimizer, optimizer.clipvalue)
-            )
+            raise ValueError("LossScaleOptimizer does not support wrapping "
+                             "optimizers with a clipvalue. Optimizer %s has "
+                             "clipvalue %s" % (optimizer, optimizer.clipvalue))
         self._hyper = {}  # Needed for `Optimizer.__getattr__`.
         self._raise_if_strategy_unsupported()
 
@@ -287,7 +276,8 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
         # constructor.
         _DelegatingTrackableMixin.__init__(self, self._optimizer)
 
-        for weight in loss_scale_module.get_loss_scale_weights(self._loss_scale):
+        for weight in loss_scale_module.get_loss_scale_weights(
+                self._loss_scale):
             # We cannot call `track_variable` in the LossScale class itself, because a
             # file outside of Keras cannot depend on a Keras file. Calling it here
             # instead is OK, because a variable only needs to be tracked if used with
@@ -297,9 +287,8 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
         self._track_trackable(self._loss_scale, "loss_scale")
 
         # To support restoring TensorFlow 2.2 checkpoints.
-        self._track_trackable(
-            FakeOptimizerForRestoration(self._optimizer), "base_optimizer"
-        )
+        self._track_trackable(FakeOptimizerForRestoration(self._optimizer),
+                              "base_optimizer")
 
     @property
     def loss_scale(self):
@@ -361,14 +350,16 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
         loss_scale = self._loss_scale()
         loss_scale_reciprocal = 1.0 / loss_scale
         return [
-            _multiply_gradient(g, loss_scale_reciprocal) if g is not None else None
-            for g in grads
+            _multiply_gradient(g, loss_scale_reciprocal)
+            if g is not None else None for g in grads
         ]
 
     def _compute_gradients(self, loss, var_list, grad_loss=None):
         loss = self.get_scaled_loss(loss)
         grads_and_vars = self._optimizer._compute_gradients(
-            loss, var_list, grad_loss  # pylint: disable=protected-access
+            loss,
+            var_list,
+            grad_loss  # pylint: disable=protected-access
         )
         grads = [g for g, _ in grads_and_vars]
         variables = [v for _, v in grads_and_vars]
@@ -381,15 +372,15 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
         return self.get_unscaled_gradients(grads)
 
     def _create_all_weights(self, var_list):
-        self._optimizer._create_all_weights(
-            var_list
-        )  # pylint: disable=protected-access
+        self._optimizer._create_all_weights(var_list)  # pylint: disable=protected-access
 
-    def apply_gradients(
-        self, grads_and_vars, name=None, experimental_aggregate_gradients=True
-    ):
+    def apply_gradients(self,
+                        grads_and_vars,
+                        name=None,
+                        experimental_aggregate_gradients=True):
         if distribution_strategy_context.in_cross_replica_context():
-            raise ValueError("apply_gradients() must be called in a replica context.")
+            raise ValueError(
+                "apply_gradients() must be called in a replica context.")
         # We check for the strategy here despite already checking in the constructor
         # as frequently the optimizer is created outside the strategy's scope.
         self._raise_if_strategy_unsupported()
@@ -400,11 +391,11 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
             args=(grads_and_vars, name, experimental_aggregate_gradients),
         )
 
-    def _apply_gradients_cross_replica(
-        self, distribution, grads_and_vars, name, experimental_aggregate_gradients
-    ):
+    def _apply_gradients_cross_replica(self, distribution, grads_and_vars,
+                                       name, experimental_aggregate_gradients):
         grads = [g for g, _ in grads_and_vars]
-        loss_scale_update_op, should_apply_grads = self._loss_scale.update(grads)
+        loss_scale_update_op, should_apply_grads = self._loss_scale.update(
+            grads)
 
         def apply_fn():
             # We do not want DistributionStrategy to unwrap any MirroredVariables in
@@ -415,21 +406,20 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
             wrapped_vars = _UnwrapPreventer([v for _, v in grads_and_vars])
             return distribution.extended.call_for_each_replica(
                 self._apply_gradients,
-                args=(grads, wrapped_vars, name, experimental_aggregate_gradients),
+                args=(grads, wrapped_vars, name,
+                      experimental_aggregate_gradients),
             )
 
         # Note: We must call this cond() in a cross-replica context.
         # DistributionStrategy does not support having a cond in a replica context
         # with a branch that calls `merge_call`, and self._optimizer.apply_gradients
         # calls `merge_call`.
-        maybe_apply_op = smart_cond.smart_cond(
-            should_apply_grads, apply_fn, control_flow_ops.no_op
-        )
+        maybe_apply_op = smart_cond.smart_cond(should_apply_grads, apply_fn,
+                                               control_flow_ops.no_op)
         return control_flow_ops.group(maybe_apply_op, loss_scale_update_op)
 
-    def _apply_gradients(
-        self, grads, wrapped_vars, name, experimental_aggregate_gradients
-    ):
+    def _apply_gradients(self, grads, wrapped_vars, name,
+                         experimental_aggregate_gradients):
         # TODO(reedwm): This will raise a fairly cryptic error message if
         # self._optimizer.apply_gradients does not take
         # experimental_aggregate_gradients.
@@ -441,7 +431,8 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
 
     def get_config(self):
         serialized_optimizer = optimizers.serialize(self._optimizer)
-        serialized_loss_scale = keras_loss_scale_module.serialize(self._loss_scale)
+        serialized_loss_scale = keras_loss_scale_module.serialize(
+            self._loss_scale)
         return {
             "optimizer": serialized_optimizer,
             "loss_scale": serialized_loss_scale,
@@ -451,19 +442,17 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
     def from_config(cls, config, custom_objects=None):
         config = config.copy()  # Make a copy, since we mutate config
         config["optimizer"] = optimizers.deserialize(
-            config["optimizer"], custom_objects=custom_objects
-        )
+            config["optimizer"], custom_objects=custom_objects)
         config["loss_scale"] = keras_loss_scale_module.deserialize(
-            config["loss_scale"], custom_objects=custom_objects
-        )
+            config["loss_scale"], custom_objects=custom_objects)
         return cls(**config)
 
     def _raise_if_strategy_unsupported(self):
         if not strategy_supports_loss_scaling():
             strategy = distribution_strategy_context.get_strategy()
             if isinstance(
-                strategy, (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)
-            ):
+                    strategy,
+                (tpu_strategy.TPUStrategy, tpu_strategy.TPUStrategyV1)):
                 raise ValueError(
                     "Loss scaling is not supported with TPUStrategy. Loss scaling is "
                     "unnecessary with TPUs, since they support bfloat16 instead of "
@@ -474,8 +463,8 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
                 raise ValueError(
                     "Loss scaling is not supported with the "
                     "tf.distribute.Strategy: %s. Try using a different "
-                    "Strategy, e.g. a MirroredStrategy" % strategy.__class__.__name__
-                )
+                    "Strategy, e.g. a MirroredStrategy" %
+                    strategy.__class__.__name__)
 
     # Delegations: We delegate most OptimizerV2 methods to the wrapped optimizer
     # below.
@@ -505,21 +494,19 @@ class LossScaleOptimizer(_DelegatingTrackableMixin, optimizer_v2.OptimizerV2):
         return self._optimizer.set_weights(weights)
 
     def _aggregate_gradients(self, grads_and_vars):
-        return self._optimizer._aggregate_gradients(
-            grads_and_vars
-        )  # pylint: disable=protected-access
+        return self._optimizer._aggregate_gradients(grads_and_vars)  # pylint: disable=protected-access
 
     def _restore_slot_variable(self, slot_name, variable, slot_variable):
         return self._optimizer._restore_slot_variable(
-            slot_name, variable, slot_variable  # pylint: disable=protected-access
+            slot_name,
+            variable,
+            slot_variable  # pylint: disable=protected-access
         )
 
-    def _create_or_restore_slot_variable(
-        self, slot_variable_position, slot_name, variable
-    ):
+    def _create_or_restore_slot_variable(self, slot_variable_position,
+                                         slot_name, variable):
         return self._optimizer._create_or_restore_slot_variable(  # pylint: disable=protected-access
-            slot_variable_position, slot_name, variable
-        )
+            slot_variable_position, slot_name, variable)
 
     def get_slot(self, var, slot_name):
         return self._optimizer.get_slot(var, slot_name)
@@ -604,27 +591,24 @@ class FakeOptimizerForRestoration(trackable.Trackable):
     def get_slot_names(self):
         return self._optimizer.get_slot_names()
 
-    def _create_or_restore_slot_variable(
-        self, slot_variable_position, slot_name, variable
-    ):
+    def _create_or_restore_slot_variable(self, slot_variable_position,
+                                         slot_name, variable):
         return self._optimizer._create_or_restore_slot_variable(  # pylint: disable=protected-access
-            slot_variable_position, slot_name, variable
-        )
+            slot_variable_position, slot_name, variable)
 
 
 # pylint: disable=protected-access
-mixed_precision._register_wrapper_optimizer_cls(
-    optimizer_v2.OptimizerV2, LossScaleOptimizer
-)
+mixed_precision._register_wrapper_optimizer_cls(optimizer_v2.OptimizerV2,
+                                                LossScaleOptimizer)
 
 
 def _multiply_gradient(gradient, scale):
     """Multiply a (possibly sparse) gradient by the given scale factor."""
     scale = math_ops.cast(scale, gradient.dtype)
     if isinstance(gradient, ops.IndexedSlices):
-        return ops.IndexedSlices(
-            gradient.values * scale, gradient.indices, dense_shape=gradient.dense_shape
-        )
+        return ops.IndexedSlices(gradient.values * scale,
+                                 gradient.indices,
+                                 dense_shape=gradient.dense_shape)
     else:
         return gradient * scale
 
