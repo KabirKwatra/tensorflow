@@ -54,98 +54,107 @@ from tensorflow.python.util import compat
 
 
 class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
-
     @combinations.generate(test_base.graph_only_combinations())
     def testNoGradients(self):
-        component = constant_op.constant([1.])
-        side = constant_op.constant(0.)
-        def add(x): return x + side
+        component = constant_op.constant([1.0])
+        side = constant_op.constant(0.0)
+
+        def add(x):
+            return x + side
+
         dataset = dataset_ops.Dataset.from_tensor_slices(component).map(add)
         value = dataset_ops.make_one_shot_iterator(dataset).get_next()
         self.assertIsNone(gradients_impl.gradients(value, component)[0])
         self.assertIsNone(gradients_impl.gradients(value, side)[0])
-        self.assertIsNone(gradients_impl.gradients(
-            value, [component, side])[0])
+        self.assertIsNone(gradients_impl.gradients(value, [component, side])[0])
 
     @combinations.generate(test_base.graph_only_combinations())
     def testCapturingStateInOneShotRaisesException(self):
         var = variables.Variable(37.0, name="myvar")
-        dataset = (
-            dataset_ops.Dataset.from_tensor_slices([0.0, 1.0, 2.0])
-            .map(lambda x: x + var))
+        dataset = dataset_ops.Dataset.from_tensor_slices([0.0, 1.0, 2.0]).map(
+            lambda x: x + var
+        )
         with self.assertRaisesRegexp(
-                ValueError, r"`Dataset.make_one_shot_iterator\(\)` does not support "
-                "datasets that capture stateful objects.+myvar"):
+            ValueError,
+            r"`Dataset.make_one_shot_iterator\(\)` does not support "
+            "datasets that capture stateful objects.+myvar",
+        ):
             dataset_ops.make_one_shot_iterator(dataset)
 
     @combinations.generate(test_base.graph_only_combinations())
     def testOneShotIterator(self):
-        components = (np.arange(7),
-                      np.array([[1, 2, 3]]) * np.arange(7)[:, np.newaxis],
-                      np.array(37.0) * np.arange(7))
+        components = (
+            np.arange(7),
+            np.array([[1, 2, 3]]) * np.arange(7)[:, np.newaxis],
+            np.array(37.0) * np.arange(7),
+        )
 
         def _map_fn(x, y, z):
             return math_ops.square(x), math_ops.square(y), math_ops.square(z)
 
         iterator = dataset_ops.make_one_shot_iterator(
-            dataset_ops.Dataset.from_tensor_slices(components).map(_map_fn)
-            .repeat(14))
+            dataset_ops.Dataset.from_tensor_slices(components).map(_map_fn).repeat(14)
+        )
         get_next = iterator.get_next()
 
-        self.assertEqual([c.shape[1:] for c in components],
-                         [t.shape for t in get_next])
+        self.assertEqual([c.shape[1:] for c in components], [t.shape for t in get_next])
 
         with self.cached_session() as sess:
             for _ in range(14):
                 for i in range(7):
                     result = sess.run(get_next)
                     for component, result_component in zip(components, result):
-                        self.assertAllEqual(component[i]**2, result_component)
+                        self.assertAllEqual(component[i] ** 2, result_component)
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(get_next)
 
     @combinations.generate(test_base.graph_only_combinations())
     def testOneShotIteratorCaptureByValue(self):
-        components = (np.arange(7),
-                      np.array([[1, 2, 3]]) * np.arange(7)[:, np.newaxis],
-                      np.array(37.0) * np.arange(7))
-        tensor_components = tuple([ops.convert_to_tensor(c)
-                                   for c in components])
+        components = (
+            np.arange(7),
+            np.array([[1, 2, 3]]) * np.arange(7)[:, np.newaxis],
+            np.array(37.0) * np.arange(7),
+        )
+        tensor_components = tuple([ops.convert_to_tensor(c) for c in components])
 
         def _map_fn(x, y, z):
             return math_ops.square(x), math_ops.square(y), math_ops.square(z)
 
         iterator = dataset_ops.make_one_shot_iterator(
             dataset_ops.Dataset.from_tensor_slices(tensor_components)
-            .map(_map_fn).repeat(14))
+            .map(_map_fn)
+            .repeat(14)
+        )
         get_next = iterator.get_next()
 
-        self.assertEqual([c.shape[1:] for c in components],
-                         [t.shape for t in get_next])
+        self.assertEqual([c.shape[1:] for c in components], [t.shape for t in get_next])
 
         with self.cached_session() as sess:
             for _ in range(14):
                 for i in range(7):
                     result = sess.run(get_next)
                     for component, result_component in zip(components, result):
-                        self.assertAllEqual(component[i]**2, result_component)
+                        self.assertAllEqual(component[i] ** 2, result_component)
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(get_next)
 
     @combinations.generate(test_base.default_test_combinations())
     def testOneShotIteratorInsideContainer(self):
-        components = (np.arange(7),
-                      np.array([[1, 2, 3]]) * np.arange(7)[:, np.newaxis],
-                      np.array(37.0) * np.arange(7))
+        components = (
+            np.arange(7),
+            np.array([[1, 2, 3]]) * np.arange(7)[:, np.newaxis],
+            np.array(37.0) * np.arange(7),
+        )
 
         def within_container():
-
             def _map_fn(x, y, z):
                 return math_ops.square(x), math_ops.square(y), math_ops.square(z)
 
             iterator = dataset_ops.make_one_shot_iterator(
                 dataset_ops.Dataset.from_tensor_slices(components)
-                .map(_map_fn).repeat(14))
+                .map(_map_fn)
+                .repeat(14)
+            )
             return iterator.get_next()
 
         server = server_lib.Server.create_local_server()
@@ -165,22 +174,21 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                     for i in range(7):
                         result = sess.run(get_next)
                         for component, result_component in zip(components, result):
-                            self.assertAllEqual(
-                                component[i]**2, result_component)
+                            self.assertAllEqual(component[i] ** 2, result_component)
                 with self.assertRaises(errors.OutOfRangeError):
                     sess.run(get_next)
 
     @combinations.generate(test_base.graph_only_combinations())
     def testOneShotIteratorNonBlocking(self):
-        dataset = dataset_ops.Dataset.from_tensors(
-            [1, 2, 3]).map(lambda x: x * x)
+        dataset = dataset_ops.Dataset.from_tensors([1, 2, 3]).map(lambda x: x * x)
         iterator = dataset_ops.make_one_shot_iterator(dataset)
         next_element = iterator.get_next()
 
         # Create a session with a single thread to ensure that the
         # one-shot iterator initializer does not deadlock.
         config = config_pb2.ConfigProto(
-            inter_op_parallelism_threads=1, use_per_session_threads=True)
+            inter_op_parallelism_threads=1, use_per_session_threads=True
+        )
         with session.Session(config=config) as sess:
             self.assertAllEqual([1, 4, 9], sess.run(next_element))
             with self.assertRaises(errors.OutOfRangeError):
@@ -197,19 +205,15 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                     results.append(None)
 
             num_threads = 8
-            threads = [
-                self.checkedThread(consumer_thread) for _ in range(num_threads)
-            ]
+            threads = [self.checkedThread(consumer_thread) for _ in range(num_threads)]
             for t in threads:
                 t.start()
             for t in threads:
                 t.join()
 
             self.assertLen(results, num_threads)
-            self.assertLen(
-                [None for r in results if r is None], num_threads - 1)
-            self.assertAllEqual(
-                [[1, 4, 9]], [r for r in results if r is not None])
+            self.assertLen([None for r in results if r is None], num_threads - 1)
+            self.assertAllEqual([[1, 4, 9]], [r for r in results if r is not None])
 
     @combinations.generate(test_base.graph_only_combinations())
     def testOneShotIteratorInitializerFails(self):
@@ -233,9 +237,7 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                     sess.run(next_element)
 
             num_threads = 8
-            threads = [
-                self.checkedThread(consumer_thread) for _ in range(num_threads)
-            ]
+            threads = [self.checkedThread(consumer_thread) for _ in range(num_threads)]
             for t in threads:
                 t.start()
             for t in threads:
@@ -243,9 +245,11 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
     @combinations.generate(test_base.graph_only_combinations())
     def testSimpleSharedResource(self):
-        components = (np.array(1, dtype=np.int64),
-                      np.array([1, 2, 3], dtype=np.int64),
-                      np.array(37.0, dtype=np.float64))
+        components = (
+            np.array(1, dtype=np.int64),
+            np.array([1, 2, 3], dtype=np.int64),
+            np.array(37.0, dtype=np.float64),
+        )
 
         server = server_lib.Server.create_local_server()
 
@@ -255,9 +259,11 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         # second session.
         with ops.Graph().as_default():
             iterator = dataset_ops.make_initializable_iterator(
-                dataset_ops.Dataset.from_tensors(
-                    components).map(lambda x, y, z: (x, y, z)),
-                shared_name="shared_iterator")
+                dataset_ops.Dataset.from_tensors(components).map(
+                    lambda x, y, z: (x, y, z)
+                ),
+                shared_name="shared_iterator",
+            )
             init_op = iterator.initializer
             get_next = iterator.get_next()
 
@@ -280,7 +286,8 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             iterator = iterator_ops.Iterator.from_structure(
                 shared_name="shared_iterator",
                 output_types=(dtypes.int64, dtypes.int64, dtypes.float64),
-                output_shapes=([], [3], []))
+                output_shapes=([], [3], []),
+            )
             get_next = iterator.get_next()
 
             with session.Session(server.target) as sess:
@@ -295,22 +302,23 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testNotInitializedError(self):
         components = (np.array(1), np.array([1, 2, 3]), np.array(37.0))
         iterator = dataset_ops.make_initializable_iterator(
-            dataset_ops.Dataset.from_tensors(components))
+            dataset_ops.Dataset.from_tensors(components)
+        )
         get_next = iterator.get_next()
 
         with self.cached_session() as sess:
-            with self.assertRaisesRegexp(errors.FailedPreconditionError,
-                                         "iterator has not been initialized"):
+            with self.assertRaisesRegexp(
+                errors.FailedPreconditionError, "iterator has not been initialized"
+            ):
                 sess.run(get_next)
 
     @combinations.generate(test_base.graph_only_combinations())
     def testReinitializableIterator(self):
-        dataset_3 = dataset_ops.Dataset.from_tensors(
-            constant_op.constant([1, 2, 3]))
-        dataset_4 = dataset_ops.Dataset.from_tensors(
-            constant_op.constant([4, 5, 6, 7]))
+        dataset_3 = dataset_ops.Dataset.from_tensors(constant_op.constant([1, 2, 3]))
+        dataset_4 = dataset_ops.Dataset.from_tensors(constant_op.constant([4, 5, 6, 7]))
         iterator = iterator_ops.Iterator.from_structure(
-            dataset_ops.get_legacy_output_types(dataset_3), [None])
+            dataset_ops.get_legacy_output_types(dataset_3), [None]
+        )
 
         dataset_3_init_op = iterator.make_initializer(dataset_3)
         dataset_4_init_op = iterator.make_initializer(dataset_4)
@@ -318,12 +326,15 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         self.assertEqual(
             dataset_ops.get_legacy_output_types(dataset_3),
-            dataset_ops.get_legacy_output_types(iterator))
+            dataset_ops.get_legacy_output_types(iterator),
+        )
         self.assertEqual(
             dataset_ops.get_legacy_output_types(dataset_4),
-            dataset_ops.get_legacy_output_types(iterator))
+            dataset_ops.get_legacy_output_types(iterator),
+        )
         self.assertEqual(
-            [None], dataset_ops.get_legacy_output_shapes(iterator).as_list())
+            [None], dataset_ops.get_legacy_output_shapes(iterator).as_list()
+        )
 
         with self.cached_session() as sess:
             # The iterator is initially uninitialized.
@@ -350,7 +361,6 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
     @combinations.generate(test_base.graph_only_combinations())
     def testReinitializableIteratorWithFunctions(self):
-
         def g():
             for i in range(10):
                 yield i
@@ -359,16 +369,14 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         next_element = iterator.get_next()
 
         with self.cached_session() as sess:
-            dataset_1 = dataset_ops.Dataset.from_generator(
-                g, output_types=dtypes.int64)
+            dataset_1 = dataset_ops.Dataset.from_generator(g, output_types=dtypes.int64)
             sess.run(iterator.make_initializer(dataset_1))
             for expected in range(10):
                 self.assertEqual(expected, sess.run(next_element))
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(next_element)
 
-            dataset_2 = dataset_ops.Dataset.from_generator(
-                g, output_types=dtypes.int64)
+            dataset_2 = dataset_ops.Dataset.from_generator(g, output_types=dtypes.int64)
             sess.run(iterator.make_initializer(dataset_2))
             for expected in range(10):
                 self.assertEqual(expected, sess.run(next_element))
@@ -380,34 +388,55 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         # Non-matching structure for types and shapes.
         with self.assertRaises(TypeError):
             iterator = iterator_ops.Iterator.from_structure(
-                (dtypes.int64, dtypes.float64), [None])
+                (dtypes.int64, dtypes.float64), [None]
+            )
 
         # Test validation of dataset argument.
-        iterator = iterator_ops.Iterator.from_structure((dtypes.int64,
-                                                         dtypes.float64))
+        iterator = iterator_ops.Iterator.from_structure((dtypes.int64, dtypes.float64))
 
         # Incompatible structure.
         with self.assertRaises(ValueError):
             iterator.make_initializer(
-                dataset_ops.Dataset.from_tensors(((constant_op.constant(
-                    [1, 2, 3], dtype=dtypes.int64),), (constant_op.constant(
-                        [4., 5., 6., 7.], dtype=dtypes.float64),))))
+                dataset_ops.Dataset.from_tensors(
+                    (
+                        (constant_op.constant([1, 2, 3], dtype=dtypes.int64),),
+                        (
+                            constant_op.constant(
+                                [4.0, 5.0, 6.0, 7.0], dtype=dtypes.float64
+                            ),
+                        ),
+                    )
+                )
+            )
 
         # Incompatible types.
         with self.assertRaises(TypeError):
             iterator.make_initializer(
                 dataset_ops.Dataset.from_tensors(
-                    (constant_op.constant([1, 2, 3], dtype=dtypes.int32),
-                     constant_op.constant([4., 5., 6., 7.], dtype=dtypes.float32))))
+                    (
+                        constant_op.constant([1, 2, 3], dtype=dtypes.int32),
+                        constant_op.constant(
+                            [4.0, 5.0, 6.0, 7.0], dtype=dtypes.float32
+                        ),
+                    )
+                )
+            )
 
         # Incompatible shapes.
         iterator = iterator_ops.Iterator.from_structure(
-            (dtypes.int64, dtypes.float64), ([None], []))
+            (dtypes.int64, dtypes.float64), ([None], [])
+        )
         with self.assertRaises(TypeError):
             iterator.make_initializer(
                 dataset_ops.Dataset.from_tensors(
-                    (constant_op.constant([1, 2, 3], dtype=dtypes.int64),
-                     constant_op.constant([4., 5., 6., 7.], dtype=dtypes.float64))))
+                    (
+                        constant_op.constant([1, 2, 3], dtype=dtypes.int64),
+                        constant_op.constant(
+                            [4.0, 5.0, 6.0, 7.0], dtype=dtypes.float64
+                        ),
+                    )
+                )
+            )
 
     @combinations.generate(test_base.graph_only_combinations())
     def testIteratorStringHandle(self):
@@ -419,53 +448,73 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         handle_placeholder = array_ops.placeholder(dtypes.string, shape=[])
         feedable_iterator = iterator_ops.Iterator.from_string_handle(
-            handle_placeholder, dataset_ops.get_legacy_output_types(dataset_3),
-            dataset_ops.get_legacy_output_shapes(dataset_3))
+            handle_placeholder,
+            dataset_ops.get_legacy_output_types(dataset_3),
+            dataset_ops.get_legacy_output_shapes(dataset_3),
+        )
         next_element = feedable_iterator.get_next()
 
         self.assertTrue(
             structure.are_compatible(
                 dataset_ops.get_structure(dataset_3),
-                dataset_ops.get_structure(feedable_iterator)))
+                dataset_ops.get_structure(feedable_iterator),
+            )
+        )
 
         with self.cached_session() as sess:
             iterator_3_handle = sess.run(iterator_3.string_handle())
             iterator_4_handle = sess.run(iterator_4.string_handle())
 
-            self.assertEqual(10,
-                             sess.run(
-                                 next_element,
-                                 feed_dict={handle_placeholder: iterator_4_handle}))
-            self.assertEqual(1,
-                             sess.run(
-                                 next_element,
-                                 feed_dict={handle_placeholder: iterator_3_handle}))
-            self.assertEqual(20,
-                             sess.run(
-                                 next_element,
-                                 feed_dict={handle_placeholder: iterator_4_handle}))
-            self.assertEqual(2,
-                             sess.run(
-                                 next_element,
-                                 feed_dict={handle_placeholder: iterator_3_handle}))
-            self.assertEqual(30,
-                             sess.run(
-                                 next_element,
-                                 feed_dict={handle_placeholder: iterator_4_handle}))
-            self.assertEqual(3,
-                             sess.run(
-                                 next_element,
-                                 feed_dict={handle_placeholder: iterator_3_handle}))
-            self.assertEqual(40,
-                             sess.run(
-                                 next_element,
-                                 feed_dict={handle_placeholder: iterator_4_handle}))
+            self.assertEqual(
+                10,
+                sess.run(
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                ),
+            )
+            self.assertEqual(
+                1,
+                sess.run(
+                    next_element, feed_dict={handle_placeholder: iterator_3_handle}
+                ),
+            )
+            self.assertEqual(
+                20,
+                sess.run(
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                ),
+            )
+            self.assertEqual(
+                2,
+                sess.run(
+                    next_element, feed_dict={handle_placeholder: iterator_3_handle}
+                ),
+            )
+            self.assertEqual(
+                30,
+                sess.run(
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                ),
+            )
+            self.assertEqual(
+                3,
+                sess.run(
+                    next_element, feed_dict={handle_placeholder: iterator_3_handle}
+                ),
+            )
+            self.assertEqual(
+                40,
+                sess.run(
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                ),
+            )
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(
-                    next_element, feed_dict={handle_placeholder: iterator_3_handle})
+                    next_element, feed_dict={handle_placeholder: iterator_3_handle}
+                )
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(
-                    next_element, feed_dict={handle_placeholder: iterator_4_handle})
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                )
 
     @combinations.generate(test_base.graph_only_combinations())
     def testIteratorStringHandleFuture(self):
@@ -477,14 +526,18 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         handle_placeholder = array_ops.placeholder(dtypes.string, shape=[])
         feedable_iterator = iterator_ops.Iterator.from_string_handle(
-            handle_placeholder, dataset_ops.get_legacy_output_types(dataset_3),
-            dataset_ops.get_legacy_output_shapes(dataset_3))
+            handle_placeholder,
+            dataset_ops.get_legacy_output_types(dataset_3),
+            dataset_ops.get_legacy_output_shapes(dataset_3),
+        )
         next_element = feedable_iterator.get_next()
 
         self.assertTrue(
             structure.are_compatible(
                 dataset_ops.get_structure(dataset_3),
-                dataset_ops.get_structure(feedable_iterator)))
+                dataset_ops.get_structure(feedable_iterator),
+            )
+        )
 
         with self.cached_session() as sess:
             iterator_3_handle = sess.run(iterator_3.string_handle())
@@ -493,66 +546,78 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
             self.assertEqual(
                 10,
                 sess.run(
-                    next_element,
-                    feed_dict={handle_placeholder: iterator_4_handle}))
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                ),
+            )
             self.assertEqual(
                 1,
                 sess.run(
-                    next_element,
-                    feed_dict={handle_placeholder: iterator_3_handle}))
+                    next_element, feed_dict={handle_placeholder: iterator_3_handle}
+                ),
+            )
             self.assertEqual(
                 20,
                 sess.run(
-                    next_element,
-                    feed_dict={handle_placeholder: iterator_4_handle}))
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                ),
+            )
             self.assertEqual(
                 2,
                 sess.run(
-                    next_element,
-                    feed_dict={handle_placeholder: iterator_3_handle}))
+                    next_element, feed_dict={handle_placeholder: iterator_3_handle}
+                ),
+            )
             self.assertEqual(
                 30,
                 sess.run(
-                    next_element,
-                    feed_dict={handle_placeholder: iterator_4_handle}))
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                ),
+            )
             self.assertEqual(
                 3,
                 sess.run(
-                    next_element,
-                    feed_dict={handle_placeholder: iterator_3_handle}))
+                    next_element, feed_dict={handle_placeholder: iterator_3_handle}
+                ),
+            )
             self.assertEqual(
                 40,
                 sess.run(
-                    next_element,
-                    feed_dict={handle_placeholder: iterator_4_handle}))
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                ),
+            )
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(
-                    next_element, feed_dict={handle_placeholder: iterator_3_handle})
+                    next_element, feed_dict={handle_placeholder: iterator_3_handle}
+                )
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(
-                    next_element, feed_dict={handle_placeholder: iterator_4_handle})
+                    next_element, feed_dict={handle_placeholder: iterator_4_handle}
+                )
 
     @combinations.generate(test_base.graph_only_combinations())
     def testIteratorStringHandleReuseTensorObject(self):
         dataset = dataset_ops.Dataset.from_tensor_slices([1, 2, 3])
         one_shot_iterator = dataset_ops.make_one_shot_iterator(dataset)
-        initializable_iterator = dataset_ops.make_initializable_iterator(
-            dataset)
+        initializable_iterator = dataset_ops.make_initializable_iterator(dataset)
         structure_iterator = iterator_ops.Iterator.from_structure(
-            dataset_ops.get_legacy_output_types(dataset))
+            dataset_ops.get_legacy_output_types(dataset)
+        )
 
         created_ops = len(ops.get_default_graph().get_operations())
 
-        self.assertIs(one_shot_iterator.string_handle(),
-                      one_shot_iterator.string_handle())
-        self.assertIs(initializable_iterator.string_handle(),
-                      initializable_iterator.string_handle())
-        self.assertIs(structure_iterator.string_handle(),
-                      structure_iterator.string_handle())
+        self.assertIs(
+            one_shot_iterator.string_handle(), one_shot_iterator.string_handle()
+        )
+        self.assertIs(
+            initializable_iterator.string_handle(),
+            initializable_iterator.string_handle(),
+        )
+        self.assertIs(
+            structure_iterator.string_handle(), structure_iterator.string_handle()
+        )
 
         # Assert that getting the (default) string handle creates no ops.
-        self.assertEqual(created_ops, len(
-            ops.get_default_graph().get_operations()))
+        self.assertEqual(created_ops, len(ops.get_default_graph().get_operations()))
 
         # Specifying an explicit name will create a new op.
         handle_with_name = one_shot_iterator.string_handle(name="foo")
@@ -565,45 +630,60 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
     @combinations.generate(test_base.graph_only_combinations())
     def testIteratorStringHandleError(self):
-        dataset_int_scalar = (
-            dataset_ops.Dataset.from_tensor_slices([1, 2, 3]).repeat())
-        dataset_float_vector = (
-            dataset_ops.Dataset.from_tensors([1.0, 2.0, 3.0]))
+        dataset_int_scalar = dataset_ops.Dataset.from_tensor_slices([1, 2, 3]).repeat()
+        dataset_float_vector = dataset_ops.Dataset.from_tensors([1.0, 2.0, 3.0])
 
         handle_placeholder = array_ops.placeholder(dtypes.string, shape=[])
 
         feedable_int_scalar = iterator_ops.Iterator.from_string_handle(
-            handle_placeholder, dtypes.int32, [])
+            handle_placeholder, dtypes.int32, []
+        )
         feedable_int_vector = iterator_ops.Iterator.from_string_handle(
-            handle_placeholder, dtypes.int32, [None])
+            handle_placeholder, dtypes.int32, [None]
+        )
         feedable_int_any = iterator_ops.Iterator.from_string_handle(
-            handle_placeholder, dtypes.int32)
+            handle_placeholder, dtypes.int32
+        )
 
         with self.cached_session() as sess:
-            handle_int_scalar = sess.run(dataset_ops.make_one_shot_iterator(
-                dataset_int_scalar).string_handle())
-            handle_float_vector = sess.run(dataset_ops.make_one_shot_iterator(
-                dataset_float_vector).string_handle())
+            handle_int_scalar = sess.run(
+                dataset_ops.make_one_shot_iterator(dataset_int_scalar).string_handle()
+            )
+            handle_float_vector = sess.run(
+                dataset_ops.make_one_shot_iterator(dataset_float_vector).string_handle()
+            )
 
-            self.assertEqual(1,
-                             sess.run(
-                                 feedable_int_scalar.get_next(),
-                                 feed_dict={handle_placeholder: handle_int_scalar}))
+            self.assertEqual(
+                1,
+                sess.run(
+                    feedable_int_scalar.get_next(),
+                    feed_dict={handle_placeholder: handle_int_scalar},
+                ),
+            )
 
-            self.assertEqual(2,
-                             sess.run(
-                                 feedable_int_any.get_next(),
-                                 feed_dict={handle_placeholder: handle_int_scalar}))
+            self.assertEqual(
+                2,
+                sess.run(
+                    feedable_int_any.get_next(),
+                    feed_dict={handle_placeholder: handle_int_scalar},
+                ),
+            )
 
             with self.assertRaises(errors.InvalidArgumentError):
-                print(sess.run(
-                    feedable_int_vector.get_next(),
-                    feed_dict={handle_placeholder: handle_int_scalar}))
+                print(
+                    sess.run(
+                        feedable_int_vector.get_next(),
+                        feed_dict={handle_placeholder: handle_int_scalar},
+                    )
+                )
 
             with self.assertRaises(errors.InvalidArgumentError):
-                print(sess.run(
-                    feedable_int_vector.get_next(),
-                    feed_dict={handle_placeholder: handle_float_vector}))
+                print(
+                    sess.run(
+                        feedable_int_vector.get_next(),
+                        feed_dict={handle_placeholder: handle_float_vector},
+                    )
+                )
 
     @combinations.generate(test_base.graph_only_combinations())
     def testRemoteIteratorUsingRemoteCallOpDirectSession(self):
@@ -618,8 +698,10 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         @function.Defun(dtypes.string)
         def _remote_fn(h):
             remote_iterator = iterator_ops.Iterator.from_string_handle(
-                h, dataset_ops.get_legacy_output_types(dataset_3),
-                dataset_ops.get_legacy_output_shapes(dataset_3))
+                h,
+                dataset_ops.get_legacy_output_types(dataset_3),
+                dataset_ops.get_legacy_output_shapes(dataset_3),
+            )
             return remote_iterator.get_next()
 
         with ops.device("/job:localhost/replica:0/task:0/cpu:0"):
@@ -628,14 +710,14 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                 args=[iterator_3_handle],
                 Tout=[dtypes.int32],
                 f=_remote_fn,
-                target=target_placeholder)
+                target=target_placeholder,
+            )
 
         with self.session(config=worker_config) as sess:
             elem = sess.run(
                 remote_op,
-                feed_dict={
-                    target_placeholder: "/job:localhost/replica:0/task:0/cpu:1"
-                })
+                feed_dict={target_placeholder: "/job:localhost/replica:0/task:0/cpu:1"},
+            )
             self.assertEqual(elem, [1])
             # Fails when target is cpu:2 where the resource is not located.
             with self.assertRaises(errors.InvalidArgumentError):
@@ -643,25 +725,25 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
                     remote_op,
                     feed_dict={
                         target_placeholder: "/job:localhost/replica:0/task:0/cpu:2"
-                    })
+                    },
+                )
             elem = sess.run(
                 remote_op,
-                feed_dict={
-                    target_placeholder: "/job:localhost/replica:0/task:0/cpu:1"
-                })
+                feed_dict={target_placeholder: "/job:localhost/replica:0/task:0/cpu:1"},
+            )
             self.assertEqual(elem, [2])
             elem = sess.run(
                 remote_op,
-                feed_dict={
-                    target_placeholder: "/job:localhost/replica:0/task:0/cpu:1"
-                })
+                feed_dict={target_placeholder: "/job:localhost/replica:0/task:0/cpu:1"},
+            )
             self.assertEqual(elem, [3])
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(
                     remote_op,
                     feed_dict={
                         target_placeholder: "/job:localhost/replica:0/task:0/cpu:1"
-                    })
+                    },
+                )
 
     @combinations.generate(test_base.graph_only_combinations())
     def testRemoteIteratorUsingRemoteCallOpMultiWorkers(self):
@@ -672,16 +754,14 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         cluster_def = cluster_pb2.ClusterDef()
         workers = cluster_def.job.add()
         workers.name = "worker"
-        workers.tasks[0] = s1.target[len("grpc://"):]
-        workers.tasks[1] = s2.target[len("grpc://"):]
+        workers.tasks[0] = s1.target[len("grpc://") :]
+        workers.tasks[1] = s2.target[len("grpc://") :]
         client = cluster_def.job.add()
         client.name = "client"
-        client.tasks[0] = s3.target[len("grpc://"):]
+        client.tasks[0] = s3.target[len("grpc://") :]
         config = config_pb2.ConfigProto(cluster_def=cluster_def)
 
-        worker_devices = [
-            "/job:worker/replica:0/task:%d/cpu:0" % i for i in range(2)
-        ]
+        worker_devices = ["/job:worker/replica:0/task:%d/cpu:0" % i for i in range(2)]
         itr_handles = []
         for device in worker_devices:
             with ops.device(device):
@@ -695,17 +775,19 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         @function.Defun(dtypes.string)
         def loading_func(h):
             remote_itr = iterator_ops.Iterator.from_string_handle(
-                h, dataset_ops.get_legacy_output_types(itr),
-                dataset_ops.get_legacy_output_shapes(itr))
+                h,
+                dataset_ops.get_legacy_output_types(itr),
+                dataset_ops.get_legacy_output_shapes(itr),
+            )
             return remote_itr.get_next()
 
         def map_fn(target, handle):
             return functional_ops.remote_call(
-                args=[handle], Tout=[dtypes.string], f=loading_func, target=target)
+                args=[handle], Tout=[dtypes.string], f=loading_func, target=target
+            )
 
         with ops.device("/job:client"):
-            client_dataset = dataset_ops.Dataset.zip(
-                (targets, handles)).map(map_fn)
+            client_dataset = dataset_ops.Dataset.zip((targets, handles)).map(map_fn)
             itr = dataset_ops.make_initializable_iterator(client_dataset)
             n = itr.get_next()
 
@@ -735,174 +817,211 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         def _remote_fn(h):
             handle = script_ops.py_func(_encode_raw, [h], dtypes.string)
             remote_iterator = iterator_ops.Iterator.from_string_handle(
-                handle, dataset_ops.get_legacy_output_types(dataset_3),
-                dataset_ops.get_legacy_output_shapes(dataset_3))
+                handle,
+                dataset_ops.get_legacy_output_types(dataset_3),
+                dataset_ops.get_legacy_output_shapes(dataset_3),
+            )
             return remote_iterator.get_next()
 
         with ops.device("/job:localhost/replica:0/task:0/device:GPU:0"):
             target_placeholder = array_ops.placeholder(dtypes.string, shape=[])
             iterator_3_handle_uint8 = parsing_ops.decode_raw(
-                input_bytes=iterator_3_handle, out_type=dtypes.uint8)
+                input_bytes=iterator_3_handle, out_type=dtypes.uint8
+            )
             remote_op = functional_ops.remote_call(
                 args=[iterator_3_handle_uint8],
                 Tout=[dtypes.int32],
                 f=_remote_fn,
-                target=target_placeholder)
+                target=target_placeholder,
+            )
 
         with self.cached_session() as sess:
             elem = sess.run(
                 remote_op,
-                feed_dict={
-                    target_placeholder: "/job:localhost/replica:0/task:0/cpu:0"
-                })
+                feed_dict={target_placeholder: "/job:localhost/replica:0/task:0/cpu:0"},
+            )
             self.assertEqual(elem, [1])
             elem = sess.run(
                 remote_op,
-                feed_dict={
-                    target_placeholder: "/job:localhost/replica:0/task:0/cpu:0"
-                })
+                feed_dict={target_placeholder: "/job:localhost/replica:0/task:0/cpu:0"},
+            )
             self.assertEqual(elem, [2])
             elem = sess.run(
                 remote_op,
-                feed_dict={
-                    target_placeholder: "/job:localhost/replica:0/task:0/cpu:0"
-                })
+                feed_dict={target_placeholder: "/job:localhost/replica:0/task:0/cpu:0"},
+            )
             self.assertEqual(elem, [3])
             with self.assertRaises(errors.OutOfRangeError):
                 sess.run(
                     remote_op,
                     feed_dict={
                         target_placeholder: "/job:localhost/replica:0/task:0/cpu:0"
-                    })
+                    },
+                )
 
     @combinations.generate(test_base.graph_only_combinations())
     def testRepeatedGetNextWarning(self):
-        iterator = dataset_ops.make_one_shot_iterator(
-            dataset_ops.Dataset.range(10))
+        iterator = dataset_ops.make_one_shot_iterator(dataset_ops.Dataset.range(10))
         warnings.simplefilter("always")
         with warnings.catch_warnings(record=True) as w:
             for _ in range(100):
                 iterator.get_next()
-        self.assertEqual(
-            100 - iterator_ops.GET_NEXT_CALL_WARNING_THRESHOLD, len(w))
+        self.assertEqual(100 - iterator_ops.GET_NEXT_CALL_WARNING_THRESHOLD, len(w))
         for warning in w:
             self.assertIn(
-                iterator_ops.GET_NEXT_CALL_WARNING_MESSAGE, str(warning.message))
+                iterator_ops.GET_NEXT_CALL_WARNING_MESSAGE, str(warning.message)
+            )
 
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
             combinations.combine(
-                expected_element_structure=tensor_spec.TensorSpec([],
-                                                                  dtypes.float32),
+                expected_element_structure=tensor_spec.TensorSpec([], dtypes.float32),
                 expected_output_classes=ops.Tensor,
                 expected_output_types=dtypes.float32,
-                expected_output_shapes=[[]])))
-    def testTensorIteratorStructure(self, expected_element_structure,
-                                    expected_output_classes,
-                                    expected_output_types,
-                                    expected_output_shapes):
-        def tf_value_fn(): return constant_op.constant(37.0)
+                expected_output_shapes=[[]],
+            ),
+        )
+    )
+    def testTensorIteratorStructure(
+        self,
+        expected_element_structure,
+        expected_output_classes,
+        expected_output_types,
+        expected_output_shapes,
+    ):
+        def tf_value_fn():
+            return constant_op.constant(37.0)
+
         tf_value = tf_value_fn()
         iterator = dataset_ops.make_one_shot_iterator(
-            dataset_ops.Dataset.from_tensors(tf_value))
+            dataset_ops.Dataset.from_tensors(tf_value)
+        )
 
         self.assertTrue(
             structure.are_compatible(
-                dataset_ops.get_structure(iterator), expected_element_structure))
-        self.assertEqual(expected_output_classes,
-                         dataset_ops.get_legacy_output_classes(iterator))
-        self.assertEqual(expected_output_types,
-                         dataset_ops.get_legacy_output_types(iterator))
-        self.assertEqual(expected_output_shapes,
-                         dataset_ops.get_legacy_output_shapes(iterator))
+                dataset_ops.get_structure(iterator), expected_element_structure
+            )
+        )
+        self.assertEqual(
+            expected_output_classes, dataset_ops.get_legacy_output_classes(iterator)
+        )
+        self.assertEqual(
+            expected_output_types, dataset_ops.get_legacy_output_types(iterator)
+        )
+        self.assertEqual(
+            expected_output_shapes, dataset_ops.get_legacy_output_shapes(iterator)
+        )
 
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
             combinations.combine(
                 expected_element_structure=sparse_tensor.SparseTensorSpec(
-                    [1], dtypes.int32),
+                    [1], dtypes.int32
+                ),
                 expected_output_classes=sparse_tensor.SparseTensor,
                 expected_output_types=dtypes.int32,
-                expected_output_shapes=[[1]])))
-    def testSparseTensorIteratorStructure(self, expected_element_structure,
-                                          expected_output_classes,
-                                          expected_output_types,
-                                          expected_output_shapes):
-
+                expected_output_shapes=[[1]],
+            ),
+        )
+    )
+    def testSparseTensorIteratorStructure(
+        self,
+        expected_element_structure,
+        expected_output_classes,
+        expected_output_types,
+        expected_output_shapes,
+    ):
         def tf_value_fn():
             return sparse_tensor.SparseTensor(
                 indices=[[0]],
                 values=constant_op.constant([0], dtype=dtypes.int32),
-                dense_shape=[1])
+                dense_shape=[1],
+            )
 
         tf_value = tf_value_fn()
         iterator = dataset_ops.make_one_shot_iterator(
-            dataset_ops.Dataset.from_tensors(tf_value))
+            dataset_ops.Dataset.from_tensors(tf_value)
+        )
 
         self.assertTrue(
             structure.are_compatible(
-                dataset_ops.get_structure(iterator), expected_element_structure))
-        self.assertEqual(expected_output_classes,
-                         dataset_ops.get_legacy_output_classes(iterator))
-        self.assertEqual(expected_output_types,
-                         dataset_ops.get_legacy_output_types(iterator))
-        self.assertEqual(expected_output_shapes,
-                         dataset_ops.get_legacy_output_shapes(iterator))
+                dataset_ops.get_structure(iterator), expected_element_structure
+            )
+        )
+        self.assertEqual(
+            expected_output_classes, dataset_ops.get_legacy_output_classes(iterator)
+        )
+        self.assertEqual(
+            expected_output_types, dataset_ops.get_legacy_output_types(iterator)
+        )
+        self.assertEqual(
+            expected_output_shapes, dataset_ops.get_legacy_output_shapes(iterator)
+        )
 
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
             combinations.combine(
                 expected_element_structure={
-                    "a":
-                        tensor_spec.TensorSpec([], dtypes.float32),
-                    "b": (tensor_spec.TensorSpec([1], dtypes.string),
-                          tensor_spec.TensorSpec([], dtypes.string))
+                    "a": tensor_spec.TensorSpec([], dtypes.float32),
+                    "b": (
+                        tensor_spec.TensorSpec([1], dtypes.string),
+                        tensor_spec.TensorSpec([], dtypes.string),
+                    ),
                 },
                 expected_output_classes={
                     "a": ops.Tensor,
-                    "b": (ops.Tensor, ops.Tensor)
+                    "b": (ops.Tensor, ops.Tensor),
                 },
                 expected_output_types={
                     "a": dtypes.float32,
-                    "b": (dtypes.string, dtypes.string)
+                    "b": (dtypes.string, dtypes.string),
                 },
-                expected_output_shapes={
-                    "a": [],
-                    "b": ([1], [])
-                })))
-    def testNestedTensorIteratorStructure(self, expected_element_structure,
-                                          expected_output_classes,
-                                          expected_output_types,
-                                          expected_output_shapes):
-
+                expected_output_shapes={"a": [], "b": ([1], [])},
+            ),
+        )
+    )
+    def testNestedTensorIteratorStructure(
+        self,
+        expected_element_structure,
+        expected_output_classes,
+        expected_output_types,
+        expected_output_shapes,
+    ):
         def tf_value_fn():
             return {
                 "a": constant_op.constant(37.0),
-                "b": (constant_op.constant(["Foo"]), constant_op.constant("Bar"))
+                "b": (constant_op.constant(["Foo"]), constant_op.constant("Bar")),
             }
 
         tf_value = tf_value_fn()
         iterator = dataset_ops.make_one_shot_iterator(
-            dataset_ops.Dataset.from_tensors(tf_value))
+            dataset_ops.Dataset.from_tensors(tf_value)
+        )
 
         self.assertTrue(
             structure.are_compatible(
-                dataset_ops.get_structure(iterator), expected_element_structure))
-        self.assertEqual(expected_output_classes,
-                         dataset_ops.get_legacy_output_classes(iterator))
-        self.assertEqual(expected_output_types,
-                         dataset_ops.get_legacy_output_types(iterator))
-        self.assertEqual(expected_output_shapes,
-                         dataset_ops.get_legacy_output_shapes(iterator))
+                dataset_ops.get_structure(iterator), expected_element_structure
+            )
+        )
+        self.assertEqual(
+            expected_output_classes, dataset_ops.get_legacy_output_classes(iterator)
+        )
+        self.assertEqual(
+            expected_output_types, dataset_ops.get_legacy_output_types(iterator)
+        )
+        self.assertEqual(
+            expected_output_shapes, dataset_ops.get_legacy_output_shapes(iterator)
+        )
 
     @combinations.generate(test_base.default_test_combinations())
     def testIteratorGetNextName(self):
         with ops.Graph().as_default():
             iterator = dataset_ops.make_one_shot_iterator(
-                dataset_ops.Dataset.from_tensors(37.0))
+                dataset_ops.Dataset.from_tensors(37.0)
+            )
             next_element = iterator.get_next(name="overridden_name")
             self.assertEqual("overridden_name", next_element.op.name)
 
@@ -910,7 +1029,9 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
         combinations.combine(
             tf_api_version=[1, 2],
             mode="eager",
-            execution_mode=[context.ASYNC, context.SYNC]))
+            execution_mode=[context.ASYNC, context.SYNC],
+        )
+    )
     def testIteratorEagerIteration(self, execution_mode):
         with context.eager_mode(), context.execution_mode(execution_mode):
             val = 0
@@ -958,8 +1079,7 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         @def_function.function
         def fn():
-            dataset = dataset_ops._GeneratorDataset(
-                1, init_fn, next_fn, finalize_fn)
+            dataset = dataset_ops._GeneratorDataset(1, init_fn, next_fn, finalize_fn)
             iterator = iter(dataset)
             next(iterator)
 
@@ -990,7 +1110,6 @@ class IteratorTest(test_base.DatasetTestBase, parameterized.TestCase):
 
     @combinations.generate(test_base.eager_only_combinations())
     def testNestedFunctionsIteratorResource(self):
-
         @def_function.function
         def sum_dataset(ds):
             it = iter(ds)

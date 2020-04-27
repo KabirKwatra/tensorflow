@@ -35,20 +35,23 @@ from tensorflow.python.platform import test
 
 # TODO(b/117581999): add eager coverage when supported.
 class PrefetchToDeviceTest(test_base.DatasetTestBase, parameterized.TestCase):
-
     @combinations.generate(test_base.graph_only_combinations())
     def testPrefetchToDevice(self):
         host_dataset = dataset_ops.Dataset.range(10)
         device_dataset = host_dataset.apply(
-            prefetching_ops.prefetch_to_device("/cpu:1"))
+            prefetching_ops.prefetch_to_device("/cpu:1")
+        )
 
         with ops.device("/cpu:1"):
             iterator = dataset_ops.make_one_shot_iterator(device_dataset)
             next_element = iterator.get_next()
 
-        self.assertTrue(structure.are_compatible(
-            dataset_ops.get_structure(host_dataset),
-            dataset_ops.get_structure(device_dataset)))
+        self.assertTrue(
+            structure.are_compatible(
+                dataset_ops.get_structure(host_dataset),
+                dataset_ops.get_structure(device_dataset),
+            )
+        )
 
         self.assertEqual(dtypes.int64, next_element.dtype)
         self.assertEqual([], next_element.shape)
@@ -65,15 +68,20 @@ class PrefetchToDeviceTest(test_base.DatasetTestBase, parameterized.TestCase):
         host_dataset = dataset_ops.Dataset.range(10)
         device_dataset = host_dataset.apply(
             prefetching_ops.prefetch_to_device(
-                "/job:localhost/replica:0/task:0/device:CPU:0"))
+                "/job:localhost/replica:0/task:0/device:CPU:0"
+            )
+        )
 
         with ops.device("/cpu:1"):
             iterator = dataset_ops.make_one_shot_iterator(device_dataset)
             next_element = iterator.get_next()
 
-        self.assertTrue(structure.are_compatible(
-            dataset_ops.get_structure(host_dataset),
-            dataset_ops.get_structure(device_dataset)))
+        self.assertTrue(
+            structure.are_compatible(
+                dataset_ops.get_structure(host_dataset),
+                dataset_ops.get_structure(device_dataset),
+            )
+        )
 
         self.assertEqual(dtypes.int64, next_element.dtype)
         self.assertEqual([], next_element.shape)
@@ -89,15 +97,19 @@ class PrefetchToDeviceTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testPrefetchDictToDevice(self):
         host_dataset = dataset_ops.Dataset.range(10).map(lambda x: {"a": x})
         device_dataset = host_dataset.apply(
-            prefetching_ops.prefetch_to_device("/cpu:1"))
+            prefetching_ops.prefetch_to_device("/cpu:1")
+        )
 
         with ops.device("/cpu:1"):
             iterator = dataset_ops.make_one_shot_iterator(device_dataset)
             next_element = iterator.get_next()
 
-        self.assertTrue(structure.are_compatible(
-            dataset_ops.get_structure(host_dataset),
-            dataset_ops.get_structure(device_dataset)))
+        self.assertTrue(
+            structure.are_compatible(
+                dataset_ops.get_structure(host_dataset),
+                dataset_ops.get_structure(device_dataset),
+            )
+        )
 
         self.assertEqual(dtypes.int64, next_element["a"].dtype)
         self.assertEqual([], next_element["a"].shape)
@@ -113,19 +125,25 @@ class PrefetchToDeviceTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testPrefetchSparseTensorsToDevice(self):
         def make_tensor(i):
             return sparse_tensor.SparseTensorValue(
-                indices=[[0, 0]], values=(i*[1]), dense_shape=[2, 2])
+                indices=[[0, 0]], values=(i * [1]), dense_shape=[2, 2]
+            )
+
         host_dataset = dataset_ops.Dataset.range(10).map(make_tensor)
 
         device_dataset = host_dataset.apply(
-            prefetching_ops.prefetch_to_device("/cpu:1"))
+            prefetching_ops.prefetch_to_device("/cpu:1")
+        )
 
         with ops.device("/cpu:1"):
             iterator = dataset_ops.make_one_shot_iterator(device_dataset)
             next_element = iterator.get_next()
 
-        self.assertTrue(structure.are_compatible(
-            dataset_ops.get_structure(host_dataset),
-            dataset_ops.get_structure(device_dataset)))
+        self.assertTrue(
+            structure.are_compatible(
+                dataset_ops.get_structure(host_dataset),
+                dataset_ops.get_structure(device_dataset),
+            )
+        )
 
         self.assertEqual(dtypes.int64, next_element.dtype)
 
@@ -146,7 +164,8 @@ class PrefetchToDeviceTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         host_dataset = dataset_ops.Dataset.range(10)
         device_dataset = host_dataset.apply(
-            prefetching_ops.prefetch_to_device("/gpu:0"))
+            prefetching_ops.prefetch_to_device("/gpu:0")
+        )
 
         self.assertDatasetProduces(device_dataset, list(range(10)))
 
@@ -154,15 +173,19 @@ class PrefetchToDeviceTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testPrefetchToDeviceWithReInit(self):
         host_dataset = dataset_ops.Dataset.range(10)
         device_dataset = host_dataset.apply(
-            prefetching_ops.prefetch_to_device("/cpu:1"))
+            prefetching_ops.prefetch_to_device("/cpu:1")
+        )
 
         with ops.device("/cpu:1"):
             iterator = dataset_ops.make_initializable_iterator(device_dataset)
             next_element = iterator.get_next()
 
-        self.assertTrue(structure.are_compatible(
-            dataset_ops.get_structure(host_dataset),
-            dataset_ops.get_structure(device_dataset)))
+        self.assertTrue(
+            structure.are_compatible(
+                dataset_ops.get_structure(host_dataset),
+                dataset_ops.get_structure(device_dataset),
+            )
+        )
 
         self.assertEqual(dtypes.int64, next_element.dtype)
         self.assertEqual([], next_element.shape)
@@ -185,13 +208,15 @@ class PrefetchToDeviceTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         host_dataset = dataset_ops.Dataset.range(10)
         device_dataset = host_dataset.apply(
-            prefetching_ops.prefetch_to_device("/gpu:0"))
+            prefetching_ops.prefetch_to_device("/gpu:0")
+        )
 
         iterator = dataset_ops.make_initializable_iterator(device_dataset)
         next_element = iterator.get_next()
 
         with self.cached_session(
-                config=config_pb2.ConfigProto(allow_soft_placement=False)):
+            config=config_pb2.ConfigProto(allow_soft_placement=False)
+        ):
             self.evaluate(iterator.initializer)
             for i in range(5):
                 self.assertEqual(i, self.evaluate(next_element))
