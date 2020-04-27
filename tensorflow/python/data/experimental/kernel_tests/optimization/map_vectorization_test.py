@@ -48,7 +48,6 @@ from tensorflow.python.platform import test
 
 
 def _generate_test_combinations(cases):
-
     def reduce_fn(x, y):
         name, fn = y
         return x + combinations.combine(map_fn=combinations.NamedObject(name, fn))
@@ -131,25 +130,26 @@ def _unary_real_test_combinations():
 
 
 def _binary_bitwise_test_combinations():
-    cases = [("BitwiseAnd", bitwise_ops.bitwise_and),
-             ("BitwiseOr", bitwise_ops.bitwise_or),
-             ("BitwiseXor", bitwise_ops.bitwise_xor),
-             ("LeftShift", bitwise_ops.left_shift),
-             ("RightShift", bitwise_ops.right_shift)]
+    cases = [
+        ("BitwiseAnd", bitwise_ops.bitwise_and),
+        ("BitwiseOr", bitwise_ops.bitwise_or),
+        ("BitwiseXor", bitwise_ops.bitwise_xor),
+        ("LeftShift", bitwise_ops.left_shift),
+        ("RightShift", bitwise_ops.right_shift),
+    ]
     return _generate_test_combinations(cases)
 
 
 def _binary_logical_test_combinations():
-    cases = [("LogicalAnd", math_ops.logical_and),
-             ("LogicalOr", math_ops.logical_or)]
+    cases = [("LogicalAnd", math_ops.logical_and), ("LogicalOr", math_ops.logical_or)]
     return _generate_test_combinations(cases)
 
 
 def _binary_real_test_combinations():
-
     def safe_polygamma(x, y):
         return math_ops.polygamma(
-            math_ops.round(clip_ops.clip_by_value(y, 1, 10)), x * x + 1)
+            math_ops.round(clip_ops.clip_by_value(y, 1, 10)), x * x + 1
+        )
 
     def safe_zeta(x, y):
         return math_ops.zeta(x * x + 1, y * y)
@@ -188,7 +188,6 @@ def _binary_real_test_combinations():
 
 # TODO(rachelim): Consolidate tests with pfor when APIs are somewhat shared.
 class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
-
     def _enable_map_vectorization(self, dataset, use_choose=True):
         options = dataset_ops.Options()
         opt_options = options.experimental_optimization
@@ -196,11 +195,9 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
         opt_options.map_vectorization.use_choose_fastest = use_choose
         return dataset.with_options(options)
 
-    def _get_test_datasets(self,
-                           base_dataset,
-                           map_fn,
-                           num_parallel_calls=None,
-                           expect_optimized=True):
+    def _get_test_datasets(
+        self, base_dataset, map_fn, num_parallel_calls=None, expect_optimized=True
+    ):
         """Given base dataset and map fn, creates test datasets.
 
         Returns a tuple of (unoptimized dataset, optimized dataset). The
@@ -236,169 +233,277 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
         unoptimized = _make_dataset([map_node_name, "BatchV2"])
         # Note that because of the `ChooseDataset` fork, we can't use `assert_next`
         # to verify the optimization result.
-        optimized = _make_dataset(["ChooseFastestBranch"] if expect_optimized else
-                                  [map_node_name, "BatchV2"])
+        optimized = _make_dataset(
+            ["ChooseFastestBranch"] if expect_optimized else [map_node_name, "BatchV2"]
+        )
         optimized = self._enable_map_vectorization(optimized)
         return unoptimized, optimized
 
     def _testOptimization(self, map_fn, dataset_factory, num_parallel_calls):
         dataset = dataset_factory()
-        unoptimized, optimized = self._get_test_datasets(dataset, map_fn,
-                                                         num_parallel_calls)
+        unoptimized, optimized = self._get_test_datasets(
+            dataset, map_fn, num_parallel_calls
+        )
         self.assertDatasetsEqual(unoptimized, optimized)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testBasic(self, num_parallel_calls):
         data = np.random.rand(10, 3)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors(data).repeat(5)
-        def map_fn(x): return (x, x + 1)
-        self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
-    @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
-    def testBroadcast(self, num_parallel_calls):
-        data = np.random.rand(10, 3)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors(data).repeat(5)
-        value = np.random.rand(1, 1, 1, 1, 1, 1)
-        def map_fn(x): return x + value
-        self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
-
-    @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
-    def testCast(self, num_parallel_calls):
-        data = np.random.rand(10, 3)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors(data).repeat(5)
-        def map_fn(x): return math_ops.cast(x, dtypes.float64)
-        self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
-
-    @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
-    def testConst(self, num_parallel_calls):
-        data = np.random.rand(10, 3)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors(data).repeat(5)
-        def map_fn(x): return 2
-        self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
-
-    @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
-    def testCycle(self, num_parallel_calls):
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors(1)
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors(data).repeat(5)
 
         def map_fn(x):
-            def c(i): return math_ops.less(i, 10)
-            def b(i): return math_ops.add(i, 1)
+            return (x, x + 1)
+
+        self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
+
+    @combinations.generate(
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
+    def testBroadcast(self, num_parallel_calls):
+        data = np.random.rand(10, 3)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors(data).repeat(5)
+
+        value = np.random.rand(1, 1, 1, 1, 1, 1)
+
+        def map_fn(x):
+            return x + value
+
+        self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
+
+    @combinations.generate(
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
+    def testCast(self, num_parallel_calls):
+        data = np.random.rand(10, 3)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors(data).repeat(5)
+
+        def map_fn(x):
+            return math_ops.cast(x, dtypes.float64)
+
+        self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
+
+    @combinations.generate(
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
+    def testConst(self, num_parallel_calls):
+        data = np.random.rand(10, 3)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors(data).repeat(5)
+
+        def map_fn(x):
+            return 2
+
+        self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
+
+    @combinations.generate(
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
+    def testCycle(self, num_parallel_calls):
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors(1)
+
+        def map_fn(x):
+            def c(i):
+                return math_ops.less(i, 10)
+
+            def b(i):
+                return math_ops.add(i, 1)
+
             return control_flow_ops.while_loop(c, b, [x])
 
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testReshape(self, num_parallel_calls):
         data = np.random.rand(10, 3)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors(data).repeat(5)
-        def map_fn(x): return array_ops.reshape(x, (-1, 30))
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors(data).repeat(5)
+
+        def map_fn(x):
+            return array_ops.reshape(x, (-1, 30))
+
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testTranspose(self, num_parallel_calls):
         data = np.random.rand(10, 3)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors(data).repeat(5)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors(data).repeat(5)
+
         map_fn = array_ops.transpose
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testUnstack(self, num_parallel_calls):
         data = np.random.rand(10, 3)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors(data).repeat(5)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors(data).repeat(5)
+
         map_fns = [array_ops.unstack, lambda x: array_ops.unstack(x, axis=-1)]
         for map_fn in map_fns:
             self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           _unary_bitwise_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            _unary_bitwise_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testUnaryBitwiseOperations(self, map_fn, num_parallel_calls):
         x = np.random.randint(0, 10, (7, 3, 5))
-        def dataset_factory(): return dataset_ops.Dataset.from_tensor_slices(x)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensor_slices(x)
+
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           _unary_logical_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            _unary_logical_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testUnaryLogicalOperations(self, map_fn, num_parallel_calls):
         x = np.random.rand(3, 5)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensor_slices(x > 0)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensor_slices(x > 0)
+
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           _unary_complex_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            _unary_complex_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testUnaryComplexOperations(self, map_fn, num_parallel_calls):
         x = math_ops.complex(np.random.rand(3, 5), np.random.rand(3, 5))
-        def dataset_factory(): return dataset_ops.Dataset.from_tensor_slices(x)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensor_slices(x)
+
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           _unary_real_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            _unary_real_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testUnaryRealOperations(self, map_fn, num_parallel_calls):
         x = np.random.rand(3, 5)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensor_slices(x)
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensor_slices(x)
+
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           _binary_bitwise_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            _binary_bitwise_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testBinaryBitwiseOperations(self, map_fn, num_parallel_calls):
         x = np.random.randint(0, 10, (7, 3, 5))
         y = np.random.randint(0, 10, (3, 5))
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors((x, y))
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors((x, y))
+
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           _binary_logical_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            _binary_logical_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testBinaryLogicalOperations(self, map_fn, num_parallel_calls):
         x = np.random.rand(7, 3, 5)
         y = np.random.rand(3, 5)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors((x > 0, y > 0))
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors((x > 0, y > 0))
+
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           _binary_real_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            _binary_real_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testBinaryRealOperations(self, map_fn, num_parallel_calls):
         x = np.random.rand(7, 3, 5)
         y = np.random.rand(3, 5)
-        def dataset_factory(): return dataset_ops.Dataset.from_tensors((x, y))
+
+        def dataset_factory():
+            return dataset_ops.Dataset.from_tensors((x, y))
+
         self._testOptimization(map_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testDecodeCsv(self, num_parallel_calls):
-
         def dataset_factory():
-            return dataset_ops.Dataset.from_tensor_slices(["1.0:2:a",
-                                                           "2.4:5:c"]).repeat(5)
+            return dataset_ops.Dataset.from_tensor_slices(
+                ["1.0:2:a", "2.4:5:c"]
+            ).repeat(5)
 
         def decode_csv_fn(x):
             return parsing_ops.decode_csv(
@@ -406,39 +511,49 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
                 record_defaults=[
                     constant_op.constant([], dtypes.float32),
                     constant_op.constant([], dtypes.int32),
-                    constant_op.constant([], dtypes.string)
+                    constant_op.constant([], dtypes.string),
                 ],
-                field_delim=":")
+                field_delim=":",
+            )
 
-        self._testOptimization(
-            decode_csv_fn, dataset_factory, num_parallel_calls)
+        self._testOptimization(decode_csv_fn, dataset_factory, num_parallel_calls)
 
     @combinations.generate(
-        combinations.times(test_base.default_test_combinations(),
-                           combinations.combine(num_parallel_calls=[None, 12])))
+        combinations.times(
+            test_base.default_test_combinations(),
+            combinations.combine(num_parallel_calls=[None, 12]),
+        )
+    )
     def testParseSingleExample(self, num_parallel_calls):
-
         def dataset_factory():
-
             def _int64_feature(*values):
                 return feature_pb2.Feature(
-                    int64_list=feature_pb2.Int64List(value=values))
+                    int64_list=feature_pb2.Int64List(value=values)
+                )
 
             def _bytes_feature(*values):
                 return feature_pb2.Feature(
                     bytes_list=feature_pb2.BytesList(
-                        value=[v.encode("utf-8") for v in values]))
+                        value=[v.encode("utf-8") for v in values]
+                    )
+                )
 
             # pylint:disable=g-complex-comprehension
             return dataset_ops.Dataset.from_tensor_slices(
-                constant_op.constant([
-                    example_pb2.Example(
-                        features=feature_pb2.Features(
-                            feature={
-                                "dense_int": _int64_feature(i),
-                                "dense_str": _bytes_feature(str(i)),
-                            })).SerializeToString() for i in range(10)
-                ]))
+                constant_op.constant(
+                    [
+                        example_pb2.Example(
+                            features=feature_pb2.Features(
+                                feature={
+                                    "dense_int": _int64_feature(i),
+                                    "dense_str": _bytes_feature(str(i)),
+                                }
+                            )
+                        ).SerializeToString()
+                        for i in range(10)
+                    ]
+                )
+            )
 
         def parse_fn(x):
             features = {
@@ -449,8 +564,7 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
 
         def dense_only_parse_fn(x):
             return [
-                y for y in parse_fn(x)
-                if not isinstance(y, sparse_tensor.SparseTensor)
+                y for y in parse_fn(x) if not isinstance(y, sparse_tensor.SparseTensor)
             ]
 
         map_fns = [parse_fn, dense_only_parse_fn]
@@ -465,10 +579,12 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
             # x has leading dimension 5, this will raise an error
             return array_ops.gather(x, 10)
 
-        with self.assertRaisesRegexp(errors.InvalidArgumentError,
-                                     r"indices = 10 is not in \[0, 5\)"):
-            base_dataset = dataset_ops.Dataset.range(5).repeat(5).batch(
-                5, drop_remainder=True)
+        with self.assertRaisesRegexp(
+            errors.InvalidArgumentError, r"indices = 10 is not in \[0, 5\)"
+        ):
+            base_dataset = (
+                dataset_ops.Dataset.range(5).repeat(5).batch(5, drop_remainder=True)
+            )
             _, optimized = self._get_test_datasets(base_dataset, map_fn)
             nxt = dataset_ops.make_one_shot_iterator(optimized).get_next()
             self.evaluate(nxt)
@@ -482,17 +598,19 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
         def map_fn(x):
             return x, y, z
 
-        base_dataset = dataset_ops.Dataset.from_tensor_slices([[1, 2],
-                                                               [3, 4]]).repeat(5)
+        base_dataset = dataset_ops.Dataset.from_tensor_slices([[1, 2], [3, 4]]).repeat(
+            5
+        )
         unoptimized, optimized = self._get_test_datasets(
-            base_dataset, map_fn, expect_optimized=True)
+            base_dataset, map_fn, expect_optimized=True
+        )
         self.assertDatasetsEqual(optimized, unoptimized)
 
     @combinations.generate(test_base.default_test_combinations())
     def testOptimizationWithMapAndBatchFusion(self):
         # Tests that vectorization works on fused map and batch.
         def map_fn(x):
-            return x**2
+            return x ** 2
 
         base_dataset = dataset_ops.Dataset.range(1000)
         options = dataset_ops.Options()
@@ -512,8 +630,9 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(
         combinations.times(
             test_base.default_test_combinations(),
-            combinations.combine(
-                fuse_first=[True, False], fuse_second=[True, False])))
+            combinations.combine(fuse_first=[True, False], fuse_second=[True, False]),
+        )
+    )
     def testOptimizationWithChainedMapAndBatch(self, fuse_first, fuse_second):
         # Tests that vectorization works on chained map and batch functions.
         def map_fn(x):
@@ -524,7 +643,8 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
 
                 def apply_fn(dataset):
                     return dataset.apply(
-                        batching.map_and_batch(map_fn, 2, 12, drop_remainder=True))
+                        batching.map_and_batch(map_fn, 2, 12, drop_remainder=True)
+                    )
 
                 return apply_fn
             else:
@@ -557,16 +677,18 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
         combinations.times(
             test_base.default_test_combinations(),
             combinations.combine(
-                local_determinism=[True, False, None],
-                global_determinism=[True, False])))
+                local_determinism=[True, False, None], global_determinism=[True, False]
+            ),
+        )
+    )
     def testOptimizationDeterminism(self, local_determinism, global_determinism):
         # Tests that vectorization maintains the determinism setting.
-        expect_determinism = local_determinism or (local_determinism is None and
-                                                   global_determinism)
+        expect_determinism = local_determinism or (
+            local_determinism is None and global_determinism
+        )
         elements = list(range(1000))
 
         def dataset_fn(delay_ms):
-
             def sleep(x):
                 time.sleep(delay_ms / 1000)
                 return x
@@ -574,13 +696,15 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
             def map_function(x):
                 if math_ops.equal(x, 0):
                     return check_ops.ensure_shape(
-                        script_ops.py_func(sleep, [x], x.dtype, stateful=False), ())
+                        script_ops.py_func(sleep, [x], x.dtype, stateful=False), ()
+                    )
                 else:
                     return x
 
             dataset = dataset_ops.Dataset.from_tensor_slices(elements)
             dataset = dataset.map(
-                map_function, num_parallel_calls=10, deterministic=local_determinism)
+                map_function, num_parallel_calls=10, deterministic=local_determinism
+            )
             dataset = dataset.batch(1)
 
             opts = dataset_ops.Options()
@@ -594,11 +718,11 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
         self.checkDeterminism(
             dataset_fn,
             expect_determinism,
-            expected_elements=[[element] for element in elements])
+            expected_elements=[[element] for element in elements],
+        )
 
     @combinations.generate(test_base.default_test_combinations())
     def testOptimizationIgnoreStateful(self):
-
         def map_fn(x):
             with ops.control_dependencies([check_ops.assert_equal(x, np.int64(0))]):
                 return array_ops.identity(x)
@@ -618,10 +742,10 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
             return array_ops.gather(x, np.int64(0))
 
         # output_shape = (?,)
-        base_dataset = dataset_ops.Dataset.range(
-            20).batch(3, drop_remainder=False)
+        base_dataset = dataset_ops.Dataset.range(20).batch(3, drop_remainder=False)
         unoptimized, optimized = self._get_test_datasets(
-            base_dataset, map_fn, expect_optimized=False)
+            base_dataset, map_fn, expect_optimized=False
+        )
         self.assertDatasetsEqual(unoptimized, optimized)
 
     @combinations.generate(test_base.default_test_combinations())
@@ -641,12 +765,12 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(test_base.default_test_combinations())
     def testOptimizationWithUnknownBatchShape(self):
         tensor = sparse_tensor.SparseTensor(
-            indices=[[0, 0], [1, 2]], values=[1, 2], dense_shape=[3, 4])
+            indices=[[0, 0], [1, 2]], values=[1, 2], dense_shape=[3, 4]
+        )
 
         # Datasets with sparse tensors have unknown output shapes.
         base_dataset = dataset_ops.Dataset.from_tensors(tensor)
-        unoptimized = base_dataset.apply(
-            batching.map_and_batch(lambda x: x, 2))
+        unoptimized = base_dataset.apply(batching.map_and_batch(lambda x: x, 2))
         options = dataset_ops.Options()
         options.experimental_optimization.apply_default_optimizations = False
         unoptimized = unoptimized.with_options(options)
@@ -661,7 +785,8 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
         def map_fn(x):
             del x
             return sparse_tensor.SparseTensor(
-                indices=[[0, 0], [1, 2]], values=[1, 2], dense_shape=[3, 4])
+                indices=[[0, 0], [1, 2]], values=[1, 2], dense_shape=[3, 4]
+            )
 
         # Datasets with sparse tensors have unknown output shapes.
         unoptimized = base_dataset.apply(batching.map_and_batch(map_fn, 2))
@@ -683,10 +808,10 @@ class MapVectorizationTest(test_base.DatasetTestBase, parameterized.TestCase):
     @combinations.generate(test_base.default_test_combinations())
     def testOptimizationWithoutChooseFastest(self):
         dataset = dataset_ops.Dataset.range(10)
-        dataset = dataset.map(lambda x: x**2)
+        dataset = dataset.map(lambda x: x ** 2)
         dataset = dataset.batch(10)
         dataset = self._enable_map_vectorization(dataset, use_choose=False)
-        self.assertDatasetProduces(dataset, [[x**2 for x in range(10)]])
+        self.assertDatasetProduces(dataset, [[x ** 2 for x in range(10)]])
 
 
 if __name__ == "__main__":

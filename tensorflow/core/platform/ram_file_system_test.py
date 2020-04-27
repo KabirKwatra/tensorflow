@@ -36,54 +36,52 @@ from tensorflow.python.training import training_util
 
 
 class RamFilesystemTest(test_util.TensorFlowTestCase):
-
     def test_write_file(self):
-        with gfile.GFile('ram://a.txt', 'w') as f:
-            f.write('Hello, world.')
-            f.write('Hello, world.')
+        with gfile.GFile("ram://a.txt", "w") as f:
+            f.write("Hello, world.")
+            f.write("Hello, world.")
 
-        with gfile.GFile('ram://a.txt', 'r') as f:
-            self.assertEqual(f.read(), 'Hello, world.' * 2)
+        with gfile.GFile("ram://a.txt", "r") as f:
+            self.assertEqual(f.read(), "Hello, world." * 2)
 
     def test_append_file_with_seek(self):
-        with gfile.GFile('ram://c.txt', 'w') as f:
-            f.write('Hello, world.')
+        with gfile.GFile("ram://c.txt", "w") as f:
+            f.write("Hello, world.")
 
-        with gfile.GFile('ram://c.txt', 'w+') as f:
+        with gfile.GFile("ram://c.txt", "w+") as f:
             f.seek(offset=0, whence=2)
-            f.write('Hello, world.')
+            f.write("Hello, world.")
 
-        with gfile.GFile('ram://c.txt', 'r') as f:
-            self.assertEqual(f.read(), 'Hello, world.' * 2)
+        with gfile.GFile("ram://c.txt", "r") as f:
+            self.assertEqual(f.read(), "Hello, world." * 2)
 
     def test_list_dir(self):
         for i in range(10):
-            with gfile.GFile('ram://a/b/%d.txt' % i, 'w') as f:
-                f.write('')
-            with gfile.GFile('ram://c/b/%d.txt' % i, 'w') as f:
-                f.write('')
+            with gfile.GFile("ram://a/b/%d.txt" % i, "w") as f:
+                f.write("")
+            with gfile.GFile("ram://c/b/%d.txt" % i, "w") as f:
+                f.write("")
 
-        matches = ['ram://a/b/%d.txt' % i for i in range(10)]
-        self.assertEqual(gfile.ListDirectory('ram://a/b/'), matches)
+        matches = ["ram://a/b/%d.txt" % i for i in range(10)]
+        self.assertEqual(gfile.ListDirectory("ram://a/b/"), matches)
 
     def test_glob(self):
         for i in range(10):
-            with gfile.GFile('ram://a/b/%d.txt' % i, 'w') as f:
-                f.write('')
-            with gfile.GFile('ram://c/b/%d.txt' % i, 'w') as f:
-                f.write('')
+            with gfile.GFile("ram://a/b/%d.txt" % i, "w") as f:
+                f.write("")
+            with gfile.GFile("ram://c/b/%d.txt" % i, "w") as f:
+                f.write("")
 
-        matches = ['ram://a/b/%d.txt' % i for i in range(10)]
-        self.assertEqual(gfile.Glob('ram://a/b/*'), matches)
+        matches = ["ram://a/b/%d.txt" % i for i in range(10)]
+        self.assertEqual(gfile.Glob("ram://a/b/*"), matches)
 
         matches = []
-        self.assertEqual(gfile.Glob('ram://b/b/*'), matches)
+        self.assertEqual(gfile.Glob("ram://b/b/*"), matches)
 
-        matches = ['ram://c/b/%d.txt' % i for i in range(10)]
-        self.assertEqual(gfile.Glob('ram://c/b/*'), matches)
+        matches = ["ram://c/b/%d.txt" % i for i in range(10)]
+        self.assertEqual(gfile.Glob("ram://c/b/*"), matches)
 
     def test_estimator(self):
-
         def model_fn(features, labels, mode, params):
             del params
             x = core_layers.dense(features, 100)
@@ -94,19 +92,23 @@ class RamFilesystemTest(test_util.TensorFlowTestCase):
             loss = losses.mean_squared_error(labels, y)
             opt = adam.AdamOptimizer(learning_rate=0.1)
             train_op = opt.minimize(
-                loss, global_step=training_util.get_or_create_global_step())
+                loss, global_step=training_util.get_or_create_global_step()
+            )
 
             return EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
         def input_fn():
             batch_size = 128
-            return (constant_op.constant(np.random.randn(batch_size, 100),
-                                         dtype=dtypes.float32),
-                    constant_op.constant(np.random.randn(batch_size, 1),
-                                         dtype=dtypes.float32))
+            return (
+                constant_op.constant(
+                    np.random.randn(batch_size, 100), dtype=dtypes.float32
+                ),
+                constant_op.constant(
+                    np.random.randn(batch_size, 1), dtype=dtypes.float32
+                ),
+            )
 
-        config = RunConfig(
-            model_dir='ram://estimator-0/', save_checkpoints_steps=1)
+        config = RunConfig(model_dir="ram://estimator-0/", save_checkpoints_steps=1)
         estimator = Estimator(config=config, model_fn=model_fn)
 
         estimator.train(input_fn=input_fn, steps=10)
@@ -115,5 +117,5 @@ class RamFilesystemTest(test_util.TensorFlowTestCase):
         estimator.train(input_fn=input_fn, steps=10)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
