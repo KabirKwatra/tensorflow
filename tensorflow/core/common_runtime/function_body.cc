@@ -26,39 +26,41 @@ FunctionBody::FunctionBody(const FunctionDef& f, DataTypeSlice arg_t,
       graph(g),
       arg_types(arg_t.begin(), arg_t.end()),
       ret_types(ret_t.begin(), ret_t.end()) {
-  // 1. Find regular Arg/Ret nodes.
-  this->arg_nodes.resize(arg_types.size());
-  this->ret_nodes.resize(ret_types.size());
-  for (Node* n : this->graph->op_nodes()) {
-    gtl::InlinedVector<Node*, 4>* node_vec;
-    if (n->type_string() == FunctionLibraryDefinition::kRetOp ||
-        n->type_string() == FunctionLibraryDefinition::kDeviceRetOp) {
-      node_vec = &this->ret_nodes;
-    } else if (n->type_string() == FunctionLibraryDefinition::kArgOp ||
-               n->type_string() == FunctionLibraryDefinition::kDeviceArgOp) {
-      node_vec = &this->arg_nodes;
-    } else {
-      continue;
+    // 1. Find regular Arg/Ret nodes.
+    this->arg_nodes.resize(arg_types.size());
+    this->ret_nodes.resize(ret_types.size());
+    for (Node* n : this->graph->op_nodes()) {
+        gtl::InlinedVector<Node*, 4>* node_vec;
+        if (n->type_string() == FunctionLibraryDefinition::kRetOp ||
+                n->type_string() == FunctionLibraryDefinition::kDeviceRetOp) {
+            node_vec = &this->ret_nodes;
+        } else if (n->type_string() == FunctionLibraryDefinition::kArgOp ||
+                   n->type_string() == FunctionLibraryDefinition::kDeviceArgOp) {
+            node_vec = &this->arg_nodes;
+        } else {
+            continue;
+        }
+        int index;
+        TF_CHECK_OK(GetNodeAttr(n->attrs(), "index", &index));
+        CHECK_LE(0, index);
+        CHECK_LT(index, node_vec->size());
+        (*node_vec)[index] = n;
     }
-    int index;
-    TF_CHECK_OK(GetNodeAttr(n->attrs(), "index", &index));
-    CHECK_LE(0, index);
-    CHECK_LT(index, node_vec->size());
-    (*node_vec)[index] = n;
-  }
-  // 2. Find ControlRet nodes that must be always executed.
-  std::unordered_set<StringPiece, StringPieceHasher> control_ret_node_names;
-  for (const auto& control_ret : fdef.control_ret()) {
-    control_ret_node_names.insert(control_ret.second);
-  }
-  this->control_ret_nodes.reserve(control_ret_node_names.size());
-  for (Node* n : this->graph->op_nodes()) {
-    if (control_ret_node_names.count(n->name()) > 0) {
-      this->control_ret_nodes.push_back(n);
+    // 2. Find ControlRet nodes that must be always executed.
+    std::unordered_set<StringPiece, StringPieceHasher> control_ret_node_names;
+    for (const auto& control_ret : fdef.control_ret()) {
+        control_ret_node_names.insert(control_ret.second);
     }
-  }
+    this->control_ret_nodes.reserve(control_ret_node_names.size());
+    for (Node* n : this->graph->op_nodes()) {
+        if (control_ret_node_names.count(n->name()) > 0) {
+            this->control_ret_nodes.push_back(n);
+        }
+    }
 }
 
-FunctionBody::~FunctionBody() { delete this->graph; }
+FunctionBody::~FunctionBody() {
+    delete this->graph;
+}
 
 }  // end namespace tensorflow

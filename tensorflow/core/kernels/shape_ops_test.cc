@@ -35,30 +35,30 @@ namespace tensorflow {
 namespace {
 
 static void BM_ExpandDims(int iters) {
-  testing::StopTiming();
-  Graph* g = new Graph(OpRegistry::Global());
+    testing::StopTiming();
+    Graph* g = new Graph(OpRegistry::Global());
 
-  Tensor input(DT_INT32, TensorShape({1, 1, 1, 1}));
-  input.flat<int32>()(0) = 10;
+    Tensor input(DT_INT32, TensorShape({1, 1, 1, 1}));
+    input.flat<int32>()(0) = 10;
 
-  Tensor axis(DT_INT32, TensorShape({}));
-  axis.flat<int32>()(0) = 2;
+    Tensor axis(DT_INT32, TensorShape({}));
+    axis.flat<int32>()(0) = 2;
 
-  Node* node;
-  TF_CHECK_OK(NodeBuilder(g->NewName("n"), "ExpandDims")
-                  .Input(test::graph::Constant(g, input))
-                  .Input(test::graph::Constant(g, axis))
-                  .Attr("T", DT_INT32)
-                  .Attr("Tdim", DT_INT32)
-                  .Finalize(g, &node));
-  FixupSourceAndSinkEdges(g);
+    Node* node;
+    TF_CHECK_OK(NodeBuilder(g->NewName("n"), "ExpandDims")
+                .Input(test::graph::Constant(g, input))
+                .Input(test::graph::Constant(g, axis))
+                .Attr("T", DT_INT32)
+                .Attr("Tdim", DT_INT32)
+                .Finalize(g, &node));
+    FixupSourceAndSinkEdges(g);
 
-  testing::StartTiming();
-  test::Benchmark("cpu", g, nullptr, nullptr, nullptr,
-                  "SINGLE_THREADED_EXECUTOR")
-      .Run(iters);
+    testing::StartTiming();
+    test::Benchmark("cpu", g, nullptr, nullptr, nullptr,
+                    "SINGLE_THREADED_EXECUTOR")
+    .Run(iters);
 
-  testing::UseRealTime();
+    testing::UseRealTime();
 }
 
 BENCHMARK(BM_ExpandDims);

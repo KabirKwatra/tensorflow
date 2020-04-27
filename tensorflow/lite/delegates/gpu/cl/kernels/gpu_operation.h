@@ -35,36 +35,36 @@ namespace gpu {
 namespace cl {
 
 struct CreationContext {
-  const CLDevice* device;
-  CLContext* context;
-  CLCommandQueue* queue;
-  ProgramCache* cache;
+    const CLDevice* device;
+    CLContext* context;
+    CLCommandQueue* queue;
+    ProgramCache* cache;
 };
 
 struct LinkingContext {
-  // variable(FLT4) name to apply subsequent transformations
-  std::string var_name;
-  // x coordinate name (as it appears in kernel) for variable
-  std::string x_coord;
-  // y coordinate name (as it appears in kernel) for variable
-  std::string y_coord;
-  // s coordinate name (as it appears in kernel) for variable
-  std::string s_coord;
+    // variable(FLT4) name to apply subsequent transformations
+    std::string var_name;
+    // x coordinate name (as it appears in kernel) for variable
+    std::string x_coord;
+    // y coordinate name (as it appears in kernel) for variable
+    std::string y_coord;
+    // s coordinate name (as it appears in kernel) for variable
+    std::string s_coord;
 };
 
 struct OperationDef {
-  CalculationsPrecision precision;
-  std::vector<TensorDescriptor> src_tensors;
-  std::vector<TensorDescriptor> dst_tensors;
+    CalculationsPrecision precision;
+    std::vector<TensorDescriptor> src_tensors;
+    std::vector<TensorDescriptor> dst_tensors;
 
-  // returns FLOAT32 for F32 precision and FLOAT16 for F16 precision
-  DataType GetDataType() const;
-  // Primary means the first src tensor, because first tensor usually defines
-  // the structure of kernel, all other resources(biases) types and etc.
-  DataType GetPrimaryDataType() const;
-  TensorStorageType GetPrimaryStorageType() const;
-  bool HasAllTensorsOfType(TensorStorageType storage_type) const;
-  bool IsBatchSupported() const;
+    // returns FLOAT32 for F32 precision and FLOAT16 for F16 precision
+    DataType GetDataType() const;
+    // Primary means the first src tensor, because first tensor usually defines
+    // the structure of kernel, all other resources(biases) types and etc.
+    DataType GetPrimaryDataType() const;
+    TensorStorageType GetPrimaryStorageType() const;
+    bool HasAllTensorsOfType(TensorStorageType storage_type) const;
+    bool IsBatchSupported() const;
 };
 
 class ElementwiseOperation;
@@ -81,40 +81,42 @@ class ElementwiseOperation;
 // GPUOperation.Compile(). Don't call ElementwiseOperation.Compile() if it
 // attached, it useless(and may be error)
 class GPUOperation {
- public:
-  GPUOperation() = default;
-  explicit GPUOperation(const OperationDef& definition);
-  virtual ~GPUOperation() = default;
-  // Move only
-  GPUOperation(GPUOperation&& operation);
-  GPUOperation& operator=(GPUOperation&& operation);
-  GPUOperation(const GPUOperation&) = delete;
-  GPUOperation& operator=(const GPUOperation&) = delete;
+public:
+    GPUOperation() = default;
+    explicit GPUOperation(const OperationDef& definition);
+    virtual ~GPUOperation() = default;
+    // Move only
+    GPUOperation(GPUOperation&& operation);
+    GPUOperation& operator=(GPUOperation&& operation);
+    GPUOperation(const GPUOperation&) = delete;
+    GPUOperation& operator=(const GPUOperation&) = delete;
 
-  void AddOperation(ElementwiseOperation* operation);
+    void AddOperation(ElementwiseOperation* operation);
 
-  void SetSrc(Tensor* ptr, int index = 0);
-  void SetDst(Tensor* ptr, int index = 0);
+    void SetSrc(Tensor* ptr, int index = 0);
+    void SetDst(Tensor* ptr, int index = 0);
 
-  virtual absl::Status AddToQueue(CLCommandQueue* queue) {
-    return absl::OkStatus();
-  }
-  virtual absl::Status Tune(const TuningParameters& params) {
-    return absl::OkStatus();
-  }
+    virtual absl::Status AddToQueue(CLCommandQueue* queue) {
+        return absl::OkStatus();
+    }
+    virtual absl::Status Tune(const TuningParameters& params) {
+        return absl::OkStatus();
+    }
 
-  virtual absl::Status Compile(const CreationContext& creation_context) {
-    return absl::OkStatus();
-  }
+    virtual absl::Status Compile(const CreationContext& creation_context) {
+        return absl::OkStatus();
+    }
 
-  const OperationDef& GetDefinition() const { return definition_; }
+    const OperationDef& GetDefinition() const {
+        return definition_;
+    }
 
- protected:
-  // Defines operation calculation precision and format of src/dst tensors.
-  OperationDef definition_;
-  std::vector<Tensor*> src_;
-  std::vector<Tensor*> dst_;
-  std::vector<ElementwiseOperation*> linked_operations_;
+protected:
+    // Defines operation calculation precision and format of src/dst tensors.
+    OperationDef definition_;
+    std::vector<Tensor*> src_;
+    std::vector<Tensor*> dst_;
+    std::vector<ElementwiseOperation*> linked_operations_;
 };
 
 // ElementwiseOperation can be fused(linked) to another operation.
@@ -125,47 +127,51 @@ class GPUOperation {
 // and should be unique in this sequence
 // link_index_ = 0 is equivalent that operation not linked.
 class ElementwiseOperation : public GPUOperation {
- public:
-  ElementwiseOperation() {}
-  explicit ElementwiseOperation(const OperationDef& definition)
-      : GPUOperation(definition) {}
+public:
+    ElementwiseOperation() {}
+    explicit ElementwiseOperation(const OperationDef& definition)
+        : GPUOperation(definition) {}
 
-  virtual ~ElementwiseOperation() {}
-  absl::Status AddToQueue(CLCommandQueue* queue) override;
-  absl::Status Tune(const TuningParameters& params) override;
+    virtual ~ElementwiseOperation() {}
+    absl::Status AddToQueue(CLCommandQueue* queue) override;
+    absl::Status Tune(const TuningParameters& params) override;
 
-  absl::Status Compile(const CreationContext& creation_context) override;
+    absl::Status Compile(const CreationContext& creation_context) override;
 
-  // Move only
-  ElementwiseOperation(ElementwiseOperation&& operation);
-  ElementwiseOperation& operator=(ElementwiseOperation&& operation);
-  ElementwiseOperation(const ElementwiseOperation&) = delete;
-  ElementwiseOperation& operator=(const ElementwiseOperation&) = delete;
+    // Move only
+    ElementwiseOperation(ElementwiseOperation&& operation);
+    ElementwiseOperation& operator=(ElementwiseOperation&& operation);
+    ElementwiseOperation(const ElementwiseOperation&) = delete;
+    ElementwiseOperation& operator=(const ElementwiseOperation&) = delete;
 
-  // We need this function for resolving naming conflicts.
-  // Unfortunately we don't know upfront(at creation time) will be the operation
-  // linked or not. Operation should be created and SetLinkIndex(0) must be
-  // called to initialize specific for this op linked info, and this is mean
-  // that operation is not linked. But if we decided to link it, we need update
-  // operation linked info and use names for kernel arguments according to this
-  // index(this is responsibility of particular implementation of
-  // ElementwiseOperation to generate right names).
-  virtual void SetLinkIndex(int index) {}
+    // We need this function for resolving naming conflicts.
+    // Unfortunately we don't know upfront(at creation time) will be the operation
+    // linked or not. Operation should be created and SetLinkIndex(0) must be
+    // called to initialize specific for this op linked info, and this is mean
+    // that operation is not linked. But if we decided to link it, we need update
+    // operation linked info and use names for kernel arguments according to this
+    // index(this is responsibility of particular implementation of
+    // ElementwiseOperation to generate right names).
+    virtual void SetLinkIndex(int index) {}
 
-  virtual std::string GetCoreCode(const LinkingContext& context) const = 0;
-  virtual std::string GetArgsDeclaration() const { return ""; }
-  virtual absl::Status BindArguments(CLKernel* kernel) {
-    return absl::OkStatus();
-  }
+    virtual std::string GetCoreCode(const LinkingContext& context) const = 0;
+    virtual std::string GetArgsDeclaration() const {
+        return "";
+    }
+    virtual absl::Status BindArguments(CLKernel* kernel) {
+        return absl::OkStatus();
+    }
 
-  // ovveride to return false if for any reason operation can not be linked.
-  virtual bool IsLinkable() const { return true; }
+    // ovveride to return false if for any reason operation can not be linked.
+    virtual bool IsLinkable() const {
+        return true;
+    }
 
- protected:
-  absl::Status BindArguments();
-  int3 GetGridSize() const;
-  CLKernel kernel_;
-  int3 work_group_size_ = int3(8, 4, 1);
+protected:
+    absl::Status BindArguments();
+    int3 GetGridSize() const;
+    CLKernel kernel_;
+    int3 work_group_size_ = int3(8, 4, 1);
 };
 
 // Generates arguments declarations string for elementwise

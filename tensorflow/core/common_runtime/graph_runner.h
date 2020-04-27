@@ -40,30 +40,30 @@ class Graph;
 // use-cases, it executes all computation on the given device (CPU by default)
 // and is not meant to be particularly lightweight, fast, or efficient.
 class GraphRunner {
- public:
-  // REQUIRES: `env` is not nullptr.
-  GraphRunner(Env* env);
-  // REQUIRES: 'device' is not nullptr. Not owned.
-  GraphRunner(Device* device);
-  ~GraphRunner();
+public:
+    // REQUIRES: `env` is not nullptr.
+    GraphRunner(Env* env);
+    // REQUIRES: 'device' is not nullptr. Not owned.
+    GraphRunner(Device* device);
+    ~GraphRunner();
 
-  // Function semantics for `inputs`, `output_names` and `outputs`
-  // matches those from Session::Run().
-  //
-  // NOTE: The output tensors share lifetime with the GraphRunner, and could
-  // be destroyed once the GraphRunner is destroyed.
-  //
-  // REQUIRES: `graph`, `env`, and `outputs` are not nullptr.
-  // `function_library` may be nullptr.
-  typedef std::vector<std::pair<string, Tensor>> NamedTensorList;
-  Status Run(Graph* graph, FunctionLibraryRuntime* function_library,
-             const NamedTensorList& inputs,
-             const std::vector<string>& output_names,
-             std::vector<Tensor>* outputs);
+    // Function semantics for `inputs`, `output_names` and `outputs`
+    // matches those from Session::Run().
+    //
+    // NOTE: The output tensors share lifetime with the GraphRunner, and could
+    // be destroyed once the GraphRunner is destroyed.
+    //
+    // REQUIRES: `graph`, `env`, and `outputs` are not nullptr.
+    // `function_library` may be nullptr.
+    typedef std::vector<std::pair<string, Tensor>> NamedTensorList;
+    Status Run(Graph* graph, FunctionLibraryRuntime* function_library,
+               const NamedTensorList& inputs,
+               const std::vector<string>& output_names,
+               std::vector<Tensor>* outputs);
 
- private:
-  std::unique_ptr<Device> device_deleter_;
-  Device* const device_;
+private:
+    std::unique_ptr<Device> device_deleter_;
+    Device* const device_;
 };
 
 }  // namespace tensorflow

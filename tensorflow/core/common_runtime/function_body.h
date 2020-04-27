@@ -29,22 +29,22 @@ class Node;
 // instantiated function that is represented as a Graph with arg/ret
 // nodes annotated.
 struct FunctionBody {
-  FunctionDef fdef;
-  Graph* graph = nullptr;  // owned.
-  DataTypeVector arg_types;
-  DataTypeVector ret_types;
-  // arg_nodes[i] contains the i'th function input. In other words,
-  // GetNodeAttr(arg_nodes[i]->attrs(), "index") == i.
-  gtl::InlinedVector<Node*, 4> arg_nodes;
-  // ret_nodes[i] contains the i'th function output. In other words,
-  // GetNodeAttr(ret_nodes[i]->attrs(), "index") == i.
-  gtl::InlinedVector<Node*, 4> ret_nodes;
-  gtl::InlinedVector<Node*, 4> control_ret_nodes;
+    FunctionDef fdef;
+    Graph* graph = nullptr;  // owned.
+    DataTypeVector arg_types;
+    DataTypeVector ret_types;
+    // arg_nodes[i] contains the i'th function input. In other words,
+    // GetNodeAttr(arg_nodes[i]->attrs(), "index") == i.
+    gtl::InlinedVector<Node*, 4> arg_nodes;
+    // ret_nodes[i] contains the i'th function output. In other words,
+    // GetNodeAttr(ret_nodes[i]->attrs(), "index") == i.
+    gtl::InlinedVector<Node*, 4> ret_nodes;
+    gtl::InlinedVector<Node*, 4> control_ret_nodes;
 
-  FunctionBody() {}
-  FunctionBody(const FunctionDef& f, DataTypeSlice arg_types,
-               DataTypeSlice ret_types, Graph* g);
-  ~FunctionBody();
+    FunctionBody() {}
+    FunctionBody(const FunctionDef& f, DataTypeSlice arg_types,
+                 DataTypeSlice ret_types, Graph* g);
+    ~FunctionBody();
 };
 
 }  // end namespace tensorflow
