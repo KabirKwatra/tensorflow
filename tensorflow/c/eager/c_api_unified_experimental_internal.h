@@ -44,10 +44,10 @@ namespace internal {
 // utility.
 template <typename T, typename S>
 T* dyncast(S source) {
-    if (source->getKind() != T::kKind) {
-        return nullptr;
-    }
-    return tensorflow::down_cast<T*>(source);
+  if (source->getKind() != T::kKind) {
+    return nullptr;
+  }
+  return tensorflow::down_cast<T*>(source);
 }
 
 // Represents either an EagerTensor or a GraphTensor.
@@ -56,46 +56,42 @@ T* dyncast(S source) {
 // type of AbstractTensor in their context (do not pass an EagerTensor to a
 // GraphContext and vice-versa).
 class AbstractTensor {
-protected:
-    enum AbstractTensorKind { kGraphTensor, kEagerTensor, kMLIRTensor };
-    explicit AbstractTensor(AbstractTensorKind kind) : kind_(kind) {}
+ protected:
+  enum AbstractTensorKind { kGraphTensor, kEagerTensor, kMLIRTensor };
+  explicit AbstractTensor(AbstractTensorKind kind) : kind_(kind) {}
 
-public:
-    // Returns which subclass is this instance of.
-    AbstractTensorKind getKind() const {
-        return kind_;
-    }
-    virtual ~AbstractTensor() = default;
+ public:
+  // Returns which subclass is this instance of.
+  AbstractTensorKind getKind() const { return kind_; }
+  virtual ~AbstractTensor() = default;
 
-private:
-    const AbstractTensorKind kind_;
+ private:
+  const AbstractTensorKind kind_;
 };
 
 // Represents the results of the execution of an operation.
 struct OutputList {
-    std::vector<AbstractTensor*> outputs;
-    int expected_num_outputs = -1;
+  std::vector<AbstractTensor*> outputs;
+  int expected_num_outputs = -1;
 };
 
 // Holds the result of tracing a function.
 class AbstractFunction {
-protected:
-    enum AbstractFunctionKind { kGraphFunc };
-    explicit AbstractFunction(AbstractFunctionKind kind) : kind_(kind) {}
+ protected:
+  enum AbstractFunctionKind { kGraphFunc };
+  explicit AbstractFunction(AbstractFunctionKind kind) : kind_(kind) {}
 
-public:
-    // Returns which subclass is this instance of.
-    AbstractFunctionKind getKind() const {
-        return kind_;
-    }
-    virtual ~AbstractFunction() = default;
+ public:
+  // Returns which subclass is this instance of.
+  AbstractFunctionKind getKind() const { return kind_; }
+  virtual ~AbstractFunction() = default;
 
-    // Temporary API till we figure the right abstraction for AbstractFunction.
-    // At the moment both Eager and Graph needs access to a "TF_Function" object.
-    virtual TF_Function* GetTfFunction(TF_Status* s) = 0;
+  // Temporary API till we figure the right abstraction for AbstractFunction.
+  // At the moment both Eager and Graph needs access to a "TF_Function" object.
+  virtual TF_Function* GetTfFunction(TF_Status* s) = 0;
 
-private:
-    const AbstractFunctionKind kind_;
+ private:
+  const AbstractFunctionKind kind_;
 };
 
 // An abstract operation describes an operation by its type, name, and
@@ -103,65 +99,61 @@ private:
 // It is allowed to reusing the same abstract operation for multiple execution
 // on a given context, with the same or different input tensors.
 class AbstractOp {
-protected:
-    enum AbstractOpKind { kGraphOp, kEagerOp };
-    explicit AbstractOp(AbstractOpKind kind) : kind_(kind) {}
+ protected:
+  enum AbstractOpKind { kGraphOp, kEagerOp };
+  explicit AbstractOp(AbstractOpKind kind) : kind_(kind) {}
 
-public:
-    // Returns which subclass is this instance of.
-    AbstractOpKind getKind() const {
-        return kind_;
-    }
-    virtual ~AbstractOp() = default;
+ public:
+  // Returns which subclass is this instance of.
+  AbstractOpKind getKind() const { return kind_; }
+  virtual ~AbstractOp() = default;
 
-    // Sets the type of the operation (for example `AddV2`).
-    virtual void SetOpType(const char* op_type, TF_Status* s) = 0;
+  // Sets the type of the operation (for example `AddV2`).
+  virtual void SetOpType(const char* op_type, TF_Status* s) = 0;
 
-    // Sets the name of the operation: this is an optional identifier that is
-    // not intended to carry semantics and preserved/propagated without
-    // guarantees.
-    virtual void SetOpName(const char* op_name, TF_Status* s) = 0;
+  // Sets the name of the operation: this is an optional identifier that is
+  // not intended to carry semantics and preserved/propagated without
+  // guarantees.
+  virtual void SetOpName(const char* op_name, TF_Status* s) = 0;
 
-    // Add a `TypeAttribute` on the operation.
-    virtual void SetAttrType(const char* attr_name, TF_DataType value,
-                             TF_Status* s) = 0;
+  // Add a `TypeAttribute` on the operation.
+  virtual void SetAttrType(const char* attr_name, TF_DataType value,
+                           TF_Status* s) = 0;
 
-private:
-    const AbstractOpKind kind_;
+ private:
+  const AbstractOpKind kind_;
 };
 
 // This holds the context for the execution: dispatching operations either to an
 // eager implementation or to a graph implementation.
 struct ExecutionContext {
-protected:
-    enum ExecutionContextKind { kGraphContext, kEagerContext };
-    explicit ExecutionContext(ExecutionContextKind kind) : k(kind) {}
+ protected:
+  enum ExecutionContextKind { kGraphContext, kEagerContext };
+  explicit ExecutionContext(ExecutionContextKind kind) : k(kind) {}
 
-public:
-    // Returns which subclass is this instance of.
-    ExecutionContextKind getKind() const {
-        return k;
-    }
-    virtual ~ExecutionContext() = default;
+ public:
+  // Returns which subclass is this instance of.
+  ExecutionContextKind getKind() const { return k; }
+  virtual ~ExecutionContext() = default;
 
-    // Executes the operation on the provided inputs and populate the OutputList
-    // with the results. The input tensors must match the current context.
-    // The effect of "executing" an operation depends on the context: in an Eager
-    // context it will dispatch it to the runtime for execution, while in a
-    // tracing context it will add the operation to the current function.
-    virtual void ExecuteOperation(AbstractOp* op, int num_inputs,
-                                  AbstractTensor* const* inputs, OutputList* o,
-                                  TF_Status* s) = 0;
+  // Executes the operation on the provided inputs and populate the OutputList
+  // with the results. The input tensors must match the current context.
+  // The effect of "executing" an operation depends on the context: in an Eager
+  // context it will dispatch it to the runtime for execution, while in a
+  // tracing context it will add the operation to the current function.
+  virtual void ExecuteOperation(AbstractOp* op, int num_inputs,
+                                AbstractTensor* const* inputs, OutputList* o,
+                                TF_Status* s) = 0;
 
-    // Creates an empty AbstractOperation suitable to use with this context.
-    virtual AbstractOp* CreateOperation() = 0;
+  // Creates an empty AbstractOperation suitable to use with this context.
+  virtual AbstractOp* CreateOperation() = 0;
 
-    // Registers a functions with this context, after this the function is
-    // available to be called/referenced by its name in this context.
-    virtual void RegisterFunction(AbstractFunction* func, TF_Status* s) = 0;
+  // Registers a functions with this context, after this the function is
+  // available to be called/referenced by its name in this context.
+  virtual void RegisterFunction(AbstractFunction* func, TF_Status* s) = 0;
 
-private:
-    const ExecutionContextKind k;
+ private:
+  const ExecutionContextKind k;
 };
 
 // Create utilities to wrap/unwrap: this convert from the C opaque types to the
