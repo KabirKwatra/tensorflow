@@ -13,41 +13,24 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for `tf.data.Iterator`."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import warnings
 
-from absl.testing import parameterized
 import numpy as np
-
-from tensorflow.core.protobuf import cluster_pb2
-from tensorflow.core.protobuf import config_pb2
+from absl.testing import parameterized
+from tensorflow.core.protobuf import cluster_pb2, config_pb2
 from tensorflow.python.client import session
 from tensorflow.python.data.kernel_tests import test_base
-from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.data.ops import iterator_ops
+from tensorflow.python.data.ops import dataset_ops, iterator_ops
 from tensorflow.python.data.util import structure
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.framework import combinations
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import function
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import data_flow_ops
-from tensorflow.python.ops import functional_ops
-from tensorflow.python.ops import gradients_impl
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import parsing_ops
-from tensorflow.python.ops import script_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.eager import context, def_function
+from tensorflow.python.framework import (combinations, constant_op, dtypes,
+                                         errors, function, ops, sparse_tensor,
+                                         tensor_spec, test_util)
+from tensorflow.python.ops import (array_ops, data_flow_ops, functional_ops,
+                                   gradients_impl, math_ops, parsing_ops,
+                                   script_ops, variables)
 from tensorflow.python.platform import test
 from tensorflow.python.training import server_lib
 from tensorflow.python.util import compat

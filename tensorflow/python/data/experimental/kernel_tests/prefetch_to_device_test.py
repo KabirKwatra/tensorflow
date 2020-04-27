@@ -13,23 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for `tf.data.experimental.prefetch_to_device()`."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from absl.testing import parameterized
-
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python.data.experimental.ops import prefetching_ops
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.data.util import structure
-from tensorflow.python.framework import combinations
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import test_util
+from tensorflow.python.framework import (combinations, dtypes, errors, ops,
+                                         sparse_tensor, test_util)
 from tensorflow.python.platform import test
 
 
