@@ -54,7 +54,7 @@ TF_ExecutionContext* TF_NewGraphExecutionContext(TF_Status* s);
 
 // Creates a context for eager execution of operations.
 TF_ExecutionContext* TF_NewEagerExecutionContext(TFE_ContextOptions*,
-                                                 TF_Status* s);
+        TF_Status* s);
 
 void TF_DeleteExecutionContext(TF_ExecutionContext*);
 
@@ -113,7 +113,7 @@ void TF_DeleteAbstractFunction(TF_AbstractFunction*);
 // Register the function with the given context. This is particularly useful for
 // making a function available to an eager context.
 void TF_ExecutionContextRegisterFunction(TF_ExecutionContext*,
-                                         TF_AbstractFunction*, TF_Status*);
+        TF_AbstractFunction*, TF_Status*);
 
 // -----------------------------------------------------------------------------
 // APIs specific to Eager modes
@@ -122,9 +122,9 @@ void TF_ExecutionContextRegisterFunction(TF_ExecutionContext*,
 // Temporary APIs till we figure out how to create scalar valued Eager
 // tensors and how to get value out of eager abstract tensors.
 TF_AbstractTensor* TF_CreateAbstractTensorFromEagerTensor(TFE_TensorHandle* t,
-                                                          TF_Status* s);
+        TF_Status* s);
 TFE_TensorHandle* TF_AbstractTensorGetEagerTensor(TF_AbstractTensor* at,
-                                                  TF_Status* s);
+        TF_Status* s);
 TFE_Context* TF_ExecutionContextGetTFEContext(TF_ExecutionContext*);
 
 #ifdef __cplusplus
