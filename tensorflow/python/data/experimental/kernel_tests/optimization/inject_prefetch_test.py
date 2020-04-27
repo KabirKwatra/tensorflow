@@ -36,9 +36,9 @@ class InjectPrefetchTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testParallelMap(self):
         dataset = dataset_ops.Dataset.range(100)
         dataset = dataset.apply(
-            testing.assert_next(["ParallelMapV2", "Prefetch", "FiniteTake"])
-        )
-        dataset = dataset.map(lambda x: x + 1, num_parallel_calls=dataset_ops.AUTOTUNE)
+            testing.assert_next(["ParallelMapV2", "Prefetch", "FiniteTake"]))
+        dataset = dataset.map(lambda x: x + 1,
+                              num_parallel_calls=dataset_ops.AUTOTUNE)
         dataset = dataset.take(50)
         dataset = self._enable_autotune_buffers(dataset)
         self.assertDatasetProduces(dataset, range(1, 51))
@@ -47,22 +47,21 @@ class InjectPrefetchTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testMapAndBatch(self):
         dataset = dataset_ops.Dataset.range(100)
         dataset = dataset.apply(
-            testing.assert_next(["MapAndBatch", "Prefetch", "FiniteTake"])
-        )
-        dataset = dataset.map(lambda x: x + 1, num_parallel_calls=dataset_ops.AUTOTUNE)
+            testing.assert_next(["MapAndBatch", "Prefetch", "FiniteTake"]))
+        dataset = dataset.map(lambda x: x + 1,
+                              num_parallel_calls=dataset_ops.AUTOTUNE)
         dataset = dataset.batch(10)
         dataset = dataset.take(5)
         dataset = self._enable_autotune_buffers(dataset)
         self.assertDatasetProduces(
-            dataset, [list(range(i + 1, i + 11)) for i in range(0, 50, 10)]
-        )
+            dataset, [list(range(i + 1, i + 11)) for i in range(0, 50, 10)])
 
     @combinations.generate(test_base.default_test_combinations())
     def testParallelInterleave(self):
         dataset = dataset_ops.Dataset.range(100)
         dataset = dataset.apply(
-            testing.assert_next(["ParallelInterleaveV4", "Prefetch", "FiniteTake"])
-        )
+            testing.assert_next(
+                ["ParallelInterleaveV4", "Prefetch", "FiniteTake"]))
         dataset = dataset.interleave(
             lambda x: dataset_ops.Dataset.from_tensors(x + 1),
             num_parallel_calls=dataset_ops.AUTOTUNE,
@@ -75,24 +74,23 @@ class InjectPrefetchTest(test_base.DatasetTestBase, parameterized.TestCase):
     def testChainedParallelDatasets(self):
         dataset = dataset_ops.Dataset.range(100)
         dataset = dataset.apply(
-            testing.assert_next(
-                [
-                    "ParallelMapV2",
-                    "Prefetch",
-                    "ParallelInterleaveV4",
-                    "Prefetch",
-                    "MapAndBatch",
-                    "Prefetch",
-                    "FiniteTake",
-                ]
-            )
-        )
-        dataset = dataset.map(lambda x: x + 1, num_parallel_calls=dataset_ops.AUTOTUNE)
+            testing.assert_next([
+                "ParallelMapV2",
+                "Prefetch",
+                "ParallelInterleaveV4",
+                "Prefetch",
+                "MapAndBatch",
+                "Prefetch",
+                "FiniteTake",
+            ]))
+        dataset = dataset.map(lambda x: x + 1,
+                              num_parallel_calls=dataset_ops.AUTOTUNE)
         dataset = dataset.interleave(
             lambda x: dataset_ops.Dataset.from_tensors(x + 1),
             num_parallel_calls=dataset_ops.AUTOTUNE,
         )
-        dataset = dataset.map(lambda x: x + 1, num_parallel_calls=dataset_ops.AUTOTUNE)
+        dataset = dataset.map(lambda x: x + 1,
+                              num_parallel_calls=dataset_ops.AUTOTUNE)
         dataset = dataset.batch(1)
         dataset = dataset.take(50)
         dataset = self._enable_autotune_buffers(dataset)

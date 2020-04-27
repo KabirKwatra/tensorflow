@@ -31,12 +31,14 @@ from tensorflow.python.util.tf_export import tf_export
 class _ParseExampleDataset(dataset_ops.UnaryDataset):
     """A `Dataset` that parses `example` dataset into a `dict` dataset."""
 
-    def __init__(self, input_dataset, features, num_parallel_calls, deterministic):
+    def __init__(self, input_dataset, features, num_parallel_calls,
+                 deterministic):
         self._input_dataset = input_dataset
         if not structure.are_compatible(
-            input_dataset.element_spec, tensor_spec.TensorSpec([None], dtypes.string)
-        ):
-            raise TypeError("Input dataset should be a dataset of vectors of strings")
+                input_dataset.element_spec,
+                tensor_spec.TensorSpec([None], dtypes.string)):
+            raise TypeError(
+                "Input dataset should be a dataset of vectors of strings")
         self._num_parallel_calls = num_parallel_calls
         if deterministic is None:
             self._deterministic = "default"
@@ -67,28 +69,27 @@ class _ParseExampleDataset(dataset_ops.UnaryDataset):
         self._dense_defaults = params.dense_defaults_vec
         self._dense_shapes = params.dense_shapes_as_proto
         self._dense_types = params.dense_types
-        input_dataset_shape = dataset_ops.get_legacy_output_shapes(self._input_dataset)
+        input_dataset_shape = dataset_ops.get_legacy_output_shapes(
+            self._input_dataset)
 
         self._element_spec = {}
 
         for (key, value_type) in zip(params.sparse_keys, params.sparse_types):
             self._element_spec[key] = sparse_tensor.SparseTensorSpec(
-                input_dataset_shape.concatenate([None]), value_type
-            )
+                input_dataset_shape.concatenate([None]), value_type)
 
-        for (key, value_type, dense_shape) in zip(
-            params.dense_keys, params.dense_types, params.dense_shapes
-        ):
+        for (key, value_type, dense_shape) in zip(params.dense_keys,
+                                                  params.dense_types,
+                                                  params.dense_shapes):
             self._element_spec[key] = tensor_spec.TensorSpec(
-                input_dataset_shape.concatenate(dense_shape), value_type
-            )
+                input_dataset_shape.concatenate(dense_shape), value_type)
 
-        for (key, value_type, splits_type) in zip(
-            params.ragged_keys, params.ragged_value_types, params.ragged_split_types
-        ):
+        for (key, value_type, splits_type) in zip(params.ragged_keys,
+                                                  params.ragged_value_types,
+                                                  params.ragged_split_types):
             self._element_spec[key] = ragged_tensor.RaggedTensorSpec(
-                input_dataset_shape.concatenate([None]), value_type, 1, splits_type
-            )
+                input_dataset_shape.concatenate([None]), value_type, 1,
+                splits_type)
 
         variant_tensor = gen_experimental_dataset_ops.parse_example_dataset_v2(
             self._input_dataset._variant_tensor,  # pylint: disable=protected-access
@@ -102,9 +103,9 @@ class _ParseExampleDataset(dataset_ops.UnaryDataset):
             ragged_keys=self._ragged_keys,
             ragged_value_types=self._ragged_value_types,
             ragged_split_types=self._ragged_split_types,
-            **self._flat_structure
-        )
-        super(_ParseExampleDataset, self).__init__(input_dataset, variant_tensor)
+            **self._flat_structure)
+        super(_ParseExampleDataset, self).__init__(input_dataset,
+                                                   variant_tensor)
 
     @property
     def element_spec(self):
@@ -153,20 +154,17 @@ def parse_example_dataset(features, num_parallel_calls=1, deterministic=None):
 
     def _apply_fn(dataset):
         """Function from `Dataset` to `Dataset` that applies the transformation."""
-        out_dataset = _ParseExampleDataset(
-            dataset, features, num_parallel_calls, deterministic
-        )
+        out_dataset = _ParseExampleDataset(dataset, features,
+                                           num_parallel_calls, deterministic)
         if any(
-            isinstance(feature, parsing_ops.SparseFeature)
-            or (isinstance(feature, parsing_ops.RaggedFeature) and feature.partitions)
-            for feature in features.values()
-        ):
+                isinstance(feature, parsing_ops.SparseFeature) or (isinstance(
+                    feature, parsing_ops.RaggedFeature) and feature.partitions)
+                for feature in features.values()):
             # pylint: disable=protected-access
             # pylint: disable=g-long-lambda
             out_dataset = out_dataset.map(
-                lambda x: parsing_ops._construct_tensors_for_composite_features(
-                    features, x
-                ),
+                lambda x: parsing_ops.
+                _construct_tensors_for_composite_features(features, x),
                 num_parallel_calls=num_parallel_calls,
             )
         return out_dataset
