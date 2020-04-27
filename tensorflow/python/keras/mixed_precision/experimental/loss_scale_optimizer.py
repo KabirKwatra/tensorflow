@@ -13,18 +13,25 @@
 # limitations under the License.
 # ==============================================================================
 """Contains the loss scaling optimizer class."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-from tensorflow.python.distribute import (collective_all_reduce_strategy,
-                                          distribution_strategy_context,
-                                          mirrored_strategy,
-                                          one_device_strategy, tpu_strategy)
-from tensorflow.python.framework import dtypes, ops, smart_cond
-from tensorflow.python.keras import backend, optimizers
+from tensorflow.python.distribute import collective_all_reduce_strategy
+from tensorflow.python.distribute import distribution_strategy_context
+from tensorflow.python.distribute import mirrored_strategy
+from tensorflow.python.distribute import one_device_strategy
+from tensorflow.python.distribute import tpu_strategy
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import smart_cond
+from tensorflow.python.keras import backend
+from tensorflow.python.keras import optimizers
 from tensorflow.python.keras.mixed_precision.experimental import \
     loss_scale as keras_loss_scale_module
 from tensorflow.python.keras.optimizer_v2 import optimizer_v2
-from tensorflow.python.ops import control_flow_ops, math_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import math_ops
 from tensorflow.python.training.experimental import \
     loss_scale as loss_scale_module
 from tensorflow.python.training.experimental import mixed_precision
