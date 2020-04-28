@@ -55,19 +55,19 @@ if [[ $1 == "PI_ONE" ]]; then
   # TODO(petewarden) - It would be nicer to move this into the main Bazel build
   # process if we can maintain a build file for this.
   TOOLCHAIN_INSTALL_PATH=/tmp/toolchain_install/
-  sudo rm -rf ${TOOLCHAIN_INSTALL_PATH}
-  mkdir ${TOOLCHAIN_INSTALL_PATH}
-  cd ${TOOLCHAIN_INSTALL_PATH}
+  sudo rm -rf "$TOOLCHAIN_INSTALL_PATH"
+  mkdir "$TOOLCHAIN_INSTALL_PATH"
+  cd "$TOOLCHAIN_INSTALL_PATH"
   curl -L https://github.com/rvagg/rpi-newer-crosstools/archive/eb68350c5c8ec1663b7fe52c742ac4271e3217c5.tar.gz -o toolchain.tar.gz
   tar xzf toolchain.tar.gz
   mv rpi-newer-crosstools-eb68350c5c8ec1663b7fe52c742ac4271e3217c5 tools
 
-  CROSSTOOL_CC=${TOOLCHAIN_INSTALL_PATH}/tools/x64-gcc-6.5.0/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-gcc
+  CROSSTOOL_CC=$TOOLCHAIN_INSTALL_PATH/tools/x64-gcc-6.5.0/arm-rpi-linux-gnueabihf/bin/arm-rpi-linux-gnueabihf-gcc
 
   OPENBLAS_SRC_PATH=/tmp/openblas_src/
-  sudo rm -rf ${OPENBLAS_SRC_PATH}
-  git clone https://github.com/xianyi/OpenBLAS ${OPENBLAS_SRC_PATH}
-  cd ${OPENBLAS_SRC_PATH}
+  sudo rm -rf "$OPENBLAS_SRC_PATH"
+  git clone https://github.com/xianyi/OpenBLAS "$OPENBLAS_SRC_PATH"
+  cd "$OPENBLAS_SRC_PATH"
   # The commit after this introduced Fortran compile issues. In theory they should
   # be solvable using NOFORTRAN=1 on the make command, but my initial tries didn't
   # work, so pinning to the last know good version.
@@ -75,15 +75,15 @@ if [[ $1 == "PI_ONE" ]]; then
   # If this path is changed, you'll also need to update
   # cxx_builtin_include_directory in third_party/toolchains/cpus/arm/CROSSTOOL.tpl
   OPENBLAS_INSTALL_PATH=/tmp/openblas_install/
-  make CC=${CROSSTOOL_CC} FC=${CROSSTOOL_CC} HOSTCC=gcc TARGET=ARMV6
-  make PREFIX=${OPENBLAS_INSTALL_PATH} install
+  make CC="$CROSSTOOL_CC" FC="$CROSSTOOL_CC" HOSTCC=gcc TARGET=ARMV6
+  make PREFIX="$OPENBLAS_INSTALL_PATH" install
 
   PI_COPTS="--copt=-march=armv6 --copt=-mfpu=vfp
   --copt=-DUSE_GEMM_FOR_CONV --copt=-DUSE_OPENBLAS
-  --copt=-isystem --copt=${OPENBLAS_INSTALL_PATH}/include/
+  --copt=-isystem --copt=$OPENBLAS_INSTALL_PATH/include/
   --copt=-std=gnu11 --copt=-DS_IREAD=S_IRUSR --copt=-DS_IWRITE=S_IWUSR
   --copt=-fpermissive
-  --linkopt=-L${OPENBLAS_INSTALL_PATH}/lib/
+  --linkopt=-L$OPENBLAS_INSTALL_PATH/lib/
   --linkopt=-l:libopenblas.a"
   echo "Building for the Pi One/Zero, with no NEON support"
   WHEEL_ARCH=linux_armv6l
@@ -103,8 +103,8 @@ fi
 # include path for Python 3.x builds to work.
 export CROSSTOOL_PYTHON_INCLUDE_PATH
 
-cd ${WORKSPACE_PATH}
-bazel build -c opt ${PI_COPTS} \
+cd "$WORKSPACE_PATH"
+bazel build -c opt "$PI_COPTS" \
   --config=monolithic \
   --copt=-funsafe-math-optimizations --copt=-ftree-vectorize \
   --copt=-fomit-frame-pointer --cpu=armeabi \
@@ -117,20 +117,20 @@ bazel build -c opt ${PI_COPTS} \
   //tensorflow/tools/pip_package:build_pip_package
 
 OUTDIR=output-artifacts
-mkdir -p "${OUTDIR}"
-echo "Final outputs will go to ${OUTDIR}"
+mkdir -p "$OUTDIR"
+echo "Final outputs will go to $OUTDIR"
 
 # Build a universal wheel.
 BDIST_OPTS="--universal" \
-  bazel-bin/tensorflow/tools/pip_package/build_pip_package "${OUTDIR}"
+  bazel-bin/tensorflow/tools/pip_package/build_pip_package "$OUTDIR"
 
-OLD_FN=$(ls "${OUTDIR}" | grep -m 1 \.whl)
-SUB='s/tensorflow-([^-]+)-([^-]+)-.*/tensorflow-\1-\2-none-'${WHEEL_ARCH}'.whl/; print'
-NEW_FN=$(echo "${OLD_FN}" | perl -ne "${SUB}")
-mv "${OUTDIR}/${OLD_FN}" "${OUTDIR}/${NEW_FN}"
-cp bazel-bin/tensorflow/tools/benchmark/benchmark_model "${OUTDIR}"
-cp bazel-bin/tensorflow/libtensorflow.so "${OUTDIR}"
-cp bazel-bin/tensorflow/libtensorflow_framework.so "${OUTDIR}"
+OLD_FN=$(ls "$OUTDIR" | grep -m 1 \.whl)
+SUB='s/tensorflow-([^-]+)-([^-]+)-.*/tensorflow-\1-\2-none-'$WHEEL_ARCH'.whl/; print'
+NEW_FN=$(echo "$OLD_FN" | perl -ne "$SUB")
+mv "$OUTDIR/$OLD_FN" "$OUTDIR/$NEW_FN"
+cp bazel-bin/tensorflow/tools/benchmark/benchmark_model "$OUTDIR"
+cp bazel-bin/tensorflow/libtensorflow.so "$OUTDIR"
+cp bazel-bin/tensorflow/libtensorflow_framework.so "$OUTDIR"
 
 echo "Output can be found here:"
-find "${OUTDIR}"
+find "$OUTDIR"
