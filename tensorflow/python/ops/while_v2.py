@@ -19,25 +19,38 @@ gradient function for While ops produced by while_loop. This will eventually
 replace the current tf.while_loop implementation once it reaches feature and
 performance parity.
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python.client import pywrap_tf_session as c_api
 from tensorflow.python.eager import backprop_util
 from tensorflow.python.framework import auto_control_deps_utils as acd
-from tensorflow.python.framework import constant_op, dtypes
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import func_graph as func_graph_module
-from tensorflow.python.framework import (ops, tensor_shape, tensor_spec,
-                                         tensor_util, type_spec)
-from tensorflow.python.ops import array_ops, control_flow_ops
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.framework import type_spec
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import control_flow_util as util_v1
 from tensorflow.python.ops import control_flow_util_v2 as util
-from tensorflow.python.ops import (custom_gradient, default_gradient,
-                                   gen_functional_ops,
-                                   gen_resource_variable_ops, gradients_util,
-                                   list_ops, math_ops, tensor_array_ops,
-                                   while_v2_indexed_slices_rewriter)
-from tensorflow.python.util import compat, nest, object_identity
+from tensorflow.python.ops import custom_gradient
+from tensorflow.python.ops import default_gradient
+from tensorflow.python.ops import gen_functional_ops
+from tensorflow.python.ops import gen_resource_variable_ops
+from tensorflow.python.ops import gradients_util
+from tensorflow.python.ops import list_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.ops import while_v2_indexed_slices_rewriter
+from tensorflow.python.util import compat
+from tensorflow.python.util import nest
+from tensorflow.python.util import object_identity
 
 # pylint: disable=protected-access
 

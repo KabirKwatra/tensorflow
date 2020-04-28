@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Adapter module that convert different input data objects into tf.dataset."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import abc
 import collections
@@ -26,20 +27,28 @@ import random
 
 import numpy as np
 import six
-from tensorflow.python.data.experimental.ops import (cardinality,
-                                                     distribute_options)
+
+from tensorflow.python.data.experimental.ops import cardinality
+from tensorflow.python.data.experimental.ops import distribute_options
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.distribute import \
     distribution_strategy_context as ds_context
 from tensorflow.python.distribute import input_lib
 from tensorflow.python.eager import context
-from tensorflow.python.framework import (dtypes, errors, ops, smart_cond,
-                                         sparse_tensor, tensor_shape)
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import smart_cond
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_shape
 from tensorflow.python.framework.ops import composite_tensor
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.engine import training_utils
 from tensorflow.python.keras.utils import data_utils
-from tensorflow.python.ops import array_ops, math_ops, random_ops, script_ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import random_ops
+from tensorflow.python.ops import script_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util import nest
 
