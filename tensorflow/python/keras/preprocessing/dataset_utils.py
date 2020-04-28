@@ -29,13 +29,13 @@ from tensorflow.python.ops import math_ops
 
 
 def index_directory(
-    directory,
-    labels,
-    formats,
-    class_names=None,
-    shuffle=True,
-    seed=None,
-    follow_links=False,
+        directory,
+        labels,
+        formats,
+        class_names=None,
+        shuffle=True,
+        seed=None,
+        follow_links=False,
 ):
     """Make list of all files in the subdirs of `directory`, with their labels.
 
@@ -74,8 +74,8 @@ def index_directory(
             raise ValueError(
                 "The `class_names` passed did not match the "
                 "names of the subdirectories of the target directory. "
-                "Expected: %s, but received: %s" % (inferred_class_names, class_names)
-            )
+                "Expected: %s, but received: %s" %
+                (inferred_class_names, class_names))
     class_indices = dict(zip(class_names, range(len(class_names))))
 
     # Build an index of the files
@@ -85,10 +85,8 @@ def index_directory(
     filenames = []
     for dirpath in (os.path.join(directory, subdir) for subdir in class_names):
         results.append(
-            pool.apply_async(
-                index_subdirectory, (dirpath, class_indices, follow_links, formats)
-            )
-        )
+            pool.apply_async(index_subdirectory,
+                             (dirpath, class_indices, follow_links, formats)))
     labels_list = []
     for res in results:
         partial_filenames, partial_labels = res.get()
@@ -99,19 +97,17 @@ def index_directory(
             raise ValueError(
                 "Expected the lengths of `labels` to match the number "
                 "of files in the target directory. len(labels) is %s "
-                "while we found %s files in %s."
-                % (len(labels), len(filenames), directory)
-            )
+                "while we found %s files in %s." %
+                (len(labels), len(filenames), directory))
     else:
         i = 0
-        labels = np.zeros((len(filenames),), dtype="int32")
+        labels = np.zeros((len(filenames), ), dtype="int32")
         for partial_labels in labels_list:
-            labels[i : i + len(partial_labels)] = partial_labels
+            labels[i:i + len(partial_labels)] = partial_labels
             i += len(partial_labels)
 
-    print(
-        "Found %d files belonging to %d classes." % (len(filenames), len(class_names))
-    )
+    print("Found %d files belonging to %d classes." %
+          (len(filenames), len(class_names)))
     pool.close()
     pool.join()
     file_paths = [os.path.join(directory, fname) for fname in filenames]
@@ -157,12 +153,14 @@ def index_subdirectory(directory, class_indices, follow_links, formats):
     for root, fname in valid_files:
         labels.append(class_indices[dirname])
         absolute_path = os.path.join(root, fname)
-        relative_path = os.path.join(dirname, os.path.relpath(absolute_path, directory))
+        relative_path = os.path.join(dirname,
+                                     os.path.relpath(absolute_path, directory))
         filenames.append(relative_path)
     return filenames, labels
 
 
-def get_training_or_validation_split(samples, labels, validation_split, subset):
+def get_training_or_validation_split(samples, labels, validation_split,
+                                     subset):
     """Potentially restict samples & labels to a training or validation split.
 
     Args:
@@ -181,27 +179,25 @@ def get_training_or_validation_split(samples, labels, validation_split, subset):
 
     num_val_samples = int(validation_split * len(samples))
     if subset == "training":
-        print("Using %d files for training." % (len(samples) - num_val_samples,))
+        print("Using %d files for training." %
+              (len(samples) - num_val_samples, ))
         samples = samples[:-num_val_samples]
         labels = labels[:-num_val_samples]
     elif subset == "validation":
-        print("Using %d files for validation." % (num_val_samples,))
+        print("Using %d files for validation." % (num_val_samples, ))
         samples = samples[-num_val_samples:]
         labels = labels[-num_val_samples:]
     else:
-        raise ValueError(
-            '`subset` must be either "training" '
-            'or "validation", received: %s' % (subset,)
-        )
+        raise ValueError('`subset` must be either "training" '
+                         'or "validation", received: %s' % (subset, ))
     return samples, labels
 
 
 def labels_to_dataset(labels, label_mode, num_classes):
     label_ds = dataset_ops.Dataset.from_tensor_slices(labels)
     if label_mode == "binary":
-        label_ds = label_ds.map(
-            lambda x: array_ops.expand_dims(math_ops.cast(x, "float32"), axis=-1)
-        )
+        label_ds = label_ds.map(lambda x: array_ops.expand_dims(
+            math_ops.cast(x, "float32"), axis=-1))
     elif label_mode == "categorical":
         label_ds = label_ds.map(lambda x: array_ops.one_hot(x, num_classes))
     return label_ds
@@ -211,21 +207,17 @@ def check_validation_split_arg(validation_split, subset, shuffle, seed):
     """Raise errors in case of invalid argument values."""
     if validation_split and not 0 < validation_split < 1:
         raise ValueError(
-            "`validation_split` must be between 0 and 1, received: %s"
-            % (validation_split,)
-        )
+            "`validation_split` must be between 0 and 1, received: %s" %
+            (validation_split, ))
     if (validation_split or subset) and not (validation_split and subset):
         raise ValueError(
             "If `subset` is set, `validation_split` must be set, and inversely."
         )
     if subset not in ("training", "validation", None):
-        raise ValueError(
-            '`subset` must be either "training" '
-            'or "validation", received: %s' % (subset,)
-        )
+        raise ValueError('`subset` must be either "training" '
+                         'or "validation", received: %s' % (subset, ))
     if validation_split and shuffle and seed is None:
         raise ValueError(
             "If using `validation_split` and shuffling the data, you must provide "
             "a `seed` argument, to make sure that there is no overlap between the "
-            "training and validation subset."
-        )
+            "training and validation subset.")

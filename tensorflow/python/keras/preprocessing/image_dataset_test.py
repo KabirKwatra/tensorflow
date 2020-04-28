@@ -50,28 +50,30 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
         return imgs
 
     def _prepare_directory(
-        self,
-        num_classes=2,
-        grayscale=False,
-        nested_dirs=False,
-        color_mode="rgb",
-        count=16,
+            self,
+            num_classes=2,
+            grayscale=False,
+            nested_dirs=False,
+            color_mode="rgb",
+            count=16,
     ):
         # Get a unique temp directory
-        temp_dir = os.path.join(self.get_temp_dir(), str(np.random.randint(1e6)))
+        temp_dir = os.path.join(self.get_temp_dir(),
+                                str(np.random.randint(1e6)))
         os.mkdir(temp_dir)
         self.addCleanup(shutil.rmtree, temp_dir)
 
         # Generate paths to class subdirectories
         paths = []
         for class_index in range(num_classes):
-            class_directory = "class_%s" % (class_index,)
+            class_directory = "class_%s" % (class_index, )
             if nested_dirs:
                 class_paths = [
                     class_directory,
                     os.path.join(class_directory, "subfolder_1"),
                     os.path.join(class_directory, "subfolder_2"),
-                    os.path.join(class_directory, "subfolder_1", "sub-subfolder"),
+                    os.path.join(class_directory, "subfolder_1",
+                                 "sub-subfolder"),
                 ]
             else:
                 class_paths = [class_directory]
@@ -97,19 +99,20 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
             return  # Skip test if PIL is not available.
 
         directory = self._prepare_directory(num_classes=2)
-        dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), label_mode="int"
-        )
+        dataset = image_dataset.image_dataset_from_directory(directory,
+                                                             batch_size=8,
+                                                             image_size=(18,
+                                                                         18),
+                                                             label_mode="int")
         batch = next(iter(dataset))
         self.assertLen(batch, 2)
         self.assertEqual(batch[0].shape, (8, 18, 18, 3))
         self.assertEqual(batch[0].dtype.name, "float32")
-        self.assertEqual(batch[1].shape, (8,))
+        self.assertEqual(batch[1].shape, (8, ))
         self.assertEqual(batch[1].dtype.name, "int32")
 
         dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), label_mode="binary"
-        )
+            directory, batch_size=8, image_size=(18, 18), label_mode="binary")
         batch = next(iter(dataset))
         self.assertLen(batch, 2)
         self.assertEqual(batch[0].shape, (8, 18, 18, 3))
@@ -118,8 +121,10 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
         self.assertEqual(batch[1].dtype.name, "float32")
 
         dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), label_mode="categorical"
-        )
+            directory,
+            batch_size=8,
+            image_size=(18, 18),
+            label_mode="categorical")
         batch = next(iter(dataset))
         self.assertLen(batch, 2)
         self.assertEqual(batch[0].shape, (8, 18, 18, 3))
@@ -132,9 +137,11 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
             return  # Skip test if PIL is not available.
 
         directory = self._prepare_directory(num_classes=4, count=15)
-        dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), label_mode=None
-        )
+        dataset = image_dataset.image_dataset_from_directory(directory,
+                                                             batch_size=8,
+                                                             image_size=(18,
+                                                                         18),
+                                                             label_mode=None)
         sample_count = 0
         for batch in dataset:
             sample_count += batch.shape[0]
@@ -146,34 +153,42 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
 
         directory = self._prepare_directory(num_classes=4, count=15)
 
-        dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), label_mode=None
-        )
+        dataset = image_dataset.image_dataset_from_directory(directory,
+                                                             batch_size=8,
+                                                             image_size=(18,
+                                                                         18),
+                                                             label_mode=None)
         batch = next(iter(dataset))
         self.assertEqual(batch.shape, (8, 18, 18, 3))
 
-        dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), label_mode=None
-        )
+        dataset = image_dataset.image_dataset_from_directory(directory,
+                                                             batch_size=8,
+                                                             image_size=(18,
+                                                                         18),
+                                                             label_mode=None)
         sample_count = 0
         iterator = iter(dataset)
         for batch in dataset:
             sample_count += next(iterator).shape[0]
         self.assertEqual(sample_count, 15)
 
-        dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), label_mode="int"
-        )
+        dataset = image_dataset.image_dataset_from_directory(directory,
+                                                             batch_size=8,
+                                                             image_size=(18,
+                                                                         18),
+                                                             label_mode="int")
         batch = next(iter(dataset))
         self.assertLen(batch, 2)
         self.assertEqual(batch[0].shape, (8, 18, 18, 3))
         self.assertEqual(batch[0].dtype.name, "float32")
-        self.assertEqual(batch[1].shape, (8,))
+        self.assertEqual(batch[1].shape, (8, ))
         self.assertEqual(batch[1].dtype.name, "int32")
 
         dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), label_mode="categorical"
-        )
+            directory,
+            batch_size=8,
+            image_size=(18, 18),
+            label_mode="categorical")
         batch = next(iter(dataset))
         self.assertLen(batch, 2)
         self.assertEqual(batch[0].shape, (8, 18, 18, 3))
@@ -186,18 +201,23 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
             return  # Skip test if PIL is not available.
 
         directory = self._prepare_directory(num_classes=4, color_mode="rgba")
-        dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), color_mode="rgba"
-        )
+        dataset = image_dataset.image_dataset_from_directory(directory,
+                                                             batch_size=8,
+                                                             image_size=(18,
+                                                                         18),
+                                                             color_mode="rgba")
         batch = next(iter(dataset))
         self.assertLen(batch, 2)
         self.assertEqual(batch[0].shape, (8, 18, 18, 4))
         self.assertEqual(batch[0].dtype.name, "float32")
 
-        directory = self._prepare_directory(num_classes=4, color_mode="grayscale")
+        directory = self._prepare_directory(num_classes=4,
+                                            color_mode="grayscale")
         dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), color_mode="grayscale"
-        )
+            directory,
+            batch_size=8,
+            image_size=(18, 18),
+            color_mode="grayscale")
         batch = next(iter(dataset))
         self.assertLen(batch, 2)
         self.assertEqual(batch[0].shape, (8, 18, 18, 1))
@@ -236,9 +256,12 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
             return  # Skip test if PIL is not available.
 
         directory = self._prepare_directory(num_classes=2, count=2)
-        dataset = image_dataset.image_dataset_from_directory(
-            directory, batch_size=8, image_size=(18, 18), labels=[0, 1], shuffle=False
-        )
+        dataset = image_dataset.image_dataset_from_directory(directory,
+                                                             batch_size=8,
+                                                             image_size=(18,
+                                                                         18),
+                                                             labels=[0, 1],
+                                                             shuffle=False)
         batch = next(iter(dataset))
         self.assertLen(batch, 2)
         self.assertAllClose(batch[1], [0, 1])
@@ -247,7 +270,9 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
         if PIL is None:
             return  # Skip test if PIL is not available.
 
-        directory = self._prepare_directory(num_classes=2, count=25, nested_dirs=True)
+        directory = self._prepare_directory(num_classes=2,
+                                            count=25,
+                                            nested_dirs=True)
         dataset = image_dataset.image_dataset_from_directory(
             directory,
             batch_size=8,
@@ -267,21 +292,21 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
         directory = self._prepare_directory(num_classes=3, count=5)
 
         with self.assertRaisesRegex(ValueError, "`labels` argument should be"):
-            _ = image_dataset.image_dataset_from_directory(directory, labels=None)
+            _ = image_dataset.image_dataset_from_directory(directory,
+                                                           labels=None)
 
-        with self.assertRaisesRegex(ValueError, "`label_mode` argument must be"):
-            _ = image_dataset.image_dataset_from_directory(
-                directory, label_mode="other"
-            )
+        with self.assertRaisesRegex(ValueError,
+                                    "`label_mode` argument must be"):
+            _ = image_dataset.image_dataset_from_directory(directory,
+                                                           label_mode="other")
 
         with self.assertRaisesRegex(ValueError, "`color_mode` must be one of"):
-            _ = image_dataset.image_dataset_from_directory(
-                directory, color_mode="other"
-            )
+            _ = image_dataset.image_dataset_from_directory(directory,
+                                                           color_mode="other")
 
         with self.assertRaisesRegex(
-            ValueError, "only pass `class_names` if the labels are inferred"
-        ):
+                ValueError,
+                "only pass `class_names` if the labels are inferred"):
             _ = image_dataset.image_dataset_from_directory(
                 directory,
                 labels=[0, 0, 1, 1, 1],
@@ -289,45 +314,41 @@ class ImageDatasetFromDirectoryTest(keras_parameterized.TestCase):
             )
 
         with self.assertRaisesRegex(
-            ValueError, "Expected the lengths of `labels` to match the number of files"
+                ValueError,
+                "Expected the lengths of `labels` to match the number of files"
         ):
-            _ = image_dataset.image_dataset_from_directory(
-                directory, labels=[0, 0, 1, 1]
-            )
+            _ = image_dataset.image_dataset_from_directory(directory,
+                                                           labels=[0, 0, 1, 1])
 
-        with self.assertRaisesRegex(ValueError, "`class_names` passed did not match"):
+        with self.assertRaisesRegex(ValueError,
+                                    "`class_names` passed did not match"):
             _ = image_dataset.image_dataset_from_directory(
-                directory, class_names=["class_0", "class_2"]
-            )
+                directory, class_names=["class_0", "class_2"])
 
-        with self.assertRaisesRegex(ValueError, "there must exactly 2 classes"):
-            _ = image_dataset.image_dataset_from_directory(
-                directory, label_mode="binary"
-            )
+        with self.assertRaisesRegex(ValueError,
+                                    "there must exactly 2 classes"):
+            _ = image_dataset.image_dataset_from_directory(directory,
+                                                           label_mode="binary")
 
         with self.assertRaisesRegex(
-            ValueError, "`validation_split` must be between 0 and 1"
-        ):
-            _ = image_dataset.image_dataset_from_directory(
-                directory, validation_split=2
-            )
+                ValueError, "`validation_split` must be between 0 and 1"):
+            _ = image_dataset.image_dataset_from_directory(directory,
+                                                           validation_split=2)
 
-        with self.assertRaisesRegex(
-            ValueError, '`subset` must be either "training" or'
-        ):
+        with self.assertRaisesRegex(ValueError,
+                                    '`subset` must be either "training" or'):
             _ = image_dataset.image_dataset_from_directory(
-                directory, validation_split=0.2, subset="other"
-            )
+                directory, validation_split=0.2, subset="other")
 
-        with self.assertRaisesRegex(ValueError, "`validation_split` must be set"):
-            _ = image_dataset.image_dataset_from_directory(
-                directory, validation_split=0, subset="training"
-            )
+        with self.assertRaisesRegex(ValueError,
+                                    "`validation_split` must be set"):
+            _ = image_dataset.image_dataset_from_directory(directory,
+                                                           validation_split=0,
+                                                           subset="training")
 
         with self.assertRaisesRegex(ValueError, "must provide a `seed`"):
             _ = image_dataset.image_dataset_from_directory(
-                directory, validation_split=0.2, subset="training"
-            )
+                directory, validation_split=0.2, subset="training")
 
 
 if __name__ == "__main__":

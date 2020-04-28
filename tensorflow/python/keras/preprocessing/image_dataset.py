@@ -32,19 +32,19 @@ WHITELIST_FORMATS = (".bmp", ".gif", ".jpeg", ".jpg", ".png")
 
 @keras_export("keras.preprocessing.image_dataset_from_directory", v1=[])
 def image_dataset_from_directory(
-    directory,
-    labels="inferred",
-    label_mode="int",
-    class_names=None,
-    color_mode="rgb",
-    batch_size=32,
-    image_size=(256, 256),
-    shuffle=True,
-    seed=None,
-    validation_split=None,
-    subset=None,
-    interpolation="bilinear",
-    follow_links=False,
+        directory,
+        labels="inferred",
+        label_mode="int",
+        class_names=None,
+        color_mode="rgb",
+        batch_size=32,
+        image_size=(256, 256),
+        shuffle=True,
+        seed=None,
+        validation_split=None,
+        subset=None,
+        interpolation="bilinear",
+        follow_links=False,
 ):
     """Generates a `tf.data.Dataset` from image files in a directory.
 
@@ -148,19 +148,16 @@ def image_dataset_from_directory(
                 "directory. If you wish to infer the labels from the subdirectory "
                 'names in the target directory, pass `labels="inferred"`. '
                 "If you wish to get a dataset that only contains images "
-                "(no labels), pass `labels=None`."
-            )
+                "(no labels), pass `labels=None`.")
         if class_names:
             raise ValueError(
                 "You can only pass `class_names` if the labels are "
                 "inferred from the subdirectory names in the target "
-                'directory (`labels="inferred"`).'
-            )
+                'directory (`labels="inferred"`).')
     if label_mode not in {"int", "categorical", "binary", None}:
         raise ValueError(
             '`label_mode` argument must be one of "int", "categorical", "binary", '
-            "or None. Received: %s" % (label_mode,)
-        )
+            "or None. Received: %s" % (label_mode, ))
     if color_mode == "rgb":
         num_channels = 3
     elif color_mode == "rgba":
@@ -170,10 +167,10 @@ def image_dataset_from_directory(
     else:
         raise ValueError(
             '`color_mode` must be one of {"rbg", "rgba", "grayscale"}. '
-            "Received: %s" % (color_mode,)
-        )
+            "Received: %s" % (color_mode, ))
     interpolation = image_preprocessing.get_interpolation(interpolation)
-    dataset_utils.check_validation_split_arg(validation_split, subset, shuffle, seed)
+    dataset_utils.check_validation_split_arg(validation_split, subset, shuffle,
+                                             seed)
 
     if seed is None:
         seed = np.random.randint(1e6)
@@ -190,12 +187,10 @@ def image_dataset_from_directory(
     if label_mode == "binary" and len(class_names) != 2:
         raise ValueError(
             'When passing `label_mode="binary", there must exactly 2 classes. '
-            "Found the following classes: %s" % (class_names,)
-        )
+            "Found the following classes: %s" % (class_names, ))
 
     image_paths, labels = dataset_utils.get_training_or_validation_split(
-        image_paths, labels, validation_split, subset
-    )
+        image_paths, labels, validation_split, subset)
 
     dataset = paths_and_labels_to_dataset(
         image_paths=image_paths,
@@ -216,27 +211,29 @@ def image_dataset_from_directory(
 
 
 def paths_and_labels_to_dataset(
-    image_paths,
-    image_size,
-    num_channels,
-    labels,
-    label_mode,
-    num_classes,
-    interpolation,
+        image_paths,
+        image_size,
+        num_channels,
+        labels,
+        label_mode,
+        num_classes,
+        interpolation,
 ):
     """Constructs a dataset of images and labels."""
     # TODO(fchollet): consider making num_parallel_calls settable
     path_ds = dataset_ops.Dataset.from_tensor_slices(image_paths)
-    img_ds = path_ds.map(
-        lambda x: path_to_image(x, image_size, num_channels, interpolation)
-    )
+    img_ds = path_ds.map(lambda x: path_to_image(x, image_size, num_channels,
+                                                 interpolation))
     if label_mode:
-        label_ds = dataset_utils.labels_to_dataset(labels, label_mode, num_classes)
+        label_ds = dataset_utils.labels_to_dataset(labels, label_mode,
+                                                   num_classes)
         img_ds = dataset_ops.Dataset.zip((img_ds, label_ds))
     return img_ds
 
 
 def path_to_image(path, image_size, num_channels, interpolation):
     img = io_ops.read_file(path)
-    img = image_ops.decode_image(img, channels=num_channels, expand_animations=False)
+    img = image_ops.decode_image(img,
+                                 channels=num_channels,
+                                 expand_animations=False)
     return image_ops.resize_images_v2(img, image_size, method=interpolation)
