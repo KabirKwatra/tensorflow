@@ -161,9 +161,8 @@ class ShapeTestCase(test_util.TensorFlowTestCase):
         self.assertEquals([2], tensor.get_shape())
         self.assertEquals(
             [2],
-            control_flow_ops.with_dependencies(
-                [constant_op.constant(1.0)], tensor
-            ).get_shape(),
+            control_flow_ops.with_dependencies([constant_op.constant(1.0)],
+                                               tensor).get_shape(),
         )
 
 
@@ -171,12 +170,11 @@ class WithDependenciesTestCase(test_util.TensorFlowTestCase):
     @test_util.run_deprecated_v1
     def testTupleDependencies(self):
         counter = variable_scope.get_variable(
-            "my_counter", shape=[], initializer=init_ops.zeros_initializer()
-        )
+            "my_counter", shape=[], initializer=init_ops.zeros_initializer())
         increment_counter = state_ops.assign_add(counter, 1)
         const_with_dep = control_flow_ops.with_dependencies(
-            (increment_counter, constant_op.constant(42)), constant_op.constant(7)
-        )
+            (increment_counter, constant_op.constant(42)),
+            constant_op.constant(7))
 
         self.evaluate(variables.global_variables_initializer())
         self.assertEquals(0, self.evaluate(counter))
@@ -186,12 +184,11 @@ class WithDependenciesTestCase(test_util.TensorFlowTestCase):
     @test_util.run_deprecated_v1
     def testListDependencies(self):
         counter = variable_scope.get_variable(
-            "my_counter", shape=[], initializer=init_ops.zeros_initializer()
-        )
+            "my_counter", shape=[], initializer=init_ops.zeros_initializer())
         increment_counter = state_ops.assign_add(counter, 1)
         const_with_dep = control_flow_ops.with_dependencies(
-            [increment_counter, constant_op.constant(42)], constant_op.constant(7)
-        )
+            [increment_counter, constant_op.constant(42)],
+            constant_op.constant(7))
 
         self.evaluate(variables.global_variables_initializer())
         self.assertEquals(0, self.evaluate(counter))
@@ -218,20 +215,21 @@ class SwitchTestCase(test_util.TensorFlowTestCase):
     @test_util.run_deprecated_v1
     def testIndexedSlicesGradient(self):
         embedding_matrix = variable_scope.get_variable(
-            "embedding_matrix", [5, 5], initializer=init_ops.random_normal_initializer()
-        )
+            "embedding_matrix", [5, 5],
+            initializer=init_ops.random_normal_initializer())
 
         def cond(it, _):
             return it < 5
 
         def body(it, cost):
-            embedding = embedding_ops.embedding_lookup(embedding_matrix + 0.0, [0])
+            embedding = embedding_ops.embedding_lookup(embedding_matrix + 0.0,
+                                                       [0])
             cost += math_ops.reduce_sum(embedding)
             return it + 1, cost
 
         _, cost = control_flow_ops.while_loop(
-            cond, body, [constant_op.constant(0), constant_op.constant(0.0)]
-        )
+            cond, body, [constant_op.constant(0),
+                         constant_op.constant(0.0)])
         optimizer = momentum.MomentumOptimizer(0.1, 0.9)
         train_op = optimizer.minimize(cost)
         with self.cached_session():
@@ -240,9 +238,10 @@ class SwitchTestCase(test_util.TensorFlowTestCase):
                 self.evaluate([train_op])
 
     def testResourceReadInLoop(self):
-        embedding_matrix = variable_scope.get_variable(
-            "embedding_matrix", initializer=[[2.0], [3.0]], use_resource=True
-        )
+        embedding_matrix = variable_scope.get_variable("embedding_matrix",
+                                                       initializer=[[2.0],
+                                                                    [3.0]],
+                                                       use_resource=True)
 
         def cond(it, _):
             return it < 5
@@ -253,8 +252,8 @@ class SwitchTestCase(test_util.TensorFlowTestCase):
             return it + 1, cost
 
         _, cost = control_flow_ops.while_loop(
-            cond, body, [constant_op.constant(0), constant_op.constant(0.0)]
-        )
+            cond, body, [constant_op.constant(0),
+                         constant_op.constant(0.0)])
         with self.cached_session():
             self.evaluate(variables.global_variables_initializer())
             self.assertAllEqual(10.0, self.evaluate(cost))
@@ -280,28 +279,29 @@ class SwitchTestCase(test_util.TensorFlowTestCase):
             return it + 1, cost
 
             _, cost = control_flow_ops.while_loop(
-                cond, body, [constant_op.constant(0), constant_op.constant(0.0)]
-            )
+                cond, body,
+                [constant_op.constant(0),
+                 constant_op.constant(0.0)])
 
-            dynamic_grads = gradients_impl.gradients(cost, [embedding_matrix])[0]
-            dynamic_grads = math_ops.segment_sum(
-                dynamic_grads.values, dynamic_grads.indices
-            )
+            dynamic_grads = gradients_impl.gradients(cost,
+                                                     [embedding_matrix])[0]
+            dynamic_grads = math_ops.segment_sum(dynamic_grads.values,
+                                                 dynamic_grads.indices)
 
             embedding = embedding_ops.embedding_lookup(embedding_matrix, [0])
             static = math_ops.square(
-                math_ops.reduce_sum(embedding)
-                + math_ops.reduce_sum(embedding)
-                + math_ops.reduce_sum(embedding)
+                math_ops.reduce_sum(embedding) +
+                math_ops.reduce_sum(embedding) + math_ops.reduce_sum(embedding)
             ) + math_ops.reduce_sum(embedding)
-            static_grads = gradients_impl.gradients(static, [embedding_matrix])[0]
-            static_grads = math_ops.segment_sum(
-                static_grads.values, static_grads.indices
-            )
+            static_grads = gradients_impl.gradients(static,
+                                                    [embedding_matrix])[0]
+            static_grads = math_ops.segment_sum(static_grads.values,
+                                                static_grads.indices)
 
             with self.cached_session():
                 self.evaluate(variables.global_variables_initializer())
-                self.assertAllEqual(*self.evaluate([static_grads, dynamic_grads]))
+                self.assertAllEqual(
+                    *self.evaluate([static_grads, dynamic_grads]))
 
     def testIndexedSlicesGradientInCondInWhileLoop(self):
         self.doTestIndexedSlicesGradientInCondInWhileLoop(use_resource=False)
@@ -316,24 +316,20 @@ class SwitchTestCase(test_util.TensorFlowTestCase):
                 num_steps = 9
 
                 inputs = array_ops.placeholder(dtype=dtype, shape=[num_steps])
-                initial_outputs = tensor_array_ops.TensorArray(
-                    dtype=dtype, size=num_steps
-                )
+                initial_outputs = tensor_array_ops.TensorArray(dtype=dtype,
+                                                               size=num_steps)
                 initial_i = constant_op.constant(0, dtype=dtypes.int32)
 
                 def cond(i, _):
                     return i < num_steps  # pylint: disable=cell-var-from-loop
 
                 def body(i, outputs):
-                    x = array_ops.gather(
-                        inputs, i
-                    )  # pylint: disable=cell-var-from-loop
+                    x = array_ops.gather(inputs, i)  # pylint: disable=cell-var-from-loop
                     outputs = outputs.write(i, x)
                     return i + 1, outputs
 
                 _, outputs = control_flow_ops.while_loop(
-                    cond, body, [initial_i, initial_outputs]
-                )
+                    cond, body, [initial_i, initial_outputs])
 
                 outputs = math_ops.reduce_sum(outputs.stack())
                 r = gradients_impl.gradients([outputs], [inputs])[0]
@@ -351,32 +347,25 @@ class SwitchTestCase(test_util.TensorFlowTestCase):
             with self.cached_session() as sess:
                 inputs = array_ops.placeholder(dtype=dtype)
                 initial_outputs = tensor_array_ops.TensorArray(
-                    dtype=dtype, dynamic_size=True, size=1
-                )
+                    dtype=dtype, dynamic_size=True, size=1)
                 initial_i = constant_op.constant(0, dtype=dtypes.int32)
 
                 def cond(i, _):
-                    return i < array_ops.size(
-                        inputs
-                    )  # pylint: disable=cell-var-from-loop
+                    return i < array_ops.size(inputs)  # pylint: disable=cell-var-from-loop
 
                 def body(i, outputs):
-                    x = array_ops.gather(
-                        inputs, i
-                    )  # pylint: disable=cell-var-from-loop
+                    x = array_ops.gather(inputs, i)  # pylint: disable=cell-var-from-loop
                     outputs = outputs.write(i, x)
                     return i + 1, outputs
 
                 _, outputs = control_flow_ops.while_loop(
-                    cond, body, [initial_i, initial_outputs]
-                )
+                    cond, body, [initial_i, initial_outputs])
 
                 outputs = math_ops.reduce_sum(outputs.stack())
                 r = gradients_impl.gradients([outputs], [inputs])[0]
                 grad_wr_inputs = ops.convert_to_tensor(r)
-                o, grad = sess.run(
-                    [outputs, grad_wr_inputs], feed_dict={inputs: [1, 3, 2]}
-                )
+                o, grad = sess.run([outputs, grad_wr_inputs],
+                                   feed_dict={inputs: [1, 3, 2]})
                 self.assertEquals(o, 6)
                 self.assertAllEqual(grad, [1] * 3)
 
@@ -437,9 +426,9 @@ class CondTest(test_util.TensorFlowTestCase):
         # This test in particular used to fail only when running in GPU, hence
         # use_gpu=True.
         with test_util.use_gpu():
-            bool_var = variable_scope.get_variable(
-                "bool_var", dtype=dtypes.bool, initializer=True
-            )
+            bool_var = variable_scope.get_variable("bool_var",
+                                                   dtype=dtypes.bool,
+                                                   initializer=True)
             cond_on_bool_var = control_flow_ops.cond(
                 pred=bool_var,
                 true_fn=lambda: state_ops.assign(bool_var, False),
@@ -478,26 +467,24 @@ class CondTest(test_util.TensorFlowTestCase):
             tape.watch(false_in)
             cond_true = control_flow_ops.cond(
                 array_ops.constant(True),
-                lambda: true_in ** 2.0,
-                lambda: false_in ** 2.0,
+                lambda: true_in**2.0,
+                lambda: false_in**2.0,
             )
             cond_false = control_flow_ops.cond(
                 array_ops.constant(False),
-                lambda: true_in ** 2.0,
-                lambda: false_in ** 2.0,
+                lambda: true_in**2.0,
+                lambda: false_in**2.0,
             )
-        grads_true = tape.gradient(cond_true, [true_in, false_in], output_gradients=3.0)
-        grads_false = tape.gradient(
-            cond_false, [true_in, false_in], output_gradients=3.0
-        )
+        grads_true = tape.gradient(cond_true, [true_in, false_in],
+                                   output_gradients=3.0)
+        grads_false = tape.gradient(cond_false, [true_in, false_in],
+                                    output_gradients=3.0)
         self.assertEqual(3.0 * 2.0 * 1.0, self.evaluate(grads_true[0]))
-        self.assertEqual(
-            None if context.executing_eagerly() else 0.0, self.evaluate(grads_true[1])
-        )
+        self.assertEqual(None if context.executing_eagerly() else 0.0,
+                         self.evaluate(grads_true[1]))
         self.assertEqual(3.0 * 2.0 * 5.0, self.evaluate(grads_false[1]))
-        self.assertEqual(
-            None if context.executing_eagerly() else 0.0, self.evaluate(grads_false[0])
-        )
+        self.assertEqual(None if context.executing_eagerly() else 0.0,
+                         self.evaluate(grads_false[0]))
 
     def testCondWithGroupAndSummaries(self):
         with ops.Graph().as_default():
@@ -505,7 +492,8 @@ class CondTest(test_util.TensorFlowTestCase):
             with writer.as_default(), summary_ops_v2.always_record_summaries():
                 op = control_flow_ops.cond(
                     constant_op.constant(1) >= 0,
-                    lambda: control_flow_ops.group(summary_ops_v2.scalar("loss", 0.2)),
+                    lambda: control_flow_ops.group(
+                        summary_ops_v2.scalar("loss", 0.2)),
                     control_flow_ops.no_op,
                 )
                 self.evaluate(variables.global_variables_initializer())
@@ -530,8 +518,7 @@ class ContextTest(test_util.TensorFlowTestCase):
                     self.assertProtoEquals(
                         c.to_proto(),
                         control_flow_ops.CondContext.from_proto(
-                            c.to_proto()
-                        ).to_proto(),
+                            c.to_proto()).to_proto(),
                     )
 
     def _testWhileContextHelper(self, maximum_iterations=None):
@@ -544,17 +531,16 @@ class ContextTest(test_util.TensorFlowTestCase):
             def b(i):
                 return math_ops.add(i, 1)
 
-            control_flow_ops.while_loop(
-                c, b, [i], maximum_iterations=maximum_iterations
-            )
+            control_flow_ops.while_loop(c,
+                                        b, [i],
+                                        maximum_iterations=maximum_iterations)
             for op in sess.graph.get_operations():
                 control_flow_context = op._get_control_flow_context()
                 if control_flow_context:
                     self.assertProtoEquals(
                         control_flow_context.to_proto(),
                         control_flow_ops.WhileContext.from_proto(
-                            control_flow_context.to_proto()
-                        ).to_proto(),
+                            control_flow_context.to_proto()).to_proto(),
                     )
 
     @test_util.run_deprecated_v1
@@ -575,10 +561,12 @@ class ContextTest(test_util.TensorFlowTestCase):
 
             # pylint: disable=useless-super-delegation
 
-            def to_control_flow_context_def(self, context_def, export_scope=None):
-                super(NoABCControlFlowContext, self).to_control_flow_context_def(
-                    context_def, export_scope
-                )
+            def to_control_flow_context_def(self,
+                                            context_def,
+                                            export_scope=None):
+                super(NoABCControlFlowContext,
+                      self).to_control_flow_context_def(
+                          context_def, export_scope)
 
         with self.cached_session():
             constant_op.constant(0, name="a")
@@ -591,14 +579,13 @@ class ContextTest(test_util.TensorFlowTestCase):
             c._external_values = {"a": b1}
 
             c_with_scope = NoABCControlFlowContext(
-                values_def=c._to_values_def(), import_scope="test_scope"
-            )
+                values_def=c._to_values_def(), import_scope="test_scope")
 
             # _values and _external_values should be have scope prepended.
-            self.assertEquals(
-                c_with_scope._values, set(["test_scope/a", "test_scope/b"])
-            )
-            self.assertEquals(c_with_scope._external_values, {"test_scope/a": b2})
+            self.assertEquals(c_with_scope._values,
+                              set(["test_scope/a", "test_scope/b"]))
+            self.assertEquals(c_with_scope._external_values,
+                              {"test_scope/a": b2})
 
             # Calling _to_proto() with export_scope should remove "test_scope".
             self.assertProtoEquals(
@@ -620,9 +607,9 @@ def _get_nested_shape(nested):
 
 
 def _create_tensor_array(size, shape):
-    ta = tensor_array_ops.TensorArray(
-        dtype=dtypes.float32, size=size, clear_after_read=False
-    )
+    ta = tensor_array_ops.TensorArray(dtype=dtypes.float32,
+                                      size=size,
+                                      clear_after_read=False)
     for i in range(size):
         ta = ta.write(i, array_ops.zeros(shape))
     return ta
@@ -630,7 +617,8 @@ def _create_tensor_array(size, shape):
 
 def _raw_nested_shape(nested_shape):
     def _raw_shape(shape):
-        if isinstance(shape, tensor_shape.TensorShape) and shape.ndims is not None:
+        if isinstance(shape,
+                      tensor_shape.TensorShape) and shape.ndims is not None:
             return [x.value for x in shape.dims]
         else:
             return None
@@ -649,54 +637,58 @@ class DataTypesTest(test_util.TensorFlowTestCase):
 
     def _testShape(self, fn_true, fn_false, expected_shape, strict=False):
         condition = array_ops.placeholder(dtypes.bool)
-        output_cond = control_flow_ops.cond(condition, fn_true, fn_false, strict=strict)
+        output_cond = control_flow_ops.cond(condition,
+                                            fn_true,
+                                            fn_false,
+                                            strict=strict)
         self.assertEqual(
             _raw_nested_shape(_get_nested_shape(output_cond)),
             _raw_nested_shape(expected_shape),
         )
 
-        output_case = control_flow_ops.case(
-            [(condition, fn_true)], fn_false, strict=strict
-        )
+        output_case = control_flow_ops.case([(condition, fn_true)],
+                                            fn_false,
+                                            strict=strict)
         self.assertEqual(
             _raw_nested_shape(_get_nested_shape(output_case)),
             _raw_nested_shape(expected_shape),
         )
 
     def _testReturnValues(
-        self,
-        fn_true,
-        fn_false,
-        expected_value_true,
-        expected_value_false,
-        strict=False,
-        check_cond=True,
-        feed_dict=None,
+            self,
+            fn_true,
+            fn_false,
+            expected_value_true,
+            expected_value_false,
+            strict=False,
+            check_cond=True,
+            feed_dict=None,
     ):
         if feed_dict is None:
             feed_dict = {}
 
         condition = array_ops.placeholder(dtypes.bool)
-        output_cond = control_flow_ops.cond(condition, fn_true, fn_false, strict=strict)
-        output_case = control_flow_ops.case(
-            [(condition, fn_true)], fn_false, strict=strict
-        )
+        output_cond = control_flow_ops.cond(condition,
+                                            fn_true,
+                                            fn_false,
+                                            strict=strict)
+        output_case = control_flow_ops.case([(condition, fn_true)],
+                                            fn_false,
+                                            strict=strict)
 
         with self.cached_session() as sess:
             self.evaluate(variables.global_variables_initializer())
             true_feed_dict = {condition: True}
             true_feed_dict.update(feed_dict)
-            result_cond, result_case = sess.run(
-                [output_cond, output_case], feed_dict=true_feed_dict
-            )
+            result_cond, result_case = sess.run([output_cond, output_case],
+                                                feed_dict=true_feed_dict)
             self.assertAllEqualNested(result_cond, expected_value_true)
             if check_cond:
                 self.assertAllEqualNested(result_case, expected_value_true)
             false_feed_dict = {condition: False}
             false_feed_dict.update(feed_dict)
-            result_cond, result_case = sess.run(
-                [output_cond, output_case], feed_dict=false_feed_dict
-            )
+            result_cond, result_case = sess.run([output_cond, output_case],
+                                                feed_dict=false_feed_dict)
             self.assertAllEqualNested(result_cond, expected_value_false)
             if check_cond:
                 self.assertAllEqualNested(result_case, expected_value_false)
@@ -776,10 +768,12 @@ class DataTypesTest(test_util.TensorFlowTestCase):
             return constant_op.constant(1)
 
         with self.assertRaises(ValueError):
-            control_flow_ops.cond(constant_op.constant(True), fn_none, fn_tensor)
+            control_flow_ops.cond(constant_op.constant(True), fn_none,
+                                  fn_tensor)
 
         with self.assertRaises(ValueError):
-            control_flow_ops.cond(constant_op.constant(True), fn_tensor, fn_none)
+            control_flow_ops.cond(constant_op.constant(True), fn_tensor,
+                                  fn_none)
 
     @test_util.run_deprecated_v1
     def test_tensors(self):
@@ -802,7 +796,8 @@ class DataTypesTest(test_util.TensorFlowTestCase):
             return _build
 
         for dtype in (dtypes.float16, dtypes.int8, dtypes.int32, dtypes.uint8):
-            shape = (tensor_shape.TensorShape([2, 2]), tensor_shape.TensorShape([3, 3]))
+            shape = (tensor_shape.TensorShape([2, 2]),
+                     tensor_shape.TensorShape([3, 3]))
             fn_true = _build_true_branch(dtype)
             fn_false = _build_false_branch(dtype)
             self._testShape(fn_true, fn_false, shape)
@@ -853,30 +848,32 @@ class DataTypesTest(test_util.TensorFlowTestCase):
 
         def true_fn():
             return [
-                sparse_tensor.SparseTensor(
-                    indices=[[0, 0], [1, 2]], values=[1, 2], dense_shape=[3, 4]
-                )
+                sparse_tensor.SparseTensor(indices=[[0, 0], [1, 2]],
+                                           values=[1, 2],
+                                           dense_shape=[3, 4])
             ]
 
         def false_fn():
             return [
-                sparse_tensor.SparseTensor(
-                    indices=[[0, 0], [2, 1]], values=[3, 4], dense_shape=[3, 4]
-                )
+                sparse_tensor.SparseTensor(indices=[[0, 0], [2, 1]],
+                                           values=[3, 4],
+                                           dense_shape=[3, 4])
             ]
 
-        value1 = sparse_tensor.SparseTensorValue(
-            indices=[[0, 0], [1, 2]], values=[1, 2], dense_shape=[3, 4]
-        )
-        value2 = sparse_tensor.SparseTensorValue(
-            indices=[[0, 0], [2, 1]], values=[3, 4], dense_shape=[3, 4]
-        )
+        value1 = sparse_tensor.SparseTensorValue(indices=[[0, 0], [1, 2]],
+                                                 values=[1, 2],
+                                                 dense_shape=[3, 4])
+        value2 = sparse_tensor.SparseTensorValue(indices=[[0, 0], [2, 1]],
+                                                 values=[3, 4],
+                                                 dense_shape=[3, 4])
         # Non-strict cond is only available in v1
         if not tf2.enabled():
             self._testShape(true_fn, false_fn, shape)
             self._testReturnValues(true_fn, false_fn, value1, value2)
         self._testShape(true_fn, false_fn, [shape], strict=True)
-        self._testReturnValues(true_fn, false_fn, [value1], [value2], strict=True)
+        self._testReturnValues(true_fn,
+                               false_fn, [value1], [value2],
+                               strict=True)
 
     @test_util.run_deprecated_v1
     def test_tensors_with_partially_specified_shapes(self):
@@ -970,7 +967,7 @@ class DataTypesTest(test_util.TensorFlowTestCase):
             return [constant_op.constant(2)]
 
         def fn_tuple():
-            return (constant_op.constant(3),)
+            return (constant_op.constant(3), )
 
         self._testShape(fn_tensor, fn_list, shape)
         self._testShape(fn_tensor, fn_tuple, shape)
@@ -988,27 +985,29 @@ class DataTypesTest(test_util.TensorFlowTestCase):
             return [constant_op.constant(2)]
 
         def fn_tuple():
-            return (constant_op.constant(3),)
+            return (constant_op.constant(3), )
 
         with self.assertRaises(ValueError):
-            control_flow_ops.cond(
-                constant_op.constant(True), fn_tensor, fn_list, strict=True
-            )
+            control_flow_ops.cond(constant_op.constant(True),
+                                  fn_tensor,
+                                  fn_list,
+                                  strict=True)
 
         with self.assertRaises(TypeError):
-            control_flow_ops.cond(
-                constant_op.constant(True), fn_list, fn_tuple, strict=True
-            )
+            control_flow_ops.cond(constant_op.constant(True),
+                                  fn_list,
+                                  fn_tuple,
+                                  strict=True)
 
         with self.assertRaises(ValueError):
-            control_flow_ops.case(
-                [(constant_op.constant(True), fn_tensor)], fn_list, strict=True
-            )
+            control_flow_ops.case([(constant_op.constant(True), fn_tensor)],
+                                  fn_list,
+                                  strict=True)
 
         with self.assertRaises(TypeError):
-            control_flow_ops.case(
-                [(constant_op.constant(True), fn_list)], fn_tuple, strict=True
-            )
+            control_flow_ops.case([(constant_op.constant(True), fn_list)],
+                                  fn_tuple,
+                                  strict=True)
 
     @test_util.run_deprecated_v1
     def test_singleton_list(self):
@@ -1032,17 +1031,17 @@ class DataTypesTest(test_util.TensorFlowTestCase):
         shape = tensor_shape.TensorShape([])
 
         def fn_true():
-            return (constant_op.constant(1),)
+            return (constant_op.constant(1), )
 
         def fn_false():
-            return (constant_op.constant(3),)
+            return (constant_op.constant(3), )
 
         # Non-strict cond is only available in v1
         if not tf2.enabled():
             self._testShape(fn_true, fn_false, shape)
             self._testReturnValues(fn_true, fn_false, 1, 3)
-        self._testShape(fn_true, fn_false, (shape,), strict=True)
-        self._testReturnValues(fn_true, fn_false, (1,), (3,), strict=True)
+        self._testShape(fn_true, fn_false, (shape, ), strict=True)
+        self._testReturnValues(fn_true, fn_false, (1, ), (3, ), strict=True)
 
     @test_util.run_deprecated_v1
     def test_singleton_namedtuple(self):
@@ -1058,10 +1057,15 @@ class DataTypesTest(test_util.TensorFlowTestCase):
         if not tf2.enabled():
             self._testShape(fn_true, fn_false, shape)
             self._testReturnValues(fn_true, fn_false, 1, 3)
-        self._testShape(fn_true, fn_false, SingletonTestTuple(shape), strict=True)
-        self._testReturnValues(
-            fn_true, fn_false, SingletonTestTuple(1), SingletonTestTuple(3), strict=True
-        )
+        self._testShape(fn_true,
+                        fn_false,
+                        SingletonTestTuple(shape),
+                        strict=True)
+        self._testReturnValues(fn_true,
+                               fn_false,
+                               SingletonTestTuple(1),
+                               SingletonTestTuple(3),
+                               strict=True)
 
     @test_util.run_deprecated_v1
     def test_tuple(self):
@@ -1078,7 +1082,8 @@ class DataTypesTest(test_util.TensorFlowTestCase):
 
     @test_util.run_deprecated_v1
     def test_namedtuple(self):
-        shape = TestTuple(tensor_shape.TensorShape([]), tensor_shape.TensorShape([]))
+        shape = TestTuple(tensor_shape.TensorShape([]),
+                          tensor_shape.TensorShape([]))
 
         def fn_true():
             return TestTuple(constant_op.constant(1), 2)
@@ -1087,7 +1092,8 @@ class DataTypesTest(test_util.TensorFlowTestCase):
             return TestTuple(constant_op.constant(3), 4)
 
         self._testShape(fn_true, fn_false, shape)
-        self._testReturnValues(fn_true, fn_false, TestTuple(1, 2), TestTuple(3, 4))
+        self._testReturnValues(fn_true, fn_false, TestTuple(1, 2),
+                               TestTuple(3, 4))
 
     @test_util.run_deprecated_v1
     def test_nested(self):
@@ -1095,7 +1101,8 @@ class DataTypesTest(test_util.TensorFlowTestCase):
             tensor_shape.TensorShape([]),
             TestTuple(
                 tensor_shape.TensorShape([]),
-                [tensor_shape.TensorShape([]), tensor_shape.TensorShape([])],
+                [tensor_shape.TensorShape([]),
+                 tensor_shape.TensorShape([])],
             ),
             tensor_shape.TensorShape([5, 5]),
             tensor_shape.TensorShape([]),
@@ -1121,8 +1128,10 @@ class DataTypesTest(test_util.TensorFlowTestCase):
         self._testReturnValues(
             true_fn,
             false_fn,
-            [1, TestTuple(2, [3, 4]), np.zeros([5, 5]), 6],
-            [11, TestTuple(12, [13, 14]), np.ones([5, 5]), 16],
+            [1, TestTuple(2, [3, 4]),
+             np.zeros([5, 5]), 6],
+            [11, TestTuple(12, [13, 14]),
+             np.ones([5, 5]), 16],
         )
 
     @test_util.run_deprecated_v1
@@ -1138,7 +1147,8 @@ class DataTypesTest(test_util.TensorFlowTestCase):
         iteration, matrix = control_flow_ops.while_loop(
             lambda i, matrix: i < 10,
             body,
-            loop_vars=[constant_op.constant(0), array_ops.ones([2, 2])],
+            loop_vars=[constant_op.constant(0),
+                       array_ops.ones([2, 2])],
         )
 
         self.assertEqual(iteration.get_shape(), tensor_shape.TensorShape([]))
@@ -1154,7 +1164,8 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         nbranches = 5
 
         def make_func(bi):
-            return lambda: array_ops.constant(bi * 10, name="br{}_out".format(bi))
+            return lambda: array_ops.constant(bi * 10,
+                                              name="br{}_out".format(bi))
 
         branches = [(i, make_func(i)) for i in range(nbranches)]
         for bi in range(nbranches):
@@ -1162,57 +1173,62 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
             case_out = control_flow_ops.switch_case(branch_index, branches)
             self.assertEqual(bi * 10, self.evaluate(case_out))
 
-    @parameterized.parameters((0,), (2,), (3,))
+    @parameterized.parameters((0, ), (2, ), (3, ))
     def testCase(self, bi):
         nbranches = 5
 
         def make_func(bi):
-            return lambda: array_ops.constant(bi * 10.0, name="br{}_out".format(bi))
+            return lambda: array_ops.constant(bi * 10.0,
+                                              name="br{}_out".format(bi))
 
         branches = [(i, make_func(i)) for i in range(nbranches)]
         branch_index = array_ops.placeholder_with_default(bi, [])
-        case_out = control_flow_ops.switch_case(
-            branch_index, branches, name=self.make_name()
-        )
+        case_out = control_flow_ops.switch_case(branch_index,
+                                                branches,
+                                                name=self.make_name())
         self.assertEqual(bi * 10.0, self.evaluate(case_out))
 
-    @parameterized.parameters((-1,), (2,), (4,), (5,), (6,))
+    @parameterized.parameters((-1, ), (2, ), (4, ), (5, ), (6, ))
     def testCase_withDefault(self, bi):
         nbranches = 5
 
         def make_func(bi):
-            return lambda: array_ops.constant(bi * 10.0, name="br{}_out".format(bi))
+            return lambda: array_ops.constant(bi * 10.0,
+                                              name="br{}_out".format(bi))
 
         branches = [(i, make_func(i)) for i in range(nbranches)]
         branch_index = array_ops.placeholder_with_default(bi, [])
-        case_out = control_flow_ops.switch_case(
-            branch_index, branches, default=make_func(6), name=self.make_name()
-        )
+        case_out = control_flow_ops.switch_case(branch_index,
+                                                branches,
+                                                default=make_func(6),
+                                                name=self.make_name())
         if bi < 0 or bi >= nbranches:
             expected = 60.0
         else:
             expected = bi * 10.0
         self.assertEqual(expected, self.evaluate(case_out))
 
-    @parameterized.parameters((-1,), (0,), (3,), (5,))
+    @parameterized.parameters((-1, ), (0, ), (3, ), (5, ))
     def testCase_dictWithDefault(self, bi):
         nbranches = 5
 
         def make_func(bi):
-            return lambda: array_ops.constant(bi * 10.0, name="br{}_out".format(bi))
+            return lambda: array_ops.constant(bi * 10.0,
+                                              name="br{}_out".format(bi))
 
         branches = {i: make_func(i) for i in range(nbranches)}
         branch_index = array_ops.placeholder_with_default(bi, [])
-        case_out = control_flow_ops.switch_case(
-            branch_index, branches, default=make_func(6), name=self.make_name()
-        )
+        case_out = control_flow_ops.switch_case(branch_index,
+                                                branches,
+                                                default=make_func(6),
+                                                name=self.make_name())
         if bi < 0 or bi >= nbranches:
             expected = 60.0
         else:
             expected = bi * 10.0
         self.assertEqual(expected, self.evaluate(case_out))
 
-    @parameterized.parameters((-1,), (1,), (4,), (5,))
+    @parameterized.parameters((-1, ), (1, ), (4, ), (5, ))
     def testCase_gradient(self, bi):
         nbranches = 5
         inputs = [
@@ -1221,7 +1237,7 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         ]
 
         def make_func(bi):
-            return lambda: inputs[bi] ** 2.0
+            return lambda: inputs[bi]**2.0
 
         branches = {bi: make_func(bi) for bi in range(nbranches)}
 
@@ -1231,25 +1247,30 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
                 tape.watch(x)
             case_out = control_flow_ops.switch_case(branch_index, branches)
         out_grad = 3.0
-        actual_grads = tape.gradient(case_out, inputs, output_gradients=out_grad)
-        expected_grads = [None if context.executing_eagerly() else 0.0] * nbranches
+        actual_grads = tape.gradient(case_out,
+                                     inputs,
+                                     output_gradients=out_grad)
+        expected_grads = [None if context.executing_eagerly() else 0.0
+                          ] * nbranches
         used_branch_idx = nbranches - 1 if bi < 0 or bi >= nbranches - 1 else bi
         expected_grads[used_branch_idx] = out_grad * 2.0 * used_branch_idx
         self.assertEqual(len(expected_grads), len(actual_grads))
         for expected, actual in zip(expected_grads, actual_grads):
             self.assertEqual(expected, self.evaluate(actual))
 
-    @parameterized.parameters((-2,), (2,), (5,))
+    @parameterized.parameters((-2, ), (2, ), (5, ))
     def testCase_gradient_diffShapedIntermediates(self, bi):
         nbranches = 5
         inputs = [
-            array_ops.constant(float(bi), shape=[bi + 1], name="br{}_in".format(bi))
+            array_ops.constant(float(bi),
+                               shape=[bi + 1],
+                               name="br{}_in".format(bi))
             for bi in range(nbranches)
         ]
 
         def make_func(bi):
             def f():
-                x = inputs[bi] ** 2 * inputs[bi][: bi + 1, None]
+                x = inputs[bi]**2 * inputs[bi][:bi + 1, None]
                 return math_ops.reduce_sum(x)
 
             return f
@@ -1260,11 +1281,13 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         with backprop.GradientTape() as tape:
             for x in inputs:
                 tape.watch(x)
-            case_out = control_flow_ops.switch_case(
-                branch_index, branches, name=self.make_name()
-            )
+            case_out = control_flow_ops.switch_case(branch_index,
+                                                    branches,
+                                                    name=self.make_name())
         out_grad = 3.0
-        actual_grads = tape.gradient(case_out, inputs, output_gradients=out_grad)
+        actual_grads = tape.gradient(case_out,
+                                     inputs,
+                                     output_gradients=out_grad)
         used_bi = (nbranches - 1) if (bi < 0 or bi >= nbranches - 1) else bi
         expected_grads = []
         for input_idx in range(nbranches):
@@ -1274,13 +1297,13 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
                     y = make_func(used_bi)()
                 expected_grads.append(
                     self.evaluate(
-                        tape.gradient(y, inputs[used_bi], output_gradients=out_grad)
-                    )
-                )
+                        tape.gradient(y,
+                                      inputs[used_bi],
+                                      output_gradients=out_grad)))
             else:
                 expected_grads.append(
-                    None if context.executing_eagerly() else [0.0] * (input_idx + 1)
-                )
+                    None if context.executing_eagerly() else [0.0] *
+                    (input_idx + 1))
 
         self.assertEqual(len(expected_grads), len(actual_grads))
         for expected, actual in zip(expected_grads, actual_grads):
@@ -1296,15 +1319,14 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
         if control_flow_v2_toggles.control_flow_v2_enabled():
             self.skipTest("b/138870290")
         if test.is_built_with_rocm():
-            self.skipTest("Disable subtest on ROCm due to missing Cholesky op support")
+            self.skipTest(
+                "Disable subtest on ROCm due to missing Cholesky op support")
 
         with ops.Graph().as_default() as g:
             nbranches = 7
             matrices = array_ops.unstack(  # Ensure all are ready before while.
                 array_ops.matrix_diag(
-                    random_ops.random_uniform([nbranches, 8, 512]) + 1e-3
-                )
-            )
+                    random_ops.random_uniform([nbranches, 8, 512]) + 1e-3))
 
             def make_branch(i, mat, name):
                 def branch_fn():
@@ -1313,8 +1335,8 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
                         return (
                             next_i,
                             math_ops.reduce_sum(
-                                linalg_ops.cholesky(mat, name=name + "_Cholesky")
-                            ),
+                                linalg_ops.cholesky(mat,
+                                                    name=name + "_Cholesky")),
                         )
 
                 return branch_fn
@@ -1331,37 +1353,36 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
             def body(i, result):
                 with ops.device("cpu:0"):
                     next_i, branch_out = control_flow_ops.switch_case(
-                        i, make_branches(i)
-                    )
+                        i, make_branches(i))
                 return next_i, result + branch_out
 
             _, result = control_flow_ops.while_loop(cond, body, [0, 0.0])
 
             run_metadata = config_pb2.RunMetadata()
             run_options = config_pb2.RunOptions(
-                trace_level=config_pb2.RunOptions.FULL_TRACE
-            )
-            config = config_pb2.ConfigProto(
-                allow_soft_placement=False, log_device_placement=True
-            )
+                trace_level=config_pb2.RunOptions.FULL_TRACE)
+            config = config_pb2.ConfigProto(allow_soft_placement=False,
+                                            log_device_placement=True)
 
             with session.Session(config=config, graph=g) as sess:
-                _ = sess.run(result, options=run_options, run_metadata=run_metadata)
+                _ = sess.run(result,
+                             options=run_options,
+                             run_metadata=run_metadata)
         chol_node_stats = []
         for dev_stats in run_metadata.step_stats.dev_stats:
             for node_stats in dev_stats.node_stats:
-                if (
-                    node_stats.node_name.endswith("Cholesky")
-                    and node_stats.all_start_nanos > 0
-                ):
+                if (node_stats.node_name.endswith("Cholesky")
+                        and node_stats.all_start_nanos > 0):
                     chol_node_stats.append(node_stats)
 
         self.assertLen(chol_node_stats, nbranches)
 
-        chol_node_stats = sorted(chol_node_stats, key=lambda stats: stats.node_name)
+        chol_node_stats = sorted(chol_node_stats,
+                                 key=lambda stats: stats.node_name)
         op_start_nanos = [stats.all_start_nanos for stats in chol_node_stats]
         op_end_nanos = [
-            stats.all_start_nanos + stats.op_end_rel_nanos for stats in chol_node_stats
+            stats.all_start_nanos + stats.op_end_rel_nanos
+            for stats in chol_node_stats
         ]
 
         def overlap(range1, range2):
@@ -1379,7 +1400,8 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
 
     def testCase_validateIndicesContiguous(self):
         def make_func(bi):
-            return lambda: array_ops.constant(bi * 10.0, name="br{}_out".format(bi))
+            return lambda: array_ops.constant(bi * 10.0,
+                                              name="br{}_out".format(bi))
 
         branches = {i: make_func(i) for i in range(0, 6, 2)}
         with self.assertRaisesRegexp(ValueError, "must form contiguous"):
@@ -1387,7 +1409,8 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
 
     def testCase_validateIndicesDup(self):
         def make_func(bi):
-            return lambda: array_ops.constant(bi * 10.0, name="br{}_out".format(bi))
+            return lambda: array_ops.constant(bi * 10.0,
+                                              name="br{}_out".format(bi))
 
         branches = [(i, make_func(i)) for i in range(0, 6, 2)]
         branches.append((0, make_func(7)))
@@ -1396,7 +1419,8 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
 
     def testCase_validateBranchIndex(self):
         def make_func(bi):
-            return lambda: array_ops.constant(bi * 10.0, name="br{}_out".format(bi))
+            return lambda: array_ops.constant(bi * 10.0,
+                                              name="br{}_out".format(bi))
 
         branches = {i: make_func(i) for i in range(5)}
         with self.assertRaisesRegexp(TypeError, "branch_index.*Tensor"):
@@ -1404,7 +1428,8 @@ class IndexedCaseTest(test_util.TensorFlowTestCase, parameterized.TestCase):
 
     def testCase_validateNonIntKeys(self):
         def make_func(bi):
-            return lambda: array_ops.constant(bi * 10.0, name="br{}_out".format(bi))
+            return lambda: array_ops.constant(bi * 10.0,
+                                              name="br{}_out".format(bi))
 
         branches = [(array_ops.constant(i), make_func(i)) for i in range(5)]
         with self.assertRaisesRegexp(TypeError, "must be a Python `int`"):
@@ -1445,7 +1470,8 @@ class CaseTest(test_util.TensorFlowTestCase):
         with self.cached_session() as sess:
             self.assertEqual(sess.run(output, feed_dict={x: 1}), 2)
             self.assertEqual(sess.run(output, feed_dict={x: 3}), 8)
-            with self.assertRaisesRegexp(errors.InvalidArgumentError, "Input error:"):
+            with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                         "Input error:"):
                 sess.run(output, feed_dict={x: 2})
 
     @test_util.run_deprecated_v1
@@ -1479,7 +1505,8 @@ class CaseTest(test_util.TensorFlowTestCase):
             self.assertEqual(sess.run(output, feed_dict={x: 1}), 2)
             self.assertEqual(sess.run(output, feed_dict={x: 2}), 4)
             self.assertEqual(sess.run(output, feed_dict={x: 3}), 6)
-            with self.assertRaisesRegexp(errors.InvalidArgumentError, "Input error:"):
+            with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                         "Input error:"):
                 sess.run(output, feed_dict={x: 4})
 
     @test_util.run_deprecated_v1
@@ -1489,7 +1516,8 @@ class CaseTest(test_util.TensorFlowTestCase):
         output = control_flow_ops.case(conditions, exclusive=True)
         with self.cached_session() as sess:
             self.assertEqual(sess.run(output, feed_dict={x: 1}), 2)
-            with self.assertRaisesRegexp(errors.InvalidArgumentError, "Input error:"):
+            with self.assertRaisesRegexp(errors.InvalidArgumentError,
+                                         "Input error:"):
                 sess.run(output, feed_dict={x: 4})
 
     @test_util.run_in_graph_and_eager_modes
@@ -1526,12 +1554,12 @@ class WhileLoopTestCase(test_util.TensorFlowTestCase):
             return math_ops.less(i, 10)
 
         def b(i):
-            return (math_ops.add(i, 1),)
+            return (math_ops.add(i, 1), )
 
         r = control_flow_ops.while_loop(c, b, [i])
 
         # Expect a tuple since that is what the body returns.
-        self.assertEqual(self.evaluate(r), (10,))
+        self.assertEqual(self.evaluate(r), (10, ))
 
     @test_util.run_v1_only("Unsupported in cfv2")
     def testWhileLoopSameReturnShape_False(self):
@@ -1582,13 +1610,16 @@ class WhileLoopTestCase(test_util.TensorFlowTestCase):
             return [math_ops.add(i, 1), []]
 
         # Should only return the original structure.
-        r = control_flow_ops.while_loop(c, b, [i, []], return_same_structure=True)
+        r = control_flow_ops.while_loop(c,
+                                        b, [i, []],
+                                        return_same_structure=True)
         self.assertEqual(self.evaluate(r), [10, []])
 
         # Adding maximum_iterations should yield the same result.
-        r = control_flow_ops.while_loop(
-            c, b, [i, []], return_same_structure=True, maximum_iterations=50
-        )
+        r = control_flow_ops.while_loop(c,
+                                        b, [i, []],
+                                        return_same_structure=True,
+                                        maximum_iterations=50)
         self.assertEqual(self.evaluate(r), [10, []])
 
     def testWhileLoopSameReturnShape_TrueSingleLoopVar(self):
@@ -1605,9 +1636,10 @@ class WhileLoopTestCase(test_util.TensorFlowTestCase):
         self.assertEqual(self.evaluate(r), [10])
 
         # Adding maximum_iterations should yield the same result.
-        r = control_flow_ops.while_loop(
-            c, b, [i], return_same_structure=True, maximum_iterations=50
-        )
+        r = control_flow_ops.while_loop(c,
+                                        b, [i],
+                                        return_same_structure=True,
+                                        maximum_iterations=50)
         self.assertEqual(self.evaluate(r), [10])
 
     @test_util.enable_control_flow_v2
@@ -1633,7 +1665,8 @@ class WhileLoopTestCase(test_util.TensorFlowTestCase):
 
         with backprop.GradientTape() as tape:
             tape.watch(x)
-            out = control_flow_ops.while_loop(cond, body, (array_ops.constant(0.0),))
+            out = control_flow_ops.while_loop(cond, body,
+                                              (array_ops.constant(0.0), ))
 
         grad = tape.gradient(out, x)
         self.assertAllEqual(grad, 20.0)
