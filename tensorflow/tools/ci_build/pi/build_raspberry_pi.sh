@@ -48,7 +48,7 @@ if [ -d /usr/include/openssl ]; then
   sudo mv /usr/include/openssl /usr/include/openssl.original
 fi
 
-WORKSPACE_PATH=`pwd`
+WORKSPACE_PATH=$(pwd)
 
 if [[ $1 == "PI_ONE" ]]; then
   # Build the OpenBLAS library, which is faster than Eigen on the Pi Zero/One.
