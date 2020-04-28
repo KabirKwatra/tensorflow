@@ -23,19 +23,16 @@ from tensorflow.python.eager import test
 
 
 class DistributedFileUtilsTest(test.TestCase):
-
     class MockedExtended(object):
         pass
 
     class MockedChiefStrategy(object):
-
         def __init__(self):
             self.extended = DistributedFileUtilsTest.MockedExtended()
             self.extended._in_multi_worker_mode = lambda: True
             self.extended.should_checkpoint = True
 
     class MockedWorkerStrategy(object):
-
         def __init__(self):
             self.extended = DistributedFileUtilsTest.MockedExtended()
             self.extended._in_multi_worker_mode = lambda: True
@@ -43,64 +40,65 @@ class DistributedFileUtilsTest(test.TestCase):
             self.extended._task_id = 3
 
     class MockedSingleWorkerStrategy(object):
-
         def __init__(self):
             self.extended = DistributedFileUtilsTest.MockedExtended()
             self.extended._in_multi_worker_mode = lambda: False
 
     def _write_dummy_file(self, file_to_write):
-        with open(file_to_write, 'w') as f:
-            f.write('foo bar')
+        with open(file_to_write, "w") as f:
+            f.write("foo bar")
 
     def testChiefWriteDirAndFilePath(self):
         dirpath = self.get_temp_dir()
-        filepath = os.path.join(dirpath, 'foo.bar')
+        filepath = os.path.join(dirpath, "foo.bar")
         strategy = DistributedFileUtilsTest.MockedChiefStrategy()
         self.assertEqual(
-            distributed_file_utils.write_filepath(filepath, strategy), filepath)
+            distributed_file_utils.write_filepath(filepath, strategy), filepath
+        )
         self.assertEqual(
-            distributed_file_utils.write_dirpath(dirpath, strategy), dirpath)
+            distributed_file_utils.write_dirpath(dirpath, strategy), dirpath
+        )
 
     def testWorkerWriteDirAndFilePath(self):
         dirpath = self.get_temp_dir()
-        filepath = os.path.join(dirpath, 'foo.bar')
+        filepath = os.path.join(dirpath, "foo.bar")
         strategy = DistributedFileUtilsTest.MockedWorkerStrategy()
         self.assertEqual(
             distributed_file_utils.write_filepath(filepath, strategy),
-            os.path.join(dirpath, 'workertemp_3', 'foo.bar'))
+            os.path.join(dirpath, "workertemp_3", "foo.bar"),
+        )
         self.assertEqual(
             distributed_file_utils.write_dirpath(dirpath, strategy),
-            os.path.join(dirpath, 'workertemp_3'))
+            os.path.join(dirpath, "workertemp_3"),
+        )
 
     def testChiefDoesNotRemoveDirAndFilePath(self):
         temp_dir = self.get_temp_dir()
         strategy = DistributedFileUtilsTest.MockedChiefStrategy()
         dir_to_write = distributed_file_utils.write_dirpath(temp_dir, strategy)
-        file_to_write = os.path.join(dir_to_write, 'tmp')
+        file_to_write = os.path.join(dir_to_write, "tmp")
         self.assertFalse(os.path.exists(file_to_write))
         self._write_dummy_file(file_to_write)
         self.assertTrue(os.path.exists(file_to_write))
-        distributed_file_utils.remove_temp_dir_with_filepath(
-            file_to_write, strategy)
+        distributed_file_utils.remove_temp_dir_with_filepath(file_to_write, strategy)
         self.assertTrue(os.path.exists(file_to_write))
 
     def testWorkerDoesRemoveFilePath(self):
         temp_dir = self.get_temp_dir()
         strategy = DistributedFileUtilsTest.MockedWorkerStrategy()
         dir_to_write = distributed_file_utils.write_dirpath(temp_dir, strategy)
-        file_to_write = os.path.join(dir_to_write, 'tmp')
+        file_to_write = os.path.join(dir_to_write, "tmp")
         self.assertFalse(os.path.exists(file_to_write))
         self._write_dummy_file(file_to_write)
         self.assertTrue(os.path.exists(file_to_write))
-        distributed_file_utils.remove_temp_dir_with_filepath(
-            file_to_write, strategy)
+        distributed_file_utils.remove_temp_dir_with_filepath(file_to_write, strategy)
         self.assertFalse(os.path.exists(file_to_write))
 
     def testWorkerDoesRemoveDirPath(self):
         temp_dir = self.get_temp_dir()
         strategy = DistributedFileUtilsTest.MockedWorkerStrategy()
         dir_to_write = distributed_file_utils.write_dirpath(temp_dir, strategy)
-        file_to_write = os.path.join(dir_to_write, 'tmp')
+        file_to_write = os.path.join(dir_to_write, "tmp")
         self.assertFalse(os.path.exists(file_to_write))
         self._write_dummy_file(file_to_write)
         self.assertTrue(os.path.exists(file_to_write))
@@ -112,7 +110,7 @@ class DistributedFileUtilsTest(test.TestCase):
         temp_dir = self.get_temp_dir()
         strategy = DistributedFileUtilsTest.MockedWorkerStrategy()
         dir_to_write = distributed_file_utils.write_dirpath(temp_dir, strategy)
-        file_to_write = os.path.join(dir_to_write, 'tmp')
+        file_to_write = os.path.join(dir_to_write, "tmp")
         self._write_dummy_file(file_to_write)
         distributed_file_utils.remove_temp_dirpath(temp_dir, strategy)
         distributed_file_utils.remove_temp_dirpath(temp_dir, strategy)
@@ -122,12 +120,12 @@ class DistributedFileUtilsTest(test.TestCase):
         temp_dir = self.get_temp_dir()
         strategy = DistributedFileUtilsTest.MockedWorkerStrategy()
         dir_to_write = distributed_file_utils.write_dirpath(temp_dir, strategy)
-        file_to_write = os.path.join(dir_to_write, 'tmp')
+        file_to_write = os.path.join(dir_to_write, "tmp")
         self._write_dummy_file(file_to_write)
         distributed_file_utils.remove_temp_dirpath(dir_to_write, strategy)
         distributed_file_utils.remove_temp_dirpath(dir_to_write, strategy)
         distributed_file_utils.remove_temp_dirpath(dir_to_write, strategy)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test.main()
