@@ -16,12 +16,13 @@ limitations under the License.
 #ifndef TENSORFLOW_LITE_DELEGATES_XNNPACK_UNARY_ELEMENTWISE_TESTER_H_
 #define TENSORFLOW_LITE_DELEGATES_XNNPACK_UNARY_ELEMENTWISE_TESTER_H_
 
+#include <gtest/gtest.h>
+
 #include <cstdint>
 #include <functional>
 #include <random>
 #include <vector>
 
-#include <gtest/gtest.h>
 #include "flatbuffers/flatbuffers.h"  // from @flatbuffers
 #include "tensorflow/lite/interpreter.h"
 #include "tensorflow/lite/kernels/register.h"
@@ -33,47 +34,41 @@ namespace tflite {
 namespace xnnpack {
 
 class UnaryElementwiseTester {
-public:
-    UnaryElementwiseTester() = default;
-    UnaryElementwiseTester(const UnaryElementwiseTester&) = delete;
-    UnaryElementwiseTester& operator=(const UnaryElementwiseTester&) = delete;
+ public:
+  UnaryElementwiseTester() = default;
+  UnaryElementwiseTester(const UnaryElementwiseTester&) = delete;
+  UnaryElementwiseTester& operator=(const UnaryElementwiseTester&) = delete;
 
-    inline UnaryElementwiseTester& Shape(std::initializer_list<int32_t> shape) {
-        for (auto it = shape.begin(); it != shape.end(); ++it) {
-            EXPECT_GT(*it, 0);
-        }
-        shape_ = std::vector<int32_t>(shape.begin(), shape.end());
-        size_ = UnaryElementwiseTester::ComputeSize(shape_);
-        return *this;
+  inline UnaryElementwiseTester& Shape(std::initializer_list<int32_t> shape) {
+    for (auto it = shape.begin(); it != shape.end(); ++it) {
+      EXPECT_GT(*it, 0);
     }
+    shape_ = std::vector<int32_t>(shape.begin(), shape.end());
+    size_ = UnaryElementwiseTester::ComputeSize(shape_);
+    return *this;
+  }
 
-    const std::vector<int32_t>& Shape() const {
-        return shape_;
-    }
+  const std::vector<int32_t>& Shape() const { return shape_; }
 
-    int32_t Size() const {
-        return size_;
-    }
+  int32_t Size() const { return size_; }
 
-    inline UnaryElementwiseTester& RelativeTolerance(float relative_tolerance) {
-        relative_tolerance_ = relative_tolerance;
-        return *this;
-    }
+  inline UnaryElementwiseTester& RelativeTolerance(float relative_tolerance) {
+    relative_tolerance_ = relative_tolerance;
+    return *this;
+  }
 
-    float RelativeTolerance() const {
-        return relative_tolerance_;
-    }
+  float RelativeTolerance() const { return relative_tolerance_; }
 
-    void Test(tflite::BuiltinOperator unary_op, TfLiteDelegate* delegate) const;
+  void Test(tflite::BuiltinOperator unary_op, TfLiteDelegate* delegate) const;
 
-private:
-    std::vector<char> CreateTfLiteModel(tflite::BuiltinOperator unary_op) const;
+ private:
+  std::vector<char> CreateTfLiteModel(tflite::BuiltinOperator unary_op) const;
 
-    static int32_t ComputeSize(const std::vector<int32_t>& shape);
+  static int32_t ComputeSize(const std::vector<int32_t>& shape);
 
-    std::vector<int32_t> shape_;
-    int32_t size_;
-    float relative_tolerance_{10.0f};
+  std::vector<int32_t> shape_;
+  int32_t size_;
+  float relative_tolerance_{10.0f};
 };
 
 }  // namespace xnnpack
