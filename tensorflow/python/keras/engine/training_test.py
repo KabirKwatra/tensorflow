@@ -14,49 +14,32 @@
 # ==============================================================================
 """Tests for training routines."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import io
 import sys
 
-from absl.testing import parameterized
 import numpy as np
 import six
-
+from absl.testing import parameterized
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import function
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
+from tensorflow.python.eager import context, def_function, function
+from tensorflow.python.framework import ops, tensor_shape
 from tensorflow.python.framework import test_util as tf_test_util
-from tensorflow.python.keras import backend
-from tensorflow.python.keras import combinations
-from tensorflow.python.keras import keras_parameterized
+from tensorflow.python.keras import backend, combinations, keras_parameterized
 from tensorflow.python.keras import layers as layers_module
 from tensorflow.python.keras import losses
 from tensorflow.python.keras import metrics as metrics_module
-from tensorflow.python.keras import optimizer_v2
-from tensorflow.python.keras import testing_utils
+from tensorflow.python.keras import optimizer_v2, testing_utils
 from tensorflow.python.keras.callbacks import Callback
-from tensorflow.python.keras.engine import input_layer
-from tensorflow.python.keras.engine import sequential
+from tensorflow.python.keras.engine import input_layer, sequential
 from tensorflow.python.keras.engine import training as training_module
 from tensorflow.python.keras.engine import training_utils
-from tensorflow.python.keras.utils import data_utils
-from tensorflow.python.keras.utils import np_utils
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import init_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import nn_ops
-from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.ops import sparse_ops
-from tensorflow.python.ops import state_ops
-from tensorflow.python.ops import template
-from tensorflow.python.ops import variable_scope
+from tensorflow.python.keras.utils import data_utils, np_utils
+from tensorflow.python.ops import (array_ops, init_ops, math_ops, nn_ops,
+                                   resource_variable_ops, sparse_ops,
+                                   state_ops, template, variable_scope)
 from tensorflow.python.ops import variables as variables_lib
 from tensorflow.python.platform import test
 from tensorflow.python.training.rmsprop import RMSPropOptimizer
