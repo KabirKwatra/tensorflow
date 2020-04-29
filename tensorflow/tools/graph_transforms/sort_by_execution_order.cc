@@ -31,7 +31,7 @@ namespace graph_transforms {
 Status SortByExecutionOrderWithUnusedContext(
     const GraphDef& input_graph_def, const TransformFuncContext& unused_context,
     GraphDef* output_graph_def) {
-    return SortByExecutionOrder(input_graph_def, output_graph_def);
+  return SortByExecutionOrder(input_graph_def, output_graph_def);
 }
 
 REGISTER_GRAPH_TRANSFORM("sort_by_execution_order",

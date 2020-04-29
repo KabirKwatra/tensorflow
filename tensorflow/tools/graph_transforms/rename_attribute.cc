@@ -28,38 +28,38 @@ namespace graph_transforms {
 Status RenameAttribute(const GraphDef& input_graph_def,
                        const TransformFuncContext& context,
                        GraphDef* output_graph_def) {
-    if (!context.params.count("old_attribute_name") ||
-            (context.params.at("old_attribute_name").size() != 1) ||
-            !context.params.count("new_attribute_name") ||
-            (context.params.at("new_attribute_name").size() != 1)) {
-        return errors::InvalidArgument(
-                   "rename_attribute expects exactly one 'old_attribute_name' and one "
-                   "'new_attribute_name' argument, e.g. "
-                   "rename_attribute(old_attribute_name=foo, new_attribute_name=bar)");
-    }
+  if (!context.params.count("old_attribute_name") ||
+      (context.params.at("old_attribute_name").size() != 1) ||
+      !context.params.count("new_attribute_name") ||
+      (context.params.at("new_attribute_name").size() != 1)) {
+    return errors::InvalidArgument(
+        "rename_attribute expects exactly one 'old_attribute_name' and one "
+        "'new_attribute_name' argument, e.g. "
+        "rename_attribute(old_attribute_name=foo, new_attribute_name=bar)");
+  }
 
-    string op_name;
-    if (context.params.count("op_name")) {
-        op_name = context.params.at("op_name")[0];
-    } else {
-        op_name = "*";
-    }
+  string op_name;
+  if (context.params.count("op_name")) {
+    op_name = context.params.at("op_name")[0];
+  } else {
+    op_name = "*";
+  }
 
-    const string old_attribute_name = context.params.at("old_attribute_name")[0];
-    const string new_attribute_name = context.params.at("new_attribute_name")[0];
-    output_graph_def->Clear();
-    for (const NodeDef& node : input_graph_def.node()) {
-        NodeDef* new_node = output_graph_def->mutable_node()->Add();
-        *new_node = node;
-        if (((op_name == "*") || (op_name == node.op())) &&
-                (node.attr().count(old_attribute_name))) {
-            AttrValue attribute_value = node.attr().at(old_attribute_name);
-            new_node->mutable_attr()->erase(old_attribute_name);
-            new_node->mutable_attr()->insert({new_attribute_name, attribute_value});
-        }
+  const string old_attribute_name = context.params.at("old_attribute_name")[0];
+  const string new_attribute_name = context.params.at("new_attribute_name")[0];
+  output_graph_def->Clear();
+  for (const NodeDef& node : input_graph_def.node()) {
+    NodeDef* new_node = output_graph_def->mutable_node()->Add();
+    *new_node = node;
+    if (((op_name == "*") || (op_name == node.op())) &&
+        (node.attr().count(old_attribute_name))) {
+      AttrValue attribute_value = node.attr().at(old_attribute_name);
+      new_node->mutable_attr()->erase(old_attribute_name);
+      new_node->mutable_attr()->insert({new_attribute_name, attribute_value});
     }
+  }
 
-    return Status::OK();
+  return Status::OK();
 }
 
 REGISTER_GRAPH_TRANSFORM("rename_attribute", RenameAttribute);

@@ -28,9 +28,9 @@ namespace graph_transforms {
 Status FuseResizePadAndConv(const GraphDef& input_graph_def,
                             const TransformFuncContext& context,
                             GraphDef* output_graph_def) {
-    GraphDef replaced_graph_def;
-    TF_RETURN_IF_ERROR(ReplaceMatchingOpTypes(
-                           input_graph_def,  // clang-format off
+  GraphDef replaced_graph_def;
+  TF_RETURN_IF_ERROR(ReplaceMatchingOpTypes(
+      input_graph_def,  // clang-format off
     {   "Conv2D",
         {
             {   "MirrorPad",
@@ -42,9 +42,9 @@ Status FuseResizePadAndConv(const GraphDef& input_graph_def,
             {"*"}
         }
     },  // clang-format on
-    [](const NodeMatch& match, const std::set<string>& input_nodes,
-       const std::set<string>& output_nodes,
-       std::vector<NodeDef>* new_nodes) {
+      [](const NodeMatch& match, const std::set<string>& input_nodes,
+         const std::set<string>& output_nodes,
+         std::vector<NodeDef>* new_nodes) {
         // Find all the nodes we expect in the subgraph.
         const NodeDef& conv_node = match.node;
         const NodeDef& mirror_pad_node = match.inputs[0].node;
@@ -73,27 +73,27 @@ Status FuseResizePadAndConv(const GraphDef& input_graph_def,
         new_nodes->push_back(fused_conv);
 
         return Status::OK();
-    },
-    {}, &replaced_graph_def));
-    *output_graph_def = replaced_graph_def;
-    return Status::OK();
+      },
+      {}, &replaced_graph_def));
+  *output_graph_def = replaced_graph_def;
+  return Status::OK();
 }
 
 Status FuseResizeAndConv(const GraphDef& input_graph_def,
                          const TransformFuncContext& context,
                          GraphDef* output_graph_def) {
-    GraphDef replaced_graph_def;
-    TF_RETURN_IF_ERROR(ReplaceMatchingOpTypes(
-                           input_graph_def,  // clang-format off
+  GraphDef replaced_graph_def;
+  TF_RETURN_IF_ERROR(ReplaceMatchingOpTypes(
+      input_graph_def,  // clang-format off
     {   "Conv2D",
         {
             {"ResizeBilinear"},
             {"*"}
         }
     },  // clang-format on
-    [](const NodeMatch& match, const std::set<string>& input_nodes,
-       const std::set<string>& output_nodes,
-       std::vector<NodeDef>* new_nodes) {
+      [](const NodeMatch& match, const std::set<string>& input_nodes,
+         const std::set<string>& output_nodes,
+         std::vector<NodeDef>* new_nodes) {
         // Find all the nodes we expect in the subgraph.
         const NodeDef& conv_node = match.node;
         const NodeDef& resize_node = match.inputs[0].node;
@@ -128,18 +128,18 @@ Status FuseResizeAndConv(const GraphDef& input_graph_def,
         new_nodes->push_back(fused_conv);
 
         return Status::OK();
-    },
-    {}, &replaced_graph_def));
-    *output_graph_def = replaced_graph_def;
-    return Status::OK();
+      },
+      {}, &replaced_graph_def));
+  *output_graph_def = replaced_graph_def;
+  return Status::OK();
 }
 
 Status FusePadAndConv(const GraphDef& input_graph_def,
                       const TransformFuncContext& context,
                       GraphDef* output_graph_def) {
-    GraphDef replaced_graph_def;
-    TF_RETURN_IF_ERROR(ReplaceMatchingOpTypes(
-                           input_graph_def,  // clang-format off
+  GraphDef replaced_graph_def;
+  TF_RETURN_IF_ERROR(ReplaceMatchingOpTypes(
+      input_graph_def,  // clang-format off
     {   "Conv2D",
         {
             {   "MirrorPad",
@@ -151,9 +151,9 @@ Status FusePadAndConv(const GraphDef& input_graph_def,
             {"*"}
         }
     },  // clang-format on
-    [](const NodeMatch& match, const std::set<string>& input_nodes,
-       const std::set<string>& output_nodes,
-       std::vector<NodeDef>* new_nodes) {
+      [](const NodeMatch& match, const std::set<string>& input_nodes,
+         const std::set<string>& output_nodes,
+         std::vector<NodeDef>* new_nodes) {
         // Find all the nodes we expect in the subgraph.
         const NodeDef& conv_node = match.node;
         CHECK_EQ("Conv2D", conv_node.op());
@@ -182,10 +182,10 @@ Status FusePadAndConv(const GraphDef& input_graph_def,
         new_nodes->push_back(fused_conv);
 
         return Status::OK();
-    },
-    {}, &replaced_graph_def));
-    *output_graph_def = replaced_graph_def;
-    return Status::OK();
+      },
+      {}, &replaced_graph_def));
+  *output_graph_def = replaced_graph_def;
+  return Status::OK();
 }
 
 REGISTER_GRAPH_TRANSFORM("fuse_resize_pad_and_conv", FuseResizePadAndConv);

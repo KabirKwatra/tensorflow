@@ -29,14 +29,14 @@ namespace graph_transforms {
 Status RemoveDevice(const GraphDef& input_graph_def,
                     const TransformFuncContext& context,
                     GraphDef* output_graph_def) {
-    output_graph_def->Clear();
-    for (const NodeDef& node : input_graph_def.node()) {
-        NodeDef* new_node = output_graph_def->mutable_node()->Add();
-        *new_node = node;
-        new_node->set_device("");
-    }
+  output_graph_def->Clear();
+  for (const NodeDef& node : input_graph_def.node()) {
+    NodeDef* new_node = output_graph_def->mutable_node()->Add();
+    *new_node = node;
+    new_node->set_device("");
+  }
 
-    return Status::OK();
+  return Status::OK();
 }
 
 REGISTER_GRAPH_TRANSFORM("remove_device", RemoveDevice);

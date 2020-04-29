@@ -46,17 +46,17 @@ namespace tensorflow {
 // how to auto-generate the .golden_summary file.
 
 class AutoClusteringTest : public ::testing::Test {
-protected:
-    Status RunAutoClusteringTestWithPbtxt(
-        absl::string_view pbtxt_file_path,
-        absl::string_view golden_summary_file_path);
-    Status RunAutoClusteringTestWithGzippedPbtxt(
-        absl::string_view gzipped_pbtxt_file_path,
-        absl::string_view golden_summary_file_path);
+ protected:
+  Status RunAutoClusteringTestWithPbtxt(
+      absl::string_view pbtxt_file_path,
+      absl::string_view golden_summary_file_path);
+  Status RunAutoClusteringTestWithGzippedPbtxt(
+      absl::string_view gzipped_pbtxt_file_path,
+      absl::string_view golden_summary_file_path);
 
-private:
-    Status RunAutoClusteringTestImpl(GraphDef graphdef,
-                                     absl::string_view golden_summary_file_path);
+ private:
+  Status RunAutoClusteringTestImpl(GraphDef graphdef,
+                                   absl::string_view golden_summary_file_path);
 };
 
 #if defined(PLATFORM_GOOGLE)
