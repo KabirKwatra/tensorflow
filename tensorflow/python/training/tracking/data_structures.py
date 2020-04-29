@@ -9,13 +9,13 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
+
+
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import copy
@@ -23,6 +23,12 @@ import operator
 import sys
 
 import six
+from tensorflow.python.eager import def_function
+from tensorflow.python.eager import function as defun
+from tensorflow.python.ops import variables
+from tensorflow.python.saved_model import revived_types
+from tensorflow.python.training.tracking import base, layer_utils
+from tensorflow.python.util.compat import collections_abc
 
 try:
     import wrapt
@@ -30,13 +36,6 @@ except ImportError:
     # Fall back to the build-time dependency if the system package is not available.
     from .....third_party import wrapt
 
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import function as defun
-from tensorflow.python.ops import variables
-from tensorflow.python.saved_model import revived_types
-from tensorflow.python.training.tracking import base
-from tensorflow.python.training.tracking import layer_utils
-from tensorflow.python.util.compat import collections_abc
 
 
 class NoDependency(object):

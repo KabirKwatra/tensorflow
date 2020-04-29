@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import contextlib
@@ -26,18 +24,14 @@ import timeit
 
 import numpy as np
 import six
-
 from tensorflow.python.framework import test_util
 from tensorflow.python.keras.engine import training
 from tensorflow.python.module import module
 from tensorflow.python.ops import array_ops
 from tensorflow.python.platform import test
-from tensorflow.python.training.tracking import base
-from tensorflow.python.training.tracking import data_structures
-from tensorflow.python.training.tracking import tracking
-from tensorflow.python.training.tracking import util
+from tensorflow.python.training.tracking import (base, data_structures,
+                                                 tracking, util)
 from tensorflow.python.util import nest
-
 
 _PICKLEABLE_CALL_COUNT = collections.Counter()
 

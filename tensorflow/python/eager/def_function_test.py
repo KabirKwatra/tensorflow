@@ -13,9 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 import itertools
@@ -26,24 +24,14 @@ import weakref
 
 from absl.testing import parameterized
 from six.moves import range
-
 from tensorflow.python.autograph.core import converter
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import lift_to_graph
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.framework import test_util
+from tensorflow.python.eager import def_function, lift_to_graph
+from tensorflow.python.framework import (constant_op, dtypes, errors, ops,
+                                         tensor_spec, test_util)
 from tensorflow.python.module import module
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import random_ops
-from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops import variables
+from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
+                                   random_ops, resource_variable_ops,
+                                   variable_scope, variables)
 from tensorflow.python.platform import test
 
 

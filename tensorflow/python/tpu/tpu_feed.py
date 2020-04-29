@@ -16,24 +16,17 @@
 """Helper library for handling infeed between hosts and TPUs.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import itertools
 
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
-
 from tensorflow.compiler.xla.experimental.xla_sharding import xla_sharding
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import dtypes, ops, tensor_shape
 from tensorflow.python.ops import array_ops
-from tensorflow.python.tpu import tpu
-from tensorflow.python.tpu import tpu_sharding
+from tensorflow.python.tpu import tpu, tpu_sharding
 from tensorflow.python.tpu.ops import tpu_ops
-
 from tensorflow.python.util import nest
 
 
