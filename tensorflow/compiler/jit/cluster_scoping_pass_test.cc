@@ -32,147 +32,147 @@ namespace tensorflow {
 namespace {
 
 Status ClusterScoping(std::unique_ptr<Graph>* graph) {
-  FixupSourceAndSinkEdges(graph->get());
+    FixupSourceAndSinkEdges(graph->get());
 
-  GraphOptimizationPassWrapper wrapper;
-  wrapper.session_options.config.mutable_graph_options()
-      ->mutable_optimizer_options()
-      ->set_global_jit_level(OptimizerOptions::ON_2);
-  GraphOptimizationPassOptions opt_options =
-      wrapper.CreateGraphOptimizationPassOptions(graph);
+    GraphOptimizationPassWrapper wrapper;
+    wrapper.session_options.config.mutable_graph_options()
+    ->mutable_optimizer_options()
+    ->set_global_jit_level(OptimizerOptions::ON_2);
+    GraphOptimizationPassOptions opt_options =
+        wrapper.CreateGraphOptimizationPassOptions(graph);
 
-  ClusterScopingPass pass;
-  return pass.Run(opt_options);
+    ClusterScopingPass pass;
+    return pass.Run(opt_options);
 }
 
 absl::flat_hash_map<string, string> GetXlaInternalScopes(const Graph& graph) {
-  absl::flat_hash_map<string, string> scopes;
-  for (Node* node : graph.nodes()) {
-    string scope;
-    if (GetNodeAttr(node->attrs(), kXlaInternalScopeAttr, &scope).ok()) {
-      scopes[node->name()] = scope;
+    absl::flat_hash_map<string, string> scopes;
+    for (Node* node : graph.nodes()) {
+        string scope;
+        if (GetNodeAttr(node->attrs(), kXlaInternalScopeAttr, &scope).ok()) {
+            scopes[node->name()] = scope;
+        }
     }
-  }
 
-  if (VLOG_IS_ON(2)) {
-    VLOG(2) << "_XlaInternalScopes:";
-    for (const auto& p : scopes) {
-      VLOG(2) << " " << p.first << " -> " << p.second;
+    if (VLOG_IS_ON(2)) {
+        VLOG(2) << "_XlaInternalScopes:";
+        for (const auto& p : scopes) {
+            VLOG(2) << " " << p.first << " -> " << p.second;
+        }
     }
-  }
-  return scopes;
+    return scopes;
 }
 
 Node* BuildStageNode(GraphDefBuilder& builder, string name,
                      std::initializer_list<DataType> dtypes,
                      absl::Span<const ops::NodeOut> values) {
-  auto opts = builder.opts()
-                  .WithName(std::move(name))
-                  .WithAttr("dtypes", std::move(dtypes));
-  if (opts.HaveError()) {
-    return nullptr;
-  }
+    auto opts = builder.opts()
+                .WithName(std::move(name))
+                .WithAttr("dtypes", std::move(dtypes));
+    if (opts.HaveError()) {
+        return nullptr;
+    }
 
-  NodeBuilder node_builder(name, "Stage", opts.op_registry());
-  node_builder.Input(values);
-  return opts.FinalizeBuilder(&node_builder);
+    NodeBuilder node_builder(name, "Stage", opts.op_registry());
+    node_builder.Input(values);
+    return opts.FinalizeBuilder(&node_builder);
 }
 
 TEST(XlaCompilationTest, StagePipelinePreserved) {
-  std::unique_ptr<Graph> graph(new Graph(OpRegistry::Global()));
-  {
-    // Graph:
-    //       b
-    //       |
-    //       v
-    // a -> add0 (ClusterX) -> relu0 (ClusterX) -> stage
-    //
-    //             b
-    //             |
-    //             v
-    // unstage -> add1 (ClusterY) -> relu1 (ClusterY)
-    GraphDefBuilder builder(GraphDefBuilder::kFailImmediately);
-    Node* a = ops::SourceOp("Const", builder.opts()
-                                         .WithName("a")
-                                         .WithAttr("dtype", DT_FLOAT)
-                                         .WithAttr("value", Tensor()));
-    Node* b = ops::SourceOp("Const", builder.opts()
-                                         .WithName("b")
-                                         .WithAttr("dtype", DT_FLOAT)
-                                         .WithAttr("value", Tensor()));
-    Node* unstage = ops::SourceOp(
-        "Unstage",
-        builder.opts().WithName("unstage").WithAttr("dtypes", {DT_FLOAT}));
+    std::unique_ptr<Graph> graph(new Graph(OpRegistry::Global()));
+    {
+        // Graph:
+        //       b
+        //       |
+        //       v
+        // a -> add0 (ClusterX) -> relu0 (ClusterX) -> stage
+        //
+        //             b
+        //             |
+        //             v
+        // unstage -> add1 (ClusterY) -> relu1 (ClusterY)
+        GraphDefBuilder builder(GraphDefBuilder::kFailImmediately);
+        Node* a = ops::SourceOp("Const", builder.opts()
+                                .WithName("a")
+                                .WithAttr("dtype", DT_FLOAT)
+                                .WithAttr("value", Tensor()));
+        Node* b = ops::SourceOp("Const", builder.opts()
+                                .WithName("b")
+                                .WithAttr("dtype", DT_FLOAT)
+                                .WithAttr("value", Tensor()));
+        Node* unstage = ops::SourceOp(
+                            "Unstage",
+                            builder.opts().WithName("unstage").WithAttr("dtypes", {DT_FLOAT}));
 
-    Node* add0 = ops::BinaryOp("Add", a, b, builder.opts().WithName("add0"));
-    Node* add1 =
-        ops::BinaryOp("Add", unstage, b, builder.opts().WithName("add1"));
-    Node* relu0 = ops::UnaryOp("Relu", add0, builder.opts().WithName("relu0"));
-    ops::UnaryOp("Relu", add1, builder.opts().WithName("relu1"));
-    BuildStageNode(builder, "stage", {DT_FLOAT}, {relu0});
+        Node* add0 = ops::BinaryOp("Add", a, b, builder.opts().WithName("add0"));
+        Node* add1 =
+            ops::BinaryOp("Add", unstage, b, builder.opts().WithName("add1"));
+        Node* relu0 = ops::UnaryOp("Relu", add0, builder.opts().WithName("relu0"));
+        ops::UnaryOp("Relu", add1, builder.opts().WithName("relu1"));
+        BuildStageNode(builder, "stage", {DT_FLOAT}, {relu0});
 
-    TF_EXPECT_OK(GraphDefBuilderToGraph(builder, graph.get()));
-  }
+        TF_EXPECT_OK(GraphDefBuilderToGraph(builder, graph.get()));
+    }
 
-  TF_ASSERT_OK(ClusterScoping(&graph));
+    TF_ASSERT_OK(ClusterScoping(&graph));
 
-  auto scopes = GetXlaInternalScopes(*graph);
-  EXPECT_NE(scopes["add0"], scopes["add1"]);
-  EXPECT_EQ(scopes["add0"], scopes["relu0"]);
-  EXPECT_EQ(scopes["add1"], scopes["relu1"]);
+    auto scopes = GetXlaInternalScopes(*graph);
+    EXPECT_NE(scopes["add0"], scopes["add1"]);
+    EXPECT_EQ(scopes["add0"], scopes["relu0"]);
+    EXPECT_EQ(scopes["add1"], scopes["relu1"]);
 }
 
 TEST(XlaCompilationTest, StagePipelinePreservedAndInitialScopesRespected) {
-  std::unique_ptr<Graph> graph(new Graph(OpRegistry::Global()));
-  {
-    // Graph:
-    //       b
-    //       |
-    //       v
-    // a -> add0 (ClusterA) -> relu0 (ClusterB) -> stage
-    //
-    //             b
-    //             |
-    //             v
-    // unstage -> add1 (ClusterC) -> relu1 (ClusterD)
-    GraphDefBuilder builder(GraphDefBuilder::kFailImmediately);
-    Node* a = ops::SourceOp("Const", builder.opts()
-                                         .WithName("a")
-                                         .WithAttr("dtype", DT_FLOAT)
-                                         .WithAttr("value", Tensor()));
-    Node* b = ops::SourceOp("Const", builder.opts()
-                                         .WithName("b")
-                                         .WithAttr("dtype", DT_FLOAT)
-                                         .WithAttr("value", Tensor()));
-    Node* unstage = ops::SourceOp(
-        "Unstage",
-        builder.opts().WithName("unstage").WithAttr("dtypes", {DT_FLOAT}));
+    std::unique_ptr<Graph> graph(new Graph(OpRegistry::Global()));
+    {
+        // Graph:
+        //       b
+        //       |
+        //       v
+        // a -> add0 (ClusterA) -> relu0 (ClusterB) -> stage
+        //
+        //             b
+        //             |
+        //             v
+        // unstage -> add1 (ClusterC) -> relu1 (ClusterD)
+        GraphDefBuilder builder(GraphDefBuilder::kFailImmediately);
+        Node* a = ops::SourceOp("Const", builder.opts()
+                                .WithName("a")
+                                .WithAttr("dtype", DT_FLOAT)
+                                .WithAttr("value", Tensor()));
+        Node* b = ops::SourceOp("Const", builder.opts()
+                                .WithName("b")
+                                .WithAttr("dtype", DT_FLOAT)
+                                .WithAttr("value", Tensor()));
+        Node* unstage = ops::SourceOp(
+                            "Unstage",
+                            builder.opts().WithName("unstage").WithAttr("dtypes", {DT_FLOAT}));
 
-    // Intentionally give add0 and add1 the same initial scope but they should
-    // be separated by the ClusterScopingPass.
-    Node* add0 = ops::BinaryOp("Add", a, b,
-                               builder.opts().WithName("add0").WithAttr(
-                                   kXlaInternalScopeAttr, "ClusterA"));
-    Node* add1 = ops::BinaryOp("Add", unstage, b,
-                               builder.opts().WithName("add1").WithAttr(
-                                   kXlaInternalScopeAttr, "ClusterA"));
-    Node* relu0 = ops::UnaryOp("Relu", add0,
-                               builder.opts().WithName("relu0").WithAttr(
-                                   kXlaInternalScopeAttr, "ClusterB"));
-    ops::UnaryOp("Relu", add1,
-                 builder.opts().WithName("relu1").WithAttr(
-                     kXlaInternalScopeAttr, "ClusterD"));
-    BuildStageNode(builder, "stage", {DT_FLOAT}, {relu0});
+        // Intentionally give add0 and add1 the same initial scope but they should
+        // be separated by the ClusterScopingPass.
+        Node* add0 = ops::BinaryOp("Add", a, b,
+                                   builder.opts().WithName("add0").WithAttr(
+                                       kXlaInternalScopeAttr, "ClusterA"));
+        Node* add1 = ops::BinaryOp("Add", unstage, b,
+                                   builder.opts().WithName("add1").WithAttr(
+                                       kXlaInternalScopeAttr, "ClusterA"));
+        Node* relu0 = ops::UnaryOp("Relu", add0,
+                                   builder.opts().WithName("relu0").WithAttr(
+                                       kXlaInternalScopeAttr, "ClusterB"));
+        ops::UnaryOp("Relu", add1,
+                     builder.opts().WithName("relu1").WithAttr(
+                         kXlaInternalScopeAttr, "ClusterD"));
+        BuildStageNode(builder, "stage", {DT_FLOAT}, {relu0});
 
-    TF_EXPECT_OK(GraphDefBuilderToGraph(builder, graph.get()));
-  }
+        TF_EXPECT_OK(GraphDefBuilderToGraph(builder, graph.get()));
+    }
 
-  TF_ASSERT_OK(ClusterScoping(&graph));
+    TF_ASSERT_OK(ClusterScoping(&graph));
 
-  auto scopes = GetXlaInternalScopes(*graph);
-  EXPECT_NE(scopes["add0"], scopes["add1"]);
-  EXPECT_NE(scopes["add0"], scopes["relu0"]);
-  EXPECT_NE(scopes["add1"], scopes["relu1"]);
+    auto scopes = GetXlaInternalScopes(*graph);
+    EXPECT_NE(scopes["add0"], scopes["add1"]);
+    EXPECT_NE(scopes["add0"], scopes["relu0"]);
+    EXPECT_NE(scopes["add1"], scopes["relu1"]);
 }
 
 }  // namespace

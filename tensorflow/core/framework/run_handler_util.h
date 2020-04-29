@@ -62,13 +62,13 @@ double ParamFromEnvWithDefault(const char* var_name, double default_value);
 // exist and can be parsed. The value must be in format val1,val2... Return
 // 'default_value' otherwise.
 std::vector<double> ParamFromEnvWithDefault(const char* var_name,
-                                            std::vector<double> default_value);
+        std::vector<double> default_value);
 
 // Look up environment variable named 'var_name' and return the value if it
 // exist and can be parsed. The value must be in format val1,val2... Return
 // 'default_value' otherwise.
 std::vector<int> ParamFromEnvWithDefault(const char* var_name,
-                                         std::vector<int> default_value);
+        std::vector<int> default_value);
 
 // Look up environment variable named 'var_name' and return the value if it
 // exist and can be parsed. Return 'default_value' otherwise.

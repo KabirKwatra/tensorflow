@@ -42,8 +42,8 @@ typedef struct TF_SavedModel TF_SavedModel;
 //  If status is not OK, returns nullptr. Otherwise, returns a newly created
 //  TF_SavedModel instance. It must be deleted by calling TF_DeleteSavedModel.
 TF_CAPI_EXPORT extern TF_SavedModel* TF_LoadSavedModel(const char* dirname,
-                                                       TFE_Context* ctx,
-                                                       TF_Status* status);
+        TFE_Context* ctx,
+        TF_Status* status);
 
 // Load a SavedModel from `dirname`.
 //

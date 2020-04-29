@@ -27,24 +27,24 @@ namespace tensorflow {
 namespace {
 
 TEST(GraphDefBuilderTest, Version) {
-  // Verify that our assertions will be nontrivial
-  ASSERT_LT(0, TF_GRAPH_DEF_VERSION);
+    // Verify that our assertions will be nontrivial
+    ASSERT_LT(0, TF_GRAPH_DEF_VERSION);
 
-  // Newly built graphs should use the current version
-  GraphDefBuilder builder(GraphDefBuilder::kFailImmediately);
+    // Newly built graphs should use the current version
+    GraphDefBuilder builder(GraphDefBuilder::kFailImmediately);
 
-  // Check version when we convert to a Graph
-  Graph graph(OpRegistry::Global());
-  TF_EXPECT_OK(GraphDefBuilderToGraph(builder, &graph));
-  ASSERT_EQ(graph.versions().producer(), TF_GRAPH_DEF_VERSION);
-  ASSERT_EQ(graph.versions().min_consumer(), TF_GRAPH_DEF_VERSION_MIN_CONSUMER);
+    // Check version when we convert to a Graph
+    Graph graph(OpRegistry::Global());
+    TF_EXPECT_OK(GraphDefBuilderToGraph(builder, &graph));
+    ASSERT_EQ(graph.versions().producer(), TF_GRAPH_DEF_VERSION);
+    ASSERT_EQ(graph.versions().min_consumer(), TF_GRAPH_DEF_VERSION_MIN_CONSUMER);
 
-  // Check version when we convert to a GraphDef
-  GraphDef graph_def;
-  TF_EXPECT_OK(builder.ToGraphDef(&graph_def));
-  ASSERT_EQ(graph_def.versions().producer(), TF_GRAPH_DEF_VERSION);
-  ASSERT_EQ(graph_def.versions().min_consumer(),
-            TF_GRAPH_DEF_VERSION_MIN_CONSUMER);
+    // Check version when we convert to a GraphDef
+    GraphDef graph_def;
+    TF_EXPECT_OK(builder.ToGraphDef(&graph_def));
+    ASSERT_EQ(graph_def.versions().producer(), TF_GRAPH_DEF_VERSION);
+    ASSERT_EQ(graph_def.versions().min_consumer(),
+              TF_GRAPH_DEF_VERSION_MIN_CONSUMER);
 }
 
 }  // namespace

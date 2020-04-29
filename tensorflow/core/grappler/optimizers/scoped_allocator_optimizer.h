@@ -36,92 +36,98 @@ class ScopedAllocatorOptimizer;
 // An Optimizer that introduces ScopedAllocators in order to reduce data
 // movement and consolidate some kinds of Ops.
 class ScopedAllocatorOptimizer : public GraphOptimizer {
- public:
-  ScopedAllocatorOptimizer(RewriterConfig::Toggle opt_level,
-                           const ScopedAllocatorOptions& opts);
-  ~ScopedAllocatorOptimizer() override;
+public:
+    ScopedAllocatorOptimizer(RewriterConfig::Toggle opt_level,
+                             const ScopedAllocatorOptions& opts);
+    ~ScopedAllocatorOptimizer() override;
 
-  string name() const override { return "scoped_allocator_optimizer"; }
-
-  bool UsesFunctionLibrary() const override { return true; }
-
-  Status Optimize(Cluster* cluster, const GrapplerItem& item,
-                  GraphDef* optimized_graph) override;
-
-  void Feedback(Cluster* cluster, const GrapplerItem& item,
-                const GraphDef& optimized_graph, double result) override {}
-
-  // Map from an Op name to a vector of Nodes with that Op.
-  typedef absl::flat_hash_map<string, std::vector<NodeDef*>> DevOpOccurrences;
-  // Map from a device name to a DevOpOccurrences map.
-  typedef absl::flat_hash_map<string, DevOpOccurrences> GraphOpOccurrences;
-  typedef absl::flat_hash_set<string> OpNameSet;
-
-  Status ProcessGraphDef(GraphDef* graph,
-                         const GraphProperties& graph_properties);
-
-  // Populates *occs by grouping Nodes with common Ops, according to
-  // their assigned devices.
-  void FindOpOccurrences(GraphDef* graph, const OpNameSet& op_names,
-                         GraphOpOccurrences* occs);
-
-  // Returns a new, unused scope_id to be assigned to a ScopedAllocator that
-  // will allocate num_fields (> 0) separate tensors.
-  int NewScopedAllocatorId(int num_fields);
-
-  // Returns a new, unused id to be assigned to an IdentityOp used in this graph
-  // rewrite.
-  Status NewIdentityId(int* id);
-
-  NodeMap* node_map() { return node_map_.get(); }
-
-  const absl::flat_hash_set<string>& repeated_outputs() {
-    return repeated_outputs_;
-  }
-
-  // Appends values to the attr value under name in node_def, if present.
-  // If not present does an assignment.
-  static void ExtendNodeAttr(StringPiece name, const std::vector<int32>& values,
-                             NodeDef* node_def);
-
-  // Class that knows how to do graph rewriting for a particular kind of Op in
-  // order to take advantage of a ScopedAllocator.
-  class Rewriter {
-   public:
-    virtual ~Rewriter() {}
-
-    virtual Status Rewrite(ScopedAllocatorOptimizer* paopti,
-                           int64 invocation_count, GraphDef* graph,
-                           const string& op_name,
-                           const std::vector<NodeDef*>& nodes,
-                           bool* applied) = 0;
-
-    void SetGraphProperties(const GraphProperties& graph_properties) {
-      graph_properties_ = &graph_properties;
-      CHECK(graph_properties_);
+    string name() const override {
+        return "scoped_allocator_optimizer";
     }
 
-   protected:
-    const GraphProperties* graph_properties_;
-  };
+    bool UsesFunctionLibrary() const override {
+        return true;
+    }
 
- private:
-  Rewriter* GetRewriter(const string& op_name);
+    Status Optimize(Cluster* cluster, const GrapplerItem& item,
+                    GraphDef* optimized_graph) override;
 
-  Status OrderNodeSet(std::vector<NodeDef*>* nodes) const;
+    void Feedback(Cluster* cluster, const GrapplerItem& item,
+                  const GraphDef& optimized_graph, double result) override {}
 
-  RewriterConfig::Toggle opt_level_;
-  std::unordered_set<string> nodes_to_preserve_;
-  OpNameSet op_name_set_;
-  absl::flat_hash_map<string, Rewriter*> rewriters_;
-  std::vector<Rewriter*> to_delete_;
-  int next_sa_id_ = 1;
-  int next_identity_id_ = 1;
-  std::unique_ptr<NodeMap> node_map_;
-  // Keeps track of outputs, i.e. a node and an output index, that are inputs to
-  // more than one op groups that are candidates for scoped allocator
-  // optimization.
-  absl::flat_hash_set<string> repeated_outputs_;
+    // Map from an Op name to a vector of Nodes with that Op.
+    typedef absl::flat_hash_map<string, std::vector<NodeDef*>> DevOpOccurrences;
+    // Map from a device name to a DevOpOccurrences map.
+    typedef absl::flat_hash_map<string, DevOpOccurrences> GraphOpOccurrences;
+    typedef absl::flat_hash_set<string> OpNameSet;
+
+    Status ProcessGraphDef(GraphDef* graph,
+                           const GraphProperties& graph_properties);
+
+    // Populates *occs by grouping Nodes with common Ops, according to
+    // their assigned devices.
+    void FindOpOccurrences(GraphDef* graph, const OpNameSet& op_names,
+                           GraphOpOccurrences* occs);
+
+    // Returns a new, unused scope_id to be assigned to a ScopedAllocator that
+    // will allocate num_fields (> 0) separate tensors.
+    int NewScopedAllocatorId(int num_fields);
+
+    // Returns a new, unused id to be assigned to an IdentityOp used in this graph
+    // rewrite.
+    Status NewIdentityId(int* id);
+
+    NodeMap* node_map() {
+        return node_map_.get();
+    }
+
+    const absl::flat_hash_set<string>& repeated_outputs() {
+        return repeated_outputs_;
+    }
+
+    // Appends values to the attr value under name in node_def, if present.
+    // If not present does an assignment.
+    static void ExtendNodeAttr(StringPiece name, const std::vector<int32>& values,
+                               NodeDef* node_def);
+
+    // Class that knows how to do graph rewriting for a particular kind of Op in
+    // order to take advantage of a ScopedAllocator.
+    class Rewriter {
+    public:
+        virtual ~Rewriter() {}
+
+        virtual Status Rewrite(ScopedAllocatorOptimizer* paopti,
+                               int64 invocation_count, GraphDef* graph,
+                               const string& op_name,
+                               const std::vector<NodeDef*>& nodes,
+                               bool* applied) = 0;
+
+        void SetGraphProperties(const GraphProperties& graph_properties) {
+            graph_properties_ = &graph_properties;
+            CHECK(graph_properties_);
+        }
+
+    protected:
+        const GraphProperties* graph_properties_;
+    };
+
+private:
+    Rewriter* GetRewriter(const string& op_name);
+
+    Status OrderNodeSet(std::vector<NodeDef*>* nodes) const;
+
+    RewriterConfig::Toggle opt_level_;
+    std::unordered_set<string> nodes_to_preserve_;
+    OpNameSet op_name_set_;
+    absl::flat_hash_map<string, Rewriter*> rewriters_;
+    std::vector<Rewriter*> to_delete_;
+    int next_sa_id_ = 1;
+    int next_identity_id_ = 1;
+    std::unique_ptr<NodeMap> node_map_;
+    // Keeps track of outputs, i.e. a node and an output index, that are inputs to
+    // more than one op groups that are candidates for scoped allocator
+    // optimization.
+    absl::flat_hash_set<string> repeated_outputs_;
 };
 
 }  // namespace grappler

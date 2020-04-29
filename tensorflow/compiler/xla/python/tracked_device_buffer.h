@@ -57,59 +57,59 @@ namespace xla {
 // definition event is known to have occurred; waiting for the same event on the
 // same stream causes no additional waiting.
 class BufferSequencingEvent {
- public:
-  BufferSequencingEvent() = default;
+public:
+    BufferSequencingEvent() = default;
 
-  // Sets the sequencing event to 'event', which is recorded on 'stream'. Must
-  // be called at most once. Unblocks any other host threads that are blocked in
-  // WaitForEventOnStream.
-  void SetSequencingEvent(EventPool::Handle event, se::Stream* stream);
+    // Sets the sequencing event to 'event', which is recorded on 'stream'. Must
+    // be called at most once. Unblocks any other host threads that are blocked in
+    // WaitForEventOnStream.
+    void SetSequencingEvent(EventPool::Handle event, se::Stream* stream);
 
-  // Adds synchronization events to 'stream' that wait for this event to be
-  // defined on 'stream'. Does nothing if the event is already known to have
-  // occurred by the tail of 'stream'. If RecordOnStream has not yet been
-  // called, blocks the calling thread until the event has been recorded.
-  void WaitForEventOnStream(se::Stream* stream);
+    // Adds synchronization events to 'stream' that wait for this event to be
+    // defined on 'stream'. Does nothing if the event is already known to have
+    // occurred by the tail of 'stream'. If RecordOnStream has not yet been
+    // called, blocks the calling thread until the event has been recorded.
+    void WaitForEventOnStream(se::Stream* stream);
 
-  // Returns true if the event is known to have occurred by the tail of
-  // 'stream'. If RecordOnStream has not yet been called, blocks the calling
-  // thread until the event has been recorded.
-  bool DefinedOn(se::Stream* stream);
+    // Returns true if the event is known to have occurred by the tail of
+    // 'stream'. If RecordOnStream has not yet been called, blocks the calling
+    // thread until the event has been recorded.
+    bool DefinedOn(se::Stream* stream);
 
-  // Returns true if the event is known by the host to have already occurred. If
-  // RecordOnStream has not yet been called, blocks the calling thread until the
-  // event has been recorded.
-  bool IsComplete();
+    // Returns true if the event is known by the host to have already occurred. If
+    // RecordOnStream has not yet been called, blocks the calling thread until the
+    // event has been recorded.
+    bool IsComplete();
 
-  // Compares the sequence numbers of two recorded events. It is illegal to call
-  // the comparison operators unless both events have been recorded.
-  inline bool operator<(const BufferSequencingEvent& rhs) const {
-    return sequence_number() < rhs.sequence_number();
-  }
-  inline bool operator>(const BufferSequencingEvent& rhs) const {
-    return rhs < *this;
-  }
-  inline bool operator<=(const BufferSequencingEvent& rhs) const {
-    return !(*this > rhs);
-  }
-  inline bool operator>=(const BufferSequencingEvent& rhs) const {
-    return !(*this < rhs);
-  }
+    // Compares the sequence numbers of two recorded events. It is illegal to call
+    // the comparison operators unless both events have been recorded.
+    inline bool operator<(const BufferSequencingEvent& rhs) const {
+        return sequence_number() < rhs.sequence_number();
+    }
+    inline bool operator>(const BufferSequencingEvent& rhs) const {
+        return rhs < *this;
+    }
+    inline bool operator<=(const BufferSequencingEvent& rhs) const {
+        return !(*this > rhs);
+    }
+    inline bool operator>=(const BufferSequencingEvent& rhs) const {
+        return !(*this < rhs);
+    }
 
- private:
-  bool EventHasBeenRecorded() const TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
-  uint64 sequence_number() const;
+private:
+    bool EventHasBeenRecorded() const TF_EXCLUSIVE_LOCKS_REQUIRED(mu_);
+    uint64 sequence_number() const;
 
-  // An event that is triggered when the content of one or more buffers has been
-  // read or written. If this event is used as a definition event and is
-  // nullptr, it is assumed that the buffer's content is always defined for
-  // example because it uses storage borrowed from elsewhere.
-  EventPool::Handle event_;
+    // An event that is triggered when the content of one or more buffers has been
+    // read or written. If this event is used as a definition event and is
+    // nullptr, it is assumed that the buffer's content is always defined for
+    // example because it uses storage borrowed from elsewhere.
+    EventPool::Handle event_;
 
-  mutable absl::Mutex mu_;
-  // A list of all streams for which the buffer's content is known to be defined
-  // at the tail of the queue, i.e., for any newly enqueued command.
-  absl::InlinedVector<se::Stream*, 2> streams_defined_on_ TF_GUARDED_BY(mu_);
+    mutable absl::Mutex mu_;
+    // A list of all streams for which the buffer's content is known to be defined
+    // at the tail of the queue, i.e., for any newly enqueued command.
+    absl::InlinedVector<se::Stream*, 2> streams_defined_on_ TF_GUARDED_BY(mu_);
 };
 
 // Class that represents a tuple of device buffers. Like a ScopedShapedBuffer it
@@ -117,131 +117,137 @@ class BufferSequencingEvent {
 // usage of the memory on streams, to allow for synchronized usage and deletion
 // of memory under all of the allocation model semantics.
 class TrackedDeviceBuffer {
- public:
-  // Helper object to keep track of usage of the buffer on streams.
-  struct StreamAndEvent {
-    // A stream the buffer has been used on.
-    se::Stream* stream;
-    // An event that is later than the most recent usage of the buffer on
-    // stream.
-    std::shared_ptr<BufferSequencingEvent> event;
-    // True if and only if a reference to the buffer is kept live until after
-    // the host knows that event is complete.
-    bool reference_held;
-  };
+public:
+    // Helper object to keep track of usage of the buffer on streams.
+    struct StreamAndEvent {
+        // A stream the buffer has been used on.
+        se::Stream* stream;
+        // An event that is later than the most recent usage of the buffer on
+        // stream.
+        std::shared_ptr<BufferSequencingEvent> event;
+        // True if and only if a reference to the buffer is kept live until after
+        // the host knows that event is complete.
+        bool reference_held;
+    };
 
-  // Converts a ScopedShapedBuffer into a TrackedDeviceBuffer. Takes ownership
-  // of the buffers of the shaped_buffer.
-  static std::shared_ptr<TrackedDeviceBuffer> FromScopedShapedBuffer(
-      ScopedShapedBuffer* shaped_buffer,
-      absl::Span<const std::shared_ptr<BufferSequencingEvent>>
-          definition_events);
+    // Converts a ScopedShapedBuffer into a TrackedDeviceBuffer. Takes ownership
+    // of the buffers of the shaped_buffer.
+    static std::shared_ptr<TrackedDeviceBuffer> FromScopedShapedBuffer(
+        ScopedShapedBuffer* shaped_buffer,
+        absl::Span<const std::shared_ptr<BufferSequencingEvent>>
+        definition_events);
 
-  // Builds a ShapedBuffer view onto the buffers of 'tree'. We require but do
-  // not verify that TransferManager::HostShapeToDeviceShape(on_host_shape) ==
-  // on_device_shape().
-  ShapedBuffer AsShapedBuffer(const Shape& on_host_shape,
-                              const Shape& on_device_shape,
-                              se::Platform* platform) const;
+    // Builds a ShapedBuffer view onto the buffers of 'tree'. We require but do
+    // not verify that TransferManager::HostShapeToDeviceShape(on_host_shape) ==
+    // on_device_shape().
+    ShapedBuffer AsShapedBuffer(const Shape& on_host_shape,
+                                const Shape& on_device_shape,
+                                se::Platform* platform) const;
 
-  // Adds the owned device buffers in order to 'iterator'. Used to add the
-  // buffers to an ExecutionInput. We require but do not verify that 'iterator'
-  // when passed in is pointing to a sub-tuple of the ExecutionInput whose
-  // on_device_shape matches that of the TrackedDeviceBuffer. 'end' is used to
-  // check that 'iterator' doesn't run out of bounds.
-  void AddToInputAsImmutable(
-      ShapeTree<MaybeOwningDeviceMemory>::iterator* iterator,
-      const ShapeTree<MaybeOwningDeviceMemory>::iterator& end) const;
+    // Adds the owned device buffers in order to 'iterator'. Used to add the
+    // buffers to an ExecutionInput. We require but do not verify that 'iterator'
+    // when passed in is pointing to a sub-tuple of the ExecutionInput whose
+    // on_device_shape matches that of the TrackedDeviceBuffer. 'end' is used to
+    // check that 'iterator' doesn't run out of bounds.
+    void AddToInputAsImmutable(
+        ShapeTree<MaybeOwningDeviceMemory>::iterator* iterator,
+        const ShapeTree<MaybeOwningDeviceMemory>::iterator& end) const;
 
-  // Adds the owned device buffers in order to 'iterator', marking them as
-  // available to be donated. If donation succeeds, i.e., execution_input is
-  // subsequently successfully enqueued to a computation,
-  // this->ReleaseDeviceMemory() must be called to avoid freeing the device
-  // memory twice. We require but do not verify that 'iterator' when passed in
-  // is pointing to a sub-tuple of execution_input whose on_device_shape matches
-  // that of the TrackedDeviceBuffer. 'end' is used to check that 'iterator'
-  // doesn't run out of bounds.
-  void AddToInputAsDonated(
-      ShapeTree<MaybeOwningDeviceMemory>::iterator* iterator,
-      const ShapeTree<MaybeOwningDeviceMemory>::iterator& end,
-      ExecutionInput* execution_input,
-      se::DeviceMemoryAllocator* allocator) const;
+    // Adds the owned device buffers in order to 'iterator', marking them as
+    // available to be donated. If donation succeeds, i.e., execution_input is
+    // subsequently successfully enqueued to a computation,
+    // this->ReleaseDeviceMemory() must be called to avoid freeing the device
+    // memory twice. We require but do not verify that 'iterator' when passed in
+    // is pointing to a sub-tuple of execution_input whose on_device_shape matches
+    // that of the TrackedDeviceBuffer. 'end' is used to check that 'iterator'
+    // doesn't run out of bounds.
+    void AddToInputAsDonated(
+        ShapeTree<MaybeOwningDeviceMemory>::iterator* iterator,
+        const ShapeTree<MaybeOwningDeviceMemory>::iterator& end,
+        ExecutionInput* execution_input,
+        se::DeviceMemoryAllocator* allocator) const;
 
-  se::DeviceMemoryAllocator* allocator() const { return allocator_; }
-  int device_ordinal() const { return device_ordinal_; }
-  absl::InlinedVector<se::DeviceMemoryBase, 1>& device_memory() {
-    return device_memory_;
-  }
-  const absl::InlinedVector<se::DeviceMemoryBase, 1>& device_memory() const {
-    return device_memory_;
-  }
-  absl::Span<const std::shared_ptr<BufferSequencingEvent>> definition_events()
-      const {
-    return definition_events_;
-  }
-  absl::Span<const StreamAndEvent> usage_events() const {
-    return usage_events_;
-  }
+    se::DeviceMemoryAllocator* allocator() const {
+        return allocator_;
+    }
+    int device_ordinal() const {
+        return device_ordinal_;
+    }
+    absl::InlinedVector<se::DeviceMemoryBase, 1>& device_memory() {
+        return device_memory_;
+    }
+    const absl::InlinedVector<se::DeviceMemoryBase, 1>& device_memory() const {
+        return device_memory_;
+    }
+    absl::Span<const std::shared_ptr<BufferSequencingEvent>> definition_events()
+    const {
+        return definition_events_;
+    }
+    absl::Span<const StreamAndEvent> usage_events() const {
+        return usage_events_;
+    }
 
-  // Relinquishes ownership of the buffer's device memory, e.g., after the
-  // buffer is passed to a computation that aliases its inputs to outputs.
-  void ReleaseDeviceMemory() { device_memory_.clear(); }
+    // Relinquishes ownership of the buffer's device memory, e.g., after the
+    // buffer is passed to a computation that aliases its inputs to outputs.
+    void ReleaseDeviceMemory() {
+        device_memory_.clear();
+    }
 
-  // Indicates that the buffer has been used on a stream.
-  //
-  //   usage_stream:   a stream that the buffer was used on.
-  //   event:          an event that has been recorded on usage_stream after the
-  //                   buffer was used.
-  //   reference_held: true if and only if the caller has caused a memory
-  //                   reference to *this to stay live until after the host
-  //                   is sure that the usage (transfer or execution) has
-  //                   completed.
-  void AddUsageEvent(se::Stream* usage_stream,
-                     std::shared_ptr<BufferSequencingEvent> event,
-                     bool reference_held);
+    // Indicates that the buffer has been used on a stream.
+    //
+    //   usage_stream:   a stream that the buffer was used on.
+    //   event:          an event that has been recorded on usage_stream after the
+    //                   buffer was used.
+    //   reference_held: true if and only if the caller has caused a memory
+    //                   reference to *this to stay live until after the host
+    //                   is sure that the usage (transfer or execution) has
+    //                   completed.
+    void AddUsageEvent(se::Stream* usage_stream,
+                       std::shared_ptr<BufferSequencingEvent> event,
+                       bool reference_held);
 
-  using StreamAndEventContainer = absl::InlinedVector<StreamAndEvent, 3>;
-  // Returns the set of streams that the buffer was used on, and for each stream
-  // an event later than the last use of the buffer. After
-  // LockUseAndTransferUsageEvents is called it is illegal to use the buffer on
-  // any stream and, e.g. AddUsageHold will CHECK fail.
-  StreamAndEventContainer LockUseAndTransferUsageEvents();
+    using StreamAndEventContainer = absl::InlinedVector<StreamAndEvent, 3>;
+    // Returns the set of streams that the buffer was used on, and for each stream
+    // an event later than the last use of the buffer. After
+    // LockUseAndTransferUsageEvents is called it is illegal to use the buffer on
+    // any stream and, e.g. AddUsageHold will CHECK fail.
+    StreamAndEventContainer LockUseAndTransferUsageEvents();
 
-  TrackedDeviceBuffer() : in_use_(true) {}
-  TrackedDeviceBuffer(se::DeviceMemoryAllocator* allocator, int device_ordinal,
-                      absl::Span<se::DeviceMemoryBase const> device_memory,
-                      absl::Span<const std::shared_ptr<BufferSequencingEvent>>
-                          definition_events,
-                      std::function<void()> on_delete_callback);
-  ~TrackedDeviceBuffer();
+    TrackedDeviceBuffer() : in_use_(true) {}
+    TrackedDeviceBuffer(se::DeviceMemoryAllocator* allocator, int device_ordinal,
+                        absl::Span<se::DeviceMemoryBase const> device_memory,
+                        absl::Span<const std::shared_ptr<BufferSequencingEvent>>
+                        definition_events,
+                        std::function<void()> on_delete_callback);
+    ~TrackedDeviceBuffer();
 
- private:
-  // Are the buffers in device_memory_ owned? If so, which allocator and device
-  // ordinal? May be nullptr, indicating the buffers are not owned.
-  se::DeviceMemoryAllocator* allocator_;
-  int device_ordinal_;
+private:
+    // Are the buffers in device_memory_ owned? If so, which allocator and device
+    // ordinal? May be nullptr, indicating the buffers are not owned.
+    se::DeviceMemoryAllocator* allocator_;
+    int device_ordinal_;
 
-  // Each host-side buffer may have several buffers on-device.
-  absl::InlinedVector<se::DeviceMemoryBase, 1> device_memory_;
+    // Each host-side buffer may have several buffers on-device.
+    absl::InlinedVector<se::DeviceMemoryBase, 1> device_memory_;
 
-  // Events that are triggered when the content of one or more buffers is ready
-  // during multistream execution. May be nullptr, which is used in the
-  // single-stream execution case where events are not necessary for buffer
-  // event sequencing. All events must be triggered before the buffers can be
-  // used.
-  absl::InlinedVector<std::shared_ptr<BufferSequencingEvent>, 2>
-      definition_events_;
+    // Events that are triggered when the content of one or more buffers is ready
+    // during multistream execution. May be nullptr, which is used in the
+    // single-stream execution case where events are not necessary for buffer
+    // event sequencing. All events must be triggered before the buffers can be
+    // used.
+    absl::InlinedVector<std::shared_ptr<BufferSequencingEvent>, 2>
+    definition_events_;
 
-  // in_use_ starts out true, and is set to false when the buffer is released
-  // from its owning PjRtBuffer. Once in_use_ is false, the buffer may no
-  // longer be used on any stream.
-  bool in_use_;
-  // Set of streams that the buffer has ever been used on, see comment on
-  // StreamAndEvent.
-  StreamAndEventContainer usage_events_;
+    // in_use_ starts out true, and is set to false when the buffer is released
+    // from its owning PjRtBuffer. Once in_use_ is false, the buffer may no
+    // longer be used on any stream.
+    bool in_use_;
+    // Set of streams that the buffer has ever been used on, see comment on
+    // StreamAndEvent.
+    StreamAndEventContainer usage_events_;
 
-  // A callback to call when the TrackedDeviceBuffer is about to be destroyed.
-  std::function<void()> on_delete_callback_;
+    // A callback to call when the TrackedDeviceBuffer is about to be destroyed.
+    std::function<void()> on_delete_callback_;
 };
 
 // Populates 'events' with the set of buffer events for buffer. If
@@ -253,7 +259,7 @@ void GetDeviceBufferEvents(const TrackedDeviceBuffer& buffer,
 
 // Waits for all of the definition events in a buffer on 'stream'.
 void WaitForBufferDefinitionEventsOnStream(const TrackedDeviceBuffer& buffer,
-                                           se::Stream* stream);
+        se::Stream* stream);
 
 }  // namespace xla
 
