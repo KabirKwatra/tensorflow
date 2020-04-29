@@ -14,9 +14,7 @@
 # ==============================================================================
 """Core Keras layers.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 import sys
@@ -25,34 +23,19 @@ import types as python_types
 import warnings
 
 import numpy as np
-
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
+from tensorflow.python.eager import backprop, context
+from tensorflow.python.framework import constant_op, dtypes, ops, tensor_shape
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import constraints
-from tensorflow.python.keras import initializers
-from tensorflow.python.keras import regularizers
+from tensorflow.python.keras import constraints, initializers, regularizers
 from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow.python.keras.engine.input_spec import InputSpec
-from tensorflow.python.keras.utils import conv_utils
-from tensorflow.python.keras.utils import generic_utils
-from tensorflow.python.keras.utils import tf_utils
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gen_math_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import nn
-from tensorflow.python.ops import sparse_ops
-from tensorflow.python.ops import standard_ops
-from tensorflow.python.ops import variable_scope
+from tensorflow.python.keras.utils import conv_utils, generic_utils, tf_utils
+from tensorflow.python.ops import (array_ops, gen_math_ops, math_ops, nn,
+                                   sparse_ops, standard_ops, variable_scope)
 from tensorflow.python.platform import tf_logging
 from tensorflow.python.training.tracking import base as trackable
-from tensorflow.python.util import nest
-from tensorflow.python.util import tf_inspect
+from tensorflow.python.util import nest, tf_inspect
 from tensorflow.python.util.tf_export import keras_export
 
 
