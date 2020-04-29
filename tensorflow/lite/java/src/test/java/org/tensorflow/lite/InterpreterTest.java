@@ -32,12 +32,9 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link org.tensorflow.lite.Interpreter}. */
 @RunWith(JUnit4.class)
 public final class InterpreterTest {
-
   private static final String MODEL_PATH = "tensorflow/lite/java/src/testdata/add.bin";
-  private static final String MULTIPLE_INPUTS_MODEL_PATH =
-      "tensorflow/lite/testdata/multi_add.bin";
-  private static final String FLEX_MODEL_PATH =
-      "tensorflow/lite/testdata/multi_add_flex.bin";
+  private static final String MULTIPLE_INPUTS_MODEL_PATH = "tensorflow/lite/testdata/multi_add.bin";
+  private static final String FLEX_MODEL_PATH = "tensorflow/lite/testdata/multi_add_flex.bin";
   private static final String UNKNOWN_DIMS_MODEL_PATH =
       "tensorflow/lite/java/src/testdata/add_unknown_dimensions.bin";
 
@@ -62,14 +59,12 @@ public final class InterpreterTest {
 
   @Test
   public void testInterpreterWithOptions() throws Exception {
-    Interpreter interpreter =
-        new Interpreter(
-            MODEL_BUFFER,
-            new Interpreter.Options()
-                .setNumThreads(2)
-                .setUseNNAPI(true)
-                .setAllowFp16PrecisionForFp32(false)
-                .setAllowBufferHandleOutput(false));
+    Interpreter interpreter = new Interpreter(MODEL_BUFFER,
+        new Interpreter.Options()
+            .setNumThreads(2)
+            .setUseNNAPI(true)
+            .setAllowFp16PrecisionForFp32(false)
+            .setAllowBufferHandleOutput(false));
     assertThat(interpreter).isNotNull();
     assertThat(interpreter.getInputTensorCount()).isEqualTo(1);
     assertThat(interpreter.getInputTensor(0).dataType()).isEqualTo(DataType.FLOAT32);
@@ -123,11 +118,8 @@ public final class InterpreterTest {
       new Interpreter(byteBuffer);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains(
-              "Model ByteBuffer should be either a MappedByteBuffer"
-                  + " of the model file, or a direct ByteBuffer using ByteOrder.nativeOrder()");
+      assertThat(e).hasMessageThat().contains("Model ByteBuffer should be either a MappedByteBuffer"
+          + " of the model file, or a direct ByteBuffer using ByteOrder.nativeOrder()");
     }
   }
 
@@ -204,8 +196,7 @@ public final class InterpreterTest {
       interpreter.run(fourD, parsedOutput);
     }
     float[] outputOneD = {
-      parsedOutput.getFloat(0), parsedOutput.getFloat(4), parsedOutput.getFloat(8)
-    };
+        parsedOutput.getFloat(0), parsedOutput.getFloat(4), parsedOutput.getFloat(8)};
     float[] expected = {3.69f, 19.62f, 23.43f};
     assertThat(outputOneD).usingTolerance(0.1f).containsExactly(expected).inOrder();
   }
@@ -294,12 +285,10 @@ public final class InterpreterTest {
       interpreter.run(fourD, parsedOutputs);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains(
-              "Cannot convert between a TensorFlowLite tensor with type "
-                  + "FLOAT32 and a Java object of type [[[[I (which is compatible with the"
-                  + " TensorFlowLite type INT32)");
+      assertThat(e).hasMessageThat().contains(
+          "Cannot convert between a TensorFlowLite tensor with type "
+          + "FLOAT32 and a Java object of type [[[[I (which is compatible with the"
+          + " TensorFlowLite type INT32)");
     }
     interpreter.close();
   }
@@ -328,12 +317,10 @@ public final class InterpreterTest {
       interpreter.run(fourD, parsedOutputs);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains(
-              "Cannot convert between a TensorFlowLite tensor with type "
-                  + "FLOAT32 and a Java object of type [[[[I (which is compatible with the"
-                  + " TensorFlowLite type INT32)");
+      assertThat(e).hasMessageThat().contains(
+          "Cannot convert between a TensorFlowLite tensor with type "
+          + "FLOAT32 and a Java object of type [[[[I (which is compatible with the"
+          + " TensorFlowLite type INT32)");
     }
     interpreter.close();
   }
@@ -345,11 +332,9 @@ public final class InterpreterTest {
       interpreter.getInputIndex("WrongInputName");
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains(
-              "'WrongInputName' is not a valid name for any input. Names of inputs and their "
-                  + "indexes are {input=0}");
+      assertThat(e).hasMessageThat().contains(
+          "'WrongInputName' is not a valid name for any input. Names of inputs and their "
+          + "indexes are {input=0}");
     }
     int index = interpreter.getInputIndex("input");
     assertThat(index).isEqualTo(0);
@@ -362,11 +347,9 @@ public final class InterpreterTest {
       interpreter.getOutputIndex("WrongOutputName");
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains(
-              "'WrongOutputName' is not a valid name for any output. Names of outputs and their"
-                  + " indexes are {output=0}");
+      assertThat(e).hasMessageThat().contains(
+          "'WrongOutputName' is not a valid name for any output. Names of outputs and their"
+          + " indexes are {output=0}");
     }
     int index = interpreter.getOutputIndex("output");
     assertThat(index).isEqualTo(0);
@@ -374,10 +357,8 @@ public final class InterpreterTest {
 
   @Test
   public void testTurnOnNNAPI() throws Exception {
-    Interpreter interpreter =
-        new Interpreter(
-            MODEL_BUFFER,
-            new Interpreter.Options().setUseNNAPI(true).setAllowFp16PrecisionForFp32(true));
+    Interpreter interpreter = new Interpreter(MODEL_BUFFER,
+        new Interpreter.Options().setUseNNAPI(true).setAllowFp16PrecisionForFp32(true));
     float[] oneD = {1.23f, 6.54f, 7.81f};
     float[][] twoD = {oneD, oneD, oneD, oneD, oneD, oneD, oneD, oneD};
     float[][][] threeD = {twoD, twoD, twoD, twoD, twoD, twoD, twoD, twoD};
@@ -435,13 +416,12 @@ public final class InterpreterTest {
   @Test
   public void testDelegate() throws Exception {
     System.loadLibrary("tensorflowlite_test_jni");
-    Delegate delegate =
-        new Delegate() {
-          @Override
-          public long getNativeHandle() {
-            return getNativeHandleForDelegate();
-          }
-        };
+    Delegate delegate = new Delegate() {
+      @Override
+      public long getNativeHandle() {
+        return getNativeHandleForDelegate();
+      }
+    };
     Interpreter interpreter =
         new Interpreter(MODEL_BUFFER, new Interpreter.Options().addDelegate(delegate));
 
@@ -462,13 +442,12 @@ public final class InterpreterTest {
   @Test
   public void testNullInputsAndOutputsWithDelegate() throws Exception {
     System.loadLibrary("tensorflowlite_test_jni");
-    Delegate delegate =
-        new Delegate() {
-          @Override
-          public long getNativeHandle() {
-            return getNativeHandleForDelegate();
-          }
-        };
+    Delegate delegate = new Delegate() {
+      @Override
+      public long getNativeHandle() {
+        return getNativeHandleForDelegate();
+      }
+    };
     Interpreter interpreter =
         new Interpreter(MODEL_BUFFER, new Interpreter.Options().addDelegate(delegate));
     // The delegate installs a custom buffer handle for all tensors, in turn allowing null to be
@@ -481,13 +460,12 @@ public final class InterpreterTest {
   @Test
   public void testModifyGraphWithDelegate() throws Exception {
     System.loadLibrary("tensorflowlite_test_jni");
-    Delegate delegate =
-        new Delegate() {
-          @Override
-          public long getNativeHandle() {
-            return getNativeHandleForDelegate();
-          }
-        };
+    Delegate delegate = new Delegate() {
+      @Override
+      public long getNativeHandle() {
+        return getNativeHandleForDelegate();
+      }
+    };
     Interpreter interpreter = new Interpreter(MODEL_BUFFER);
     interpreter.modifyGraphWithDelegate(delegate);
 
@@ -508,13 +486,12 @@ public final class InterpreterTest {
   @Test
   public void testInvalidDelegate() throws Exception {
     System.loadLibrary("tensorflowlite_test_jni");
-    Delegate delegate =
-        new Delegate() {
-          @Override
-          public long getNativeHandle() {
-            return getNativeHandleForInvalidDelegate();
-          }
-        };
+    Delegate delegate = new Delegate() {
+      @Override
+      public long getNativeHandle() {
+        return getNativeHandleForInvalidDelegate();
+      }
+    };
     try {
       Interpreter interpreter =
           new Interpreter(MODEL_BUFFER, new Interpreter.Options().addDelegate(delegate));
@@ -527,13 +504,12 @@ public final class InterpreterTest {
   @Test
   public void testNullDelegate() throws Exception {
     System.loadLibrary("tensorflowlite_test_jni");
-    Delegate delegate =
-        new Delegate() {
-          @Override
-          public long getNativeHandle() {
-            return 0;
-          }
-        };
+    Delegate delegate = new Delegate() {
+      @Override
+      public long getNativeHandle() {
+        return 0;
+      }
+    };
     try {
       Interpreter interpreter =
           new Interpreter(MODEL_BUFFER, new Interpreter.Options().addDelegate(delegate));

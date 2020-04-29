@@ -30,21 +30,15 @@ import org.junit.runners.JUnit4;
 // TODO(b/71818425): Generates model files dynamically.
 @RunWith(JUnit4.class)
 public final class NativeInterpreterWrapperTest {
+  private static final String FLOAT_MODEL_PATH = "tensorflow/lite/java/src/testdata/add.bin";
 
-  private static final String FLOAT_MODEL_PATH =
-      "tensorflow/lite/java/src/testdata/add.bin";
+  private static final String INT_MODEL_PATH = "tensorflow/lite/java/src/testdata/int32.bin";
 
-  private static final String INT_MODEL_PATH =
-      "tensorflow/lite/java/src/testdata/int32.bin";
+  private static final String LONG_MODEL_PATH = "tensorflow/lite/java/src/testdata/int64.bin";
 
-  private static final String LONG_MODEL_PATH =
-      "tensorflow/lite/java/src/testdata/int64.bin";
+  private static final String BYTE_MODEL_PATH = "tensorflow/lite/java/src/testdata/uint8.bin";
 
-  private static final String BYTE_MODEL_PATH =
-      "tensorflow/lite/java/src/testdata/uint8.bin";
-
-  private static final String STRING_MODEL_PATH =
-      "tensorflow/lite/java/src/testdata/string.bin";
+  private static final String STRING_MODEL_PATH = "tensorflow/lite/java/src/testdata/string.bin";
 
   private static final String STRING_SCALAR_MODEL_PATH =
       "tensorflow/lite/java/src/testdata/string_scalar.bin";
@@ -67,9 +61,8 @@ public final class NativeInterpreterWrapperTest {
 
   @Test
   public void testConstructorWithOptions() {
-    try (NativeInterpreterWrapper wrapper =
-        new NativeInterpreterWrapper(
-            FLOAT_MODEL_PATH, new Interpreter.Options().setNumThreads(2).setUseNNAPI(true))) {
+    try (NativeInterpreterWrapper wrapper = new NativeInterpreterWrapper(
+             FLOAT_MODEL_PATH, new Interpreter.Options().setNumThreads(2).setUseNNAPI(true))) {
       assertThat(wrapper).isNotNull();
     }
   }
@@ -140,8 +133,7 @@ public final class NativeInterpreterWrapperTest {
       outputs.put(0, parsedOutput);
       wrapper.run(inputs, outputs);
       float[] outputOneD = {
-        parsedOutput.getFloat(0), parsedOutput.getFloat(4), parsedOutput.getFloat(8)
-      };
+          parsedOutput.getFloat(0), parsedOutput.getFloat(4), parsedOutput.getFloat(8)};
       float[] expected = {3.69f, -19.62f, 23.43f};
       assertThat(outputOneD).usingTolerance(0.1f).containsExactly(expected).inOrder();
     }
@@ -242,16 +234,15 @@ public final class NativeInterpreterWrapperTest {
       wrapper.run(inputs, outputs);
       String[] outputOneD = parsedOutputs[0][0][0];
       String[] expected = {
-          "s1", "s22", "s333", "s1", "s22", "s333", "s1", "s22", "s333", "s1", "s22", "s333"
-      };
+          "s1", "s22", "s333", "s1", "s22", "s333", "s1", "s22", "s333", "s1", "s22", "s333"};
       assertThat(outputOneD).isEqualTo(expected);
     }
   }
 
   @Test
   public void testRunWithScalarString() {
-    try (NativeInterpreterWrapper wrapper =
-        new NativeInterpreterWrapper(STRING_SCALAR_MODEL_PATH)) {
+    try (
+        NativeInterpreterWrapper wrapper = new NativeInterpreterWrapper(STRING_SCALAR_MODEL_PATH)) {
       String[] parsedOutputs = new String[1];
       Map<Integer, Object> outputs = new HashMap<>();
       outputs.put(0, parsedOutputs);
@@ -275,10 +266,9 @@ public final class NativeInterpreterWrapperTest {
       outputs.put(0, parsedOutputs);
       wrapper.run(inputs, outputs);
       String[] outputOneD = parsedOutputs[0][0][0];
-      String[] expected = {
-          "\uD800\uDC01", "s22", "\ud841\udf0e", "\uD800\uDC01", "s22", "\ud841\udf0e",
-          "\uD800\uDC01", "s22", "\ud841\udf0e", "\uD800\uDC01", "s22", "\ud841\udf0e"
-      };
+      String[] expected = {"\uD800\uDC01", "s22", "\ud841\udf0e", "\uD800\uDC01", "s22",
+          "\ud841\udf0e", "\uD800\uDC01", "s22", "\ud841\udf0e", "\uD800\uDC01", "s22",
+          "\ud841\udf0e"};
       assertThat(outputOneD).isEqualTo(expected);
     }
   }
@@ -298,11 +288,9 @@ public final class NativeInterpreterWrapperTest {
         wrapper.run(inputs, outputs);
         fail();
       } catch (IllegalArgumentException e) {
-        assertThat(e)
-            .hasMessageThat()
-            .contains(
-                "Cannot copy between a TensorFlowLite tensor with shape [2, 4, 4, 12] and "
-                    + "a Java object with shape [2, 4, 4, 10]");
+        assertThat(e).hasMessageThat().contains(
+            "Cannot copy between a TensorFlowLite tensor with shape [2, 4, 4, 12] and "
+            + "a Java object with shape [2, 4, 4, 10]");
       }
     }
   }
@@ -331,10 +319,8 @@ public final class NativeInterpreterWrapperTest {
       outputs.put(0, parsedOutputs);
       wrapper.run(inputs, outputs);
       byte[] outputOneD = parsedOutputs[0][0][0];
-      byte[] expected = {
-          (byte) 0xe0, 0x4f, (byte) 0xd0, (byte) 0xe0, 0x4f, (byte) 0xd0,
-          (byte) 0xe0, 0x4f, (byte) 0xd0, (byte) 0xe0, 0x4f, (byte) 0xd0
-      };
+      byte[] expected = {(byte) 0xe0, 0x4f, (byte) 0xd0, (byte) 0xe0, 0x4f, (byte) 0xd0,
+          (byte) 0xe0, 0x4f, (byte) 0xd0, (byte) 0xe0, 0x4f, (byte) 0xd0};
       assertThat(outputOneD).isEqualTo(expected);
     }
   }
@@ -362,11 +348,9 @@ public final class NativeInterpreterWrapperTest {
         wrapper.run(inputs, outputs);
         fail();
       } catch (IllegalArgumentException e) {
-        assertThat(e)
-            .hasMessageThat()
-            .contains(
-                "Cannot convert between a TensorFlowLite buffer with 768 bytes and a "
-                    + "Java Buffer with 3072 bytes.");
+        assertThat(e).hasMessageThat().contains(
+            "Cannot convert between a TensorFlowLite buffer with 768 bytes and a "
+            + "Java Buffer with 3072 bytes.");
       }
       int[] inputDims = {4, 8, 8, 3};
       wrapper.resizeInput(0, inputDims);
@@ -390,11 +374,9 @@ public final class NativeInterpreterWrapperTest {
         wrapper.run(inputs, outputs);
         fail();
       } catch (IllegalArgumentException e) {
-        assertThat(e)
-            .hasMessageThat()
-            .contains(
-                "Cannot convert between a TensorFlowLite buffer with 192 bytes and a "
-                    + "Java Buffer with 336 bytes.");
+        assertThat(e).hasMessageThat().contains(
+            "Cannot convert between a TensorFlowLite buffer with 192 bytes and a "
+            + "Java Buffer with 336 bytes.");
       }
     }
   }
@@ -414,12 +396,10 @@ public final class NativeInterpreterWrapperTest {
         wrapper.run(inputs, outputs);
         fail();
       } catch (IllegalArgumentException e) {
-        assertThat(e)
-            .hasMessageThat()
-            .contains(
-                "Cannot convert between a TensorFlowLite tensor with type FLOAT32 and a Java "
-                    + "object of type [[[[I (which is compatible with the TensorFlowLite type "
-                    + "INT32)");
+        assertThat(e).hasMessageThat().contains(
+            "Cannot convert between a TensorFlowLite tensor with type FLOAT32 and a Java "
+            + "object of type [[[[I (which is compatible with the TensorFlowLite type "
+            + "INT32)");
       }
     }
   }
@@ -491,11 +471,9 @@ public final class NativeInterpreterWrapperTest {
         wrapper.run(inputs, outputs);
         fail();
       } catch (IllegalArgumentException e) {
-        assertThat(e)
-            .hasMessageThat()
-            .contains(
-                "Cannot copy between a TensorFlowLite tensor with shape [8, 7, 3] and a "
-                    + "Java object with shape [2, 8, 8, 3].");
+        assertThat(e).hasMessageThat().contains(
+            "Cannot copy between a TensorFlowLite tensor with shape [8, 7, 3] and a "
+            + "Java object with shape [2, 8, 8, 3].");
       }
     }
   }
@@ -515,11 +493,9 @@ public final class NativeInterpreterWrapperTest {
         wrapper.run(inputs, outputs);
         fail();
       } catch (IllegalArgumentException e) {
-        assertThat(e)
-            .hasMessageThat()
-            .contains(
-                "Cannot copy between a TensorFlowLite tensor with shape [2, 8, 7, 3] and a "
-                    + "Java object with shape [2, 8, 8, 3].");
+        assertThat(e).hasMessageThat().contains(
+            "Cannot copy between a TensorFlowLite tensor with shape [2, 8, 7, 3] and a "
+            + "Java object with shape [2, 8, 8, 3].");
       }
     }
   }

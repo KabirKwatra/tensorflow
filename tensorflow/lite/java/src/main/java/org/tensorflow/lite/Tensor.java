@@ -33,7 +33,6 @@ import java.util.Arrays;
  */
 // TODO(b/153882978): Add scalar getters similar to TF's Java API.
 public final class Tensor {
-
   /**
    * Creates a Tensor wrapper from the provided interpreter instance and tensor index.
    *
@@ -406,8 +405,7 @@ public final class Tensor {
       }
 
       throw new IllegalArgumentException(
-          String.format(
-              "Cannot convert between a TensorFlowLite tensor with type %s and a Java "
+          String.format("Cannot convert between a TensorFlowLite tensor with type %s and a Java "
                   + "object of type %s (which is compatible with the TensorFlowLite type %s).",
               dtype, o.getClass().getName(), oType));
     }
@@ -422,8 +420,7 @@ public final class Tensor {
       int oBytes = isByteBuffer(o) ? oBuffer.capacity() : oBuffer.capacity() * dtype.byteSize();
       if (bytes != oBytes) {
         throw new IllegalArgumentException(
-            String.format(
-                "Cannot convert between a TensorFlowLite buffer with %d bytes and a "
+            String.format("Cannot convert between a TensorFlowLite buffer with %d bytes and a "
                     + "Java Buffer with %d bytes.",
                 bytes, oBytes));
       }
@@ -431,11 +428,10 @@ public final class Tensor {
     }
     int[] oShape = computeShapeOf(o);
     if (!Arrays.equals(oShape, shapeCopy)) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Cannot copy between a TensorFlowLite tensor with shape %s and a Java object "
-                  + "with shape %s.",
-              Arrays.toString(shapeCopy), Arrays.toString(oShape)));
+      throw new IllegalArgumentException(String.format(
+          "Cannot copy between a TensorFlowLite tensor with shape %s and a Java object "
+              + "with shape %s.",
+          Arrays.toString(shapeCopy), Arrays.toString(oShape)));
     }
   }
 
@@ -458,9 +454,8 @@ public final class Tensor {
     this.dtype = DataType.fromC(dtype(nativeHandle));
     this.shapeCopy = shape(nativeHandle);
     this.shapeSignatureCopy = shapeSignature(nativeHandle);
-    this.quantizationParamsCopy =
-        new QuantizationParams(
-            quantizationScale(nativeHandle), quantizationZeroPoint(nativeHandle));
+    this.quantizationParamsCopy = new QuantizationParams(
+        quantizationScale(nativeHandle), quantizationZeroPoint(nativeHandle));
   }
 
   private ByteBuffer buffer() {

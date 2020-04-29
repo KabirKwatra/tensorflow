@@ -30,8 +30,8 @@ constexpr char kTestData[] = "cc/saved_model/testdata";
 const char* kServeTag[] = {"serve"};
 
 std::string SavedModelPath(tensorflow::StringPiece saved_model_dir) {
-    return tensorflow::io::JoinPath(tensorflow::testing::TensorFlowSrcRoot(),
-                                    kTestData, saved_model_dir);
+  return tensorflow::io::JoinPath(tensorflow::testing::TensorFlowSrcRoot(),
+                                  kTestData, saved_model_dir);
 }
 
 // This value parameterized test allows us to test both TFRT
@@ -40,67 +40,67 @@ std::string SavedModelPath(tensorflow::StringPiece saved_model_dir) {
 class CSavedModelAPITest : public ::testing::TestWithParam<bool> {};
 
 TEST_P(CSavedModelAPITest, LoadsSavedModelWithTags) {
-    TF_Status* status = TF_NewStatus();
-    TFE_ContextOptions* opts = TFE_NewContextOptions();
-    bool use_tfrt = GetParam();
-    if (use_tfrt) {
-        TFE_DeleteContextOptions(opts);
-        TF_DeleteStatus(status);
-        GTEST_SKIP();  // TODO(chky) : Enable this once TFRT is open sourced.
-    }
-
-    TFE_ContextOptionsSetTfrt(opts, use_tfrt);
-
-    TFE_Context* ctx = TFE_NewContext(opts, status);
-    ASSERT_EQ(TF_OK, TF_GetCode(status)) << TF_Message(status);
+  TF_Status* status = TF_NewStatus();
+  TFE_ContextOptions* opts = TFE_NewContextOptions();
+  bool use_tfrt = GetParam();
+  if (use_tfrt) {
     TFE_DeleteContextOptions(opts);
-
-    std::string model_dir = SavedModelPath("VarsAndArithmeticObjectGraph");
-
-    TF_SavedModel* saved_model =
-        TF_LoadSavedModelWithTags(model_dir.c_str(), ctx, kServeTag, 1, status);
-
-    // TODO(bmzhao): Change this to expect TF_OK when loading is implemented.
-    // That unblocks writing other tests that require a TF_SavedModel*,
-    // like loading a ConcreteFunction. This test at least checks that the
-    // C API builds and can be minimally run.
-    EXPECT_EQ(TF_GetCode(status), TF_UNIMPLEMENTED);
-
-    TF_DeleteSavedModel(saved_model);
     TF_DeleteStatus(status);
-    TFE_DeleteContext(ctx);
+    GTEST_SKIP();  // TODO(chky) : Enable this once TFRT is open sourced.
+  }
+
+  TFE_ContextOptionsSetTfrt(opts, use_tfrt);
+
+  TFE_Context* ctx = TFE_NewContext(opts, status);
+  ASSERT_EQ(TF_OK, TF_GetCode(status)) << TF_Message(status);
+  TFE_DeleteContextOptions(opts);
+
+  std::string model_dir = SavedModelPath("VarsAndArithmeticObjectGraph");
+
+  TF_SavedModel* saved_model =
+      TF_LoadSavedModelWithTags(model_dir.c_str(), ctx, kServeTag, 1, status);
+
+  // TODO(bmzhao): Change this to expect TF_OK when loading is implemented.
+  // That unblocks writing other tests that require a TF_SavedModel*,
+  // like loading a ConcreteFunction. This test at least checks that the
+  // C API builds and can be minimally run.
+  EXPECT_EQ(TF_GetCode(status), TF_UNIMPLEMENTED);
+
+  TF_DeleteSavedModel(saved_model);
+  TF_DeleteStatus(status);
+  TFE_DeleteContext(ctx);
 }
 
 TEST_P(CSavedModelAPITest, LoadsSavedModel) {
-    TF_Status* status = TF_NewStatus();
-    TFE_ContextOptions* opts = TFE_NewContextOptions();
-    bool use_tfrt = GetParam();
-    if (use_tfrt) {
-        TFE_DeleteContextOptions(opts);
-        TF_DeleteStatus(status);
-        GTEST_SKIP();  // TODO(chky) : Enable this once TFRT is open sourced.
-    }
-
-    TFE_ContextOptionsSetTfrt(opts, use_tfrt);
-
-    TFE_Context* ctx = TFE_NewContext(opts, status);
-    ASSERT_EQ(TF_OK, TF_GetCode(status)) << TF_Message(status);
+  TF_Status* status = TF_NewStatus();
+  TFE_ContextOptions* opts = TFE_NewContextOptions();
+  bool use_tfrt = GetParam();
+  if (use_tfrt) {
     TFE_DeleteContextOptions(opts);
-
-    std::string model_dir = SavedModelPath("VarsAndArithmeticObjectGraph");
-
-    TF_SavedModel* saved_model =
-        TF_LoadSavedModel(model_dir.c_str(), ctx, status);
-
-    // TODO(bmzhao): Change this to expect TF_OK when loading is implemented.
-    // That unblocks writing other tests that require a TF_SavedModel*,
-    // like loading a ConcreteFunction. This test at least checks that the
-    // C API builds and can be minimally run.
-    EXPECT_EQ(TF_GetCode(status), TF_UNIMPLEMENTED);
-
-    TF_DeleteSavedModel(saved_model);
     TF_DeleteStatus(status);
-    TFE_DeleteContext(ctx);
+    GTEST_SKIP();  // TODO(chky) : Enable this once TFRT is open sourced.
+  }
+
+  TFE_ContextOptionsSetTfrt(opts, use_tfrt);
+
+  TFE_Context* ctx = TFE_NewContext(opts, status);
+  ASSERT_EQ(TF_OK, TF_GetCode(status)) << TF_Message(status);
+  TFE_DeleteContextOptions(opts);
+
+  std::string model_dir = SavedModelPath("VarsAndArithmeticObjectGraph");
+
+  TF_SavedModel* saved_model =
+      TF_LoadSavedModel(model_dir.c_str(), ctx, status);
+
+  // TODO(bmzhao): Change this to expect TF_OK when loading is implemented.
+  // That unblocks writing other tests that require a TF_SavedModel*,
+  // like loading a ConcreteFunction. This test at least checks that the
+  // C API builds and can be minimally run.
+  EXPECT_EQ(TF_GetCode(status), TF_UNIMPLEMENTED);
+
+  TF_DeleteSavedModel(saved_model);
+  TF_DeleteStatus(status);
+  TFE_DeleteContext(ctx);
 }
 
 INSTANTIATE_TEST_SUITE_P(RuntimeAgnosticSavedModelTests, CSavedModelAPITest,

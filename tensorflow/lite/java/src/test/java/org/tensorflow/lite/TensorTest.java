@@ -36,15 +36,11 @@ import org.tensorflow.lite.Tensor.QuantizationParams;
 /** Unit tests for {@link org.tensorflow.lite.Tensor}. */
 @RunWith(JUnit4.class)
 public final class TensorTest {
+  private static final String MODEL_PATH = "tensorflow/lite/java/src/testdata/add.bin";
 
-  private static final String MODEL_PATH =
-      "tensorflow/lite/java/src/testdata/add.bin";
+  private static final String INT_MODEL_PATH = "tensorflow/lite/java/src/testdata/int32.bin";
 
-  private static final String INT_MODEL_PATH =
-      "tensorflow/lite/java/src/testdata/int32.bin";
-
-  private static final String LONG_MODEL_PATH =
-      "tensorflow/lite/java/src/testdata/int64.bin";
+  private static final String LONG_MODEL_PATH = "tensorflow/lite/java/src/testdata/int64.bin";
 
   private static final String QUANTIZED_MODEL_PATH =
       "tensorflow/lite/java/src/testdata/quantized.bin";
@@ -111,8 +107,7 @@ public final class TensorTest {
     tensor.copyTo(parsedOutput);
     assertThat(parsedOutput.position()).isEqualTo(2 * 8 * 8 * 3 * 4);
     float[] outputOneD = {
-      parsedOutput.getFloat(0), parsedOutput.getFloat(4), parsedOutput.getFloat(8)
-    };
+        parsedOutput.getFloat(0), parsedOutput.getFloat(4), parsedOutput.getFloat(8)};
     float[] expected = {3.69f, 19.62f, 23.43f};
     assertThat(outputOneD).usingTolerance(0.1f).containsExactly(expected).inOrder();
   }
@@ -185,11 +180,9 @@ public final class TensorTest {
       tensor.copyTo(parsedOutputs);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains(
-              "Cannot convert between a TensorFlowLite tensor with type FLOAT32 and a Java object "
-                  + "of type [[[[I (which is compatible with the TensorFlowLite type INT32)");
+      assertThat(e).hasMessageThat().contains(
+          "Cannot convert between a TensorFlowLite tensor with type FLOAT32 and a Java object "
+          + "of type [[[[I (which is compatible with the TensorFlowLite type INT32)");
     }
   }
 
@@ -200,11 +193,9 @@ public final class TensorTest {
       tensor.copyTo(parsedOutputs);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .contains(
-              "Cannot copy between a TensorFlowLite tensor with shape [2, 8, 8, 3] "
-                  + "and a Java object with shape [1, 8, 8, 3].");
+      assertThat(e).hasMessageThat().contains(
+          "Cannot copy between a TensorFlowLite tensor with shape [2, 8, 8, 3] "
+          + "and a Java object with shape [1, 8, 8, 3].");
     }
   }
 
@@ -363,12 +354,8 @@ public final class TensorTest {
 
   @Test
   public void testSetToInvalidBuffer() {
-    Buffer[] inputs = {
-      ByteBuffer.allocateDirect(3 * 4).order(ByteOrder.nativeOrder()),
-      FloatBuffer.allocate(3),
-      IntBuffer.allocate(3),
-      LongBuffer.allocate(3)
-    };
+    Buffer[] inputs = {ByteBuffer.allocateDirect(3 * 4).order(ByteOrder.nativeOrder()),
+        FloatBuffer.allocate(3), IntBuffer.allocate(3), LongBuffer.allocate(3)};
     for (Buffer input : inputs) {
       try {
         tensor.setTo(input);

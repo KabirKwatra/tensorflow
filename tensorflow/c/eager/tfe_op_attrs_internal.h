@@ -32,12 +32,12 @@ limitations under the License.
 // An equivalent of a tensorflow::NameAttrList protocol buffer, but used in ways
 // that sometimes do not require serialization.
 struct TFE_OpAttrs {
-    explicit TFE_OpAttrs() : attributes(nullptr) {}
+  explicit TFE_OpAttrs() : attributes(nullptr) {}
 
-    explicit TFE_OpAttrs(const tensorflow::AttrBuilder* value)
-        : attributes(value) {}
+  explicit TFE_OpAttrs(const tensorflow::AttrBuilder* value)
+      : attributes(value) {}
 
-    const tensorflow::AttrBuilder* attributes;
+  const tensorflow::AttrBuilder* attributes;
 };
 
 namespace tensorflow {

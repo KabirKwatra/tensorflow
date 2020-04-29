@@ -41,9 +41,9 @@ Status DoQuantizeTraining(int32 num_bits, const string& quant_op_type,
 // Converts the input serialized GraphDef and returns a rewritten serialized
 // GraphDef for quantized training.
 Status DoQuantizeTrainingOnSerializedGraphDef(const string& input_graph,
-        int32 num_bits,
-        const string& quant_op_type,
-        string* result_graph);
+                                              int32 num_bits,
+                                              const string& quant_op_type,
+                                              string* result_graph);
 
 // Converts the input GraphDef and returns a rewritten GraphDef for quantized
 // training.

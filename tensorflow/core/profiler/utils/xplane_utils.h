@@ -31,7 +31,7 @@ const XPlane* FindPlaneWithName(const XSpace& space, absl::string_view name);
 
 // Returns all the planes with a given prefix.
 std::vector<const XPlane*> FindPlanesWithPrefix(const XSpace& space,
-        absl::string_view prefix);
+                                                absl::string_view prefix);
 
 // Returns the plane with the given name, create it if necessary.
 XPlane* GetOrCreatePlane(XSpace* space, absl::string_view name);
@@ -61,7 +61,7 @@ XEventBuilder CreateXEventWithStringViewMetadataValue(
     XPlaneBuilder* plane_builder, XLineBuilder* line_builder,
     absl::string_view event_name, int64 offset_ps, int64 duration_ps,
     const absl::flat_hash_map<StatType, absl::string_view /*stat_value*/>&
-    stats);
+        stats);
 
 void RemovePlaneWithName(XSpace* space, absl::string_view name);
 void RemoveEmptyPlanes(XSpace* space);

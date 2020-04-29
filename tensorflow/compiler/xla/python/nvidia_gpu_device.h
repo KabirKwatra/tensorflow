@@ -26,36 +26,36 @@ limitations under the License.
 namespace xla {
 
 class GpuDevice : public Device {
-public:
-    GpuDevice(int id, std::unique_ptr<LocalDeviceState> local_device_state,
-              std::string device_kind, int node_id);
+ public:
+  GpuDevice(int id, std::unique_ptr<LocalDeviceState> local_device_state,
+            std::string device_kind, int node_id);
 };
 
 struct GpuAllocatorConfig {
-    enum class Kind {
-        kDefault,   // Client picks the best option for the platform.
-        kPlatform,  // The platform's default.
-        kBFC,  // Allocator using a "Best-Fit with Coalescing" algorithm. Currently
-        // only available for GPU.
-    };
-    Kind kind = Kind::kDefault;
+  enum class Kind {
+    kDefault,   // Client picks the best option for the platform.
+    kPlatform,  // The platform's default.
+    kBFC,  // Allocator using a "Best-Fit with Coalescing" algorithm. Currently
+           // only available for GPU.
+  };
+  Kind kind = Kind::kDefault;
 
-    // Only used if kind == kBFC. The maximum fraction of available memory to
-    // allocate.
-    double memory_fraction = 0.9;
+  // Only used if kind == kBFC. The maximum fraction of available memory to
+  // allocate.
+  double memory_fraction = 0.9;
 
-    // Only used if kind == kBFC. If true, the allocator will immediately allocate
-    // the maximum amount allowed by `memory_fraction`. This reduces
-    // fragmentation, allowing more of the total memory to be used. If false, the
-    // allocator will allocate more memory as allocations are requested.
-    bool preallocate = true;
+  // Only used if kind == kBFC. If true, the allocator will immediately allocate
+  // the maximum amount allowed by `memory_fraction`. This reduces
+  // fragmentation, allowing more of the total memory to be used. If false, the
+  // allocator will allocate more memory as allocations are requested.
+  bool preallocate = true;
 };
 
 // distributed_client may be nullptr in non-distributed settings.
 // distributed_client should not be Open()ed before calling this function.
 StatusOr<std::shared_ptr<PjRtClient>> GetNvidiaGpuClient(
-                                       bool asynchronous, const GpuAllocatorConfig& allocator_config,
-                                       std::shared_ptr<DistributedRuntimeClient> distributed_client, int node_id);
+    bool asynchronous, const GpuAllocatorConfig& allocator_config,
+    std::shared_ptr<DistributedRuntimeClient> distributed_client, int node_id);
 
 }  // namespace xla
 
