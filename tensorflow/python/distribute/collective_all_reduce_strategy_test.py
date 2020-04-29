@@ -14,52 +14,35 @@
 # ==============================================================================
 """Tests for CollectiveAllReduceStrategy."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl.testing import parameterized
 import numpy as np
-
-from tensorflow.core.protobuf import config_pb2
-from tensorflow.core.protobuf import rewriter_config_pb2
+from absl.testing import parameterized
+from tensorflow.core.protobuf import config_pb2, rewriter_config_pb2
 from tensorflow.python import keras
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.distribute import collective_all_reduce_strategy
-from tensorflow.python.distribute import combinations
-from tensorflow.python.distribute import cross_device_utils
-from tensorflow.python.distribute import multi_worker_test_base
-from tensorflow.python.distribute import multi_worker_util
-from tensorflow.python.distribute import reduce_util
-from tensorflow.python.distribute import strategy_combinations
-from tensorflow.python.distribute import strategy_test_lib
-from tensorflow.python.distribute import values
+from tensorflow.python.distribute import (collective_all_reduce_strategy,
+                                          combinations, cross_device_utils,
+                                          multi_worker_test_base,
+                                          multi_worker_util, reduce_util,
+                                          strategy_combinations,
+                                          strategy_test_lib, values)
 from tensorflow.python.distribute.cluster_resolver import SimpleClusterResolver
 from tensorflow.python.eager import context
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import test_util
+from tensorflow.python.framework import (constant_op, dtypes, errors, ops,
+                                         test_util)
 from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.layers import core
 from tensorflow.python.keras.mixed_precision.experimental import policy
-from tensorflow.python.keras.mixed_precision.experimental import (
-    test_util as mp_test_util,
-)
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gradients
-from tensorflow.python.ops import init_ops
-from tensorflow.python.ops import nn
-from tensorflow.python.ops import random_ops
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops import variables
+from tensorflow.python.keras.mixed_precision.experimental import \
+    test_util as mp_test_util
+from tensorflow.python.ops import (array_ops, gradients, init_ops, nn,
+                                   random_ops, variable_scope, variables)
 from tensorflow.python.ops.losses import losses
 from tensorflow.python.platform import test
-from tensorflow.python.training import adam
-from tensorflow.python.training import gradient_descent
-from tensorflow.python.training import training_util
-from tensorflow.python.training.experimental import loss_scale as loss_scale_module
+from tensorflow.python.training import adam, gradient_descent, training_util
+from tensorflow.python.training.experimental import \
+    loss_scale as loss_scale_module
 from tensorflow.python.training.experimental import loss_scale_optimizer
 from tensorflow.python.training.server_lib import ClusterSpec
 

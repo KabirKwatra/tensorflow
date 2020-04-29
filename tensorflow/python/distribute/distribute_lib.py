@@ -93,9 +93,7 @@ reasonable default behavior.
 """
 # pylint: enable=line-too-long
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import copy
@@ -104,39 +102,26 @@ import threading
 import weakref
 
 import six
-
 from tensorflow.python.autograph.core import ag_ctx as autograph_ctx
 from tensorflow.python.autograph.impl import api as autograph
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.distribute import collective_util
-from tensorflow.python.distribute import device_util
-from tensorflow.python.distribute import distribution_strategy_context
-from tensorflow.python.distribute import numpy_dataset
-from tensorflow.python.distribute import reduce_util
+from tensorflow.python.distribute import (collective_util, device_util,
+                                          distribution_strategy_context,
+                                          numpy_dataset, reduce_util)
 from tensorflow.python.eager import context as eager_context
 from tensorflow.python.eager import monitoring
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import custom_gradient
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.ops import summary_ops_v2
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops.losses import loss_reduction
-from tensorflow.python.ops.losses import losses_impl
+from tensorflow.python.framework import constant_op, dtypes, ops, tensor_shape
+from tensorflow.python.ops import (array_ops, control_flow_ops,
+                                   custom_gradient, math_ops,
+                                   resource_variable_ops, summary_ops_v2,
+                                   variable_scope)
+from tensorflow.python.ops.losses import loss_reduction, losses_impl
 from tensorflow.python.platform import tf_logging
 from tensorflow.python.training.tracking import base as trackable
-from tensorflow.python.util import deprecation
-from tensorflow.python.util import nest
-from tensorflow.python.util import tf_contextlib
+from tensorflow.python.util import deprecation, nest, tf_contextlib
 from tensorflow.python.util.deprecation import deprecated
 from tensorflow.python.util.tf_export import tf_export
 from tensorflow.tools.docs import doc_controls
-
 
 # ------------------------------------------------------------------------------
 # Context tracking whether in a strategy.update() or .update_non_slot() call.

@@ -14,17 +14,13 @@
 # ==============================================================================
 """A Python interface for creating TensorFlow servers."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from tensorflow.core.protobuf import cluster_pb2
-from tensorflow.core.protobuf import device_filters_pb2
-from tensorflow.core.protobuf import tensorflow_server_pb2
+from tensorflow.core.protobuf import (cluster_pb2, device_filters_pb2,
+                                      tensorflow_server_pb2)
 from tensorflow.python.client import pywrap_tf_session as c_api
 from tensorflow.python.framework import errors
-from tensorflow.python.util import compat
-from tensorflow.python.util import deprecation
+from tensorflow.python.util import compat, deprecation
 from tensorflow.python.util.tf_export import tf_export
 
 
