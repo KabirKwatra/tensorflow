@@ -62,7 +62,6 @@ try:
     def is_iterator(x):
         return isinstance(x, typing.Iterator)
 
-
 except ImportError:
     # Python2 uses next, and Python3 should have typing so __next__ is not needed.
     def is_iterator(x):
@@ -108,7 +107,6 @@ if sys.version_info[0] == 2:
             for chunk in chunk_read(response, reporthook=reporthook):
                 fd.write(chunk)
 
-
 else:
     from six.moves.urllib.request import urlretrieve
 
@@ -118,7 +116,8 @@ def is_generator_or_sequence(x):
     builtin_iterators = (str, list, tuple, dict, set, frozenset)
     if isinstance(x, (ops.Tensor, np.ndarray) + builtin_iterators):
         return False
-    return tf_inspect.isgenerator(x) or isinstance(x, Sequence) or is_iterator(x)
+    return tf_inspect.isgenerator(x) or isinstance(x,
+                                                   Sequence) or is_iterator(x)
 
 
 def _extract_archive(file_path, path=".", archive_format="auto"):
@@ -172,16 +171,16 @@ def _extract_archive(file_path, path=".", archive_format="auto"):
 
 @keras_export("keras.utils.get_file")
 def get_file(
-    fname,
-    origin,
-    untar=False,
-    md5_hash=None,
-    file_hash=None,
-    cache_subdir="datasets",
-    hash_algorithm="auto",
-    extract=False,
-    archive_format="auto",
-    cache_dir=None,
+        fname,
+        origin,
+        untar=False,
+        md5_hash=None,
+        file_hash=None,
+        cache_subdir="datasets",
+        hash_algorithm="auto",
+        extract=False,
+        archive_format="auto",
+        cache_dir=None,
 ):
     """Downloads a file from a URL if it not already in the cache.
 
@@ -255,14 +254,10 @@ def get_file(
         # File found; verify integrity if a hash was provided.
         if file_hash is not None:
             if not validate_file(fpath, file_hash, algorithm=hash_algorithm):
-                print(
-                    "A local file was found, but it seems to be "
-                    "incomplete or outdated because the "
-                    + hash_algorithm
-                    + " file hash does not match the original value of "
-                    + file_hash
-                    + " so we will re-download the data."
-                )
+                print("A local file was found, but it seems to be "
+                      "incomplete or outdated because the " + hash_algorithm +
+                      " file hash does not match the original value of " +
+                      file_hash + " so we will re-download the data.")
                 download = True
     else:
         download = True
@@ -365,7 +360,8 @@ def validate_file(fpath, file_hash, algorithm="auto", chunk_size=65535):
     Returns:
         Whether the file is valid
     """
-    if (algorithm == "sha256") or (algorithm == "auto" and len(file_hash) == 64):
+    if (algorithm == "sha256") or (algorithm == "auto"
+                                   and len(file_hash) == 64):
         hasher = "sha256"
     else:
         hasher = "md5"
@@ -516,7 +512,6 @@ _SHARED_SEQUENCES = {}
 # We use a Value to provide unique id to different processes.
 _SEQUENCE_COUNTER = None
 
-
 # Because multiprocessing pools are inherently unsafe, starting from a clean
 # state can be essential to avoiding deadlocks. In order to accomplish this, we
 # need to be able to check on the status of Pools that we create.
@@ -547,8 +542,7 @@ def get_pool_class(use_multiprocessing):
     logging.warning(
         "multiprocessing can interact badly with TensorFlow, causing "
         "nondeterministic deadlocks. For high performance data pipelines tf.data "
-        "is recommended."
-    )
+        "is recommended.")
     return multiprocessing.Pool
 
 
@@ -565,9 +559,8 @@ def init_pool(seqs):
     _SHARED_SEQUENCES = seqs
 
 
-@deprecation.deprecated(
-    "2020-06-07", "Please manage pools using the standard " "Python lib."
-)
+@deprecation.deprecated("2020-06-07", "Please manage pools using the standard "
+                        "Python lib.")
 @keras_export("keras.experimental.terminate_keras_multiprocessing_pools")
 def terminate_keras_multiprocessing_pools(grace_period=0.1, use_sigkill=False):
     """Destroy Keras' multiprocessing pools to prevent deadlocks.
@@ -646,8 +639,7 @@ def terminate_keras_multiprocessing_pools(grace_period=0.1, use_sigkill=False):
                         os.kill(
                             worker.pid,
                             signal.SIGKILL
-                            if cleanup_pass == "SIGKILL"
-                            else signal.SIGTERM,
+                            if cleanup_pass == "SIGKILL" else signal.SIGTERM,
                         )
                         workers_terminated_this_pass = True
 
@@ -655,9 +647,7 @@ def terminate_keras_multiprocessing_pools(grace_period=0.1, use_sigkill=False):
                         # And finally we give up and log the failure.
                         errors.append(
                             "worker still alive: {}, pid={}, hash={}".format(
-                                worker.name, worker.pid, hash(worker)
-                            )
-                        )
+                                worker.name, worker.pid, hash(worker)))
 
                 except OSError:
                     # Worker exited since the start of this loop.
@@ -677,7 +667,8 @@ def terminate_keras_multiprocessing_pools(grace_period=0.1, use_sigkill=False):
 
     gc.collect()
     for pool in _DATA_POOLS:
-        errors.append("pool still exists: {}, hash={}".format(pool, hash(pool)))
+        errors.append("pool still exists: {}, hash={}".format(
+            pool, hash(pool)))
 
     return errors
 
@@ -884,9 +875,9 @@ class OrderedEnqueuer(SequenceEnqueuer):
                     if self.stop_signal.is_set():
                         return
 
-                    self.queue.put(
-                        executor.apply_async(get_index, (self.uid, i)), block=True
-                    )
+                    self.queue.put(executor.apply_async(
+                        get_index, (self.uid, i)),
+                                   block=True)
 
                 # Done with the current epoch, waiting for the final batches
                 self._wait_queue()
@@ -1013,9 +1004,8 @@ class GeneratorEnqueuer(SequenceEnqueuer):
                 if self.stop_signal.is_set():
                     return
 
-                self.queue.put(
-                    executor.apply_async(next_sample, (self.uid,)), block=True
-                )
+                self.queue.put(executor.apply_async(next_sample, (self.uid, )),
+                               block=True)
 
     def get(self):
         """Creates a generator to extract data from the queue.
@@ -1042,7 +1032,9 @@ class GeneratorEnqueuer(SequenceEnqueuer):
             for f in last_ones:
                 f.wait()
             # Keep the good ones
-            last_ones = [future.get() for future in last_ones if future.successful()]
+            last_ones = [
+                future.get() for future in last_ones if future.successful()
+            ]
             for inputs in last_ones:
                 if inputs is not None:
                     yield inputs
@@ -1052,6 +1044,5 @@ class GeneratorEnqueuer(SequenceEnqueuer):
                 raise RuntimeError(
                     "Your generator is NOT thread-safe. "
                     "Keras requires a thread-safe generator when "
-                    "`use_multiprocessing=False, workers > 1`. "
-                )
+                    "`use_multiprocessing=False, workers > 1`. ")
             six.reraise(*sys.exc_info())

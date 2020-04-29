@@ -54,11 +54,11 @@ from tensorflow.python.util.tf_export import tf_export
 # Note that we need to lazy load the following two modules to avoid creating
 # circular dependencies.
 # TODO(b/119775953): fix the circular dependencies.
-pfor_ops = LazyLoader(
-    "pfor_ops", globals(), "tensorflow.python.ops.parallel_for.control_flow_ops"
-)
+pfor_ops = LazyLoader("pfor_ops", globals(),
+                      "tensorflow.python.ops.parallel_for.control_flow_ops")
 
-function = LazyLoader("function", globals(), "tensorflow.python.eager.function")
+function = LazyLoader("function", globals(),
+                      "tensorflow.python.eager.function")
 
 _op_attr_type_cache = {}
 
@@ -116,19 +116,18 @@ class _MockOp(object):
             "tf.GradientTape.gradients() does not support graph control flow "
             "operations like tf.cond or tf.while at this time. Use tf.gradients() "
             "instead. If you need this feature, please file a feature request at "
-            "https://github.com/tensorflow/tensorflow/issues/new"
-        )
+            "https://github.com/tensorflow/tensorflow/issues/new")
 
 
 def _gradient_function(
-    op_name,
-    attr_tuple,
-    num_inputs,
-    inputs,
-    outputs,
-    out_grads,
-    skip_input_indices,
-    forward_pass_name_scope,
+        op_name,
+        attr_tuple,
+        num_inputs,
+        inputs,
+        outputs,
+        out_grads,
+        skip_input_indices,
+        forward_pass_name_scope,
 ):
     """Calls the gradient function of the op.
 
@@ -152,9 +151,8 @@ def _gradient_function(
         return [None] * num_inputs
 
     # This does not work with v1 TensorArrays.
-    if ops.executing_eagerly_outside_functions() or control_flow_util.EnableControlFlowV2(
-        ops.get_default_graph()
-    ):
+    if ops.executing_eagerly_outside_functions(
+    ) or control_flow_util.EnableControlFlowV2(ops.get_default_graph()):
         gradient_name_scope = "gradient_tape/"
         if forward_pass_name_scope:
             gradient_name_scope += forward_pass_name_scope + "/"
@@ -172,9 +170,8 @@ def _must_record_gradient():
 
 
 def _record_gradient(op_name, inputs, attrs, results):
-    return pywrap_tfe.TFE_Py_RecordGradient(
-        op_name, inputs, attrs, results, ops.get_name_scope()
-    )
+    return pywrap_tfe.TFE_Py_RecordGradient(op_name, inputs, attrs, results,
+                                            ops.get_name_scope())
 
 
 execute.must_record_gradient = _must_record_gradient
@@ -226,6 +223,7 @@ def implicit_val_and_grad(f):
     Raises:
       ValueError: if `f` returns None.
     """
+
     # TODO(cais): Remove calls to tf.constant() once the gradients functions
     # accept lists and np.ndarrays.
 
@@ -237,23 +235,20 @@ def implicit_val_and_grad(f):
             if end_node is None:
                 raise ValueError(
                     "Cannot differentiate a function that returns None; "
-                    "did you forget to return a value from {}?".format(f.__name__)
-                )
+                    "did you forget to return a value from {}?".format(
+                        f.__name__))
         finally:
             tape.pop_tape(this_tape)
         # Note: variables are returned in construction order. This ensures unique
         # order across executions.
         variables = this_tape.watched_variables()
         if not variables:
-            raise ValueError(
-                "No trainable variables were accessed while the "
-                "function was being computed."
-            )
+            raise ValueError("No trainable variables were accessed while the "
+                             "function was being computed.")
 
         sources = [v.handle for v in variables]
-        grad = imperative_grad.imperative_grad(
-            this_tape, nest.flatten(end_node), sources
-        )
+        grad = imperative_grad.imperative_grad(this_tape,
+                                               nest.flatten(end_node), sources)
         return end_node, list(zip(grad, variables))
 
     return grad_fn
@@ -298,6 +293,7 @@ def implicit_grad(f):
     Returns:
       A function which, when called, returns a list of (gradient, variable) pairs.
     """
+
     # TODO(cais): Remove calls to tf.constant() once the gradients functions
     # accept lists and np.ndarrays.
 
@@ -320,8 +316,7 @@ def _get_arg_spec(f, params, param_args):
             return params
         raise ValueError(
             "Either callable provided is not a function or could not "
-            "inspect its arguments by name: %s. Original error: %s" % (f, e)
-        )
+            "inspect its arguments by name: %s. Original error: %s" % (f, e))
     if params is None:
         if not args:
             return range(len(param_args))
@@ -334,7 +329,8 @@ def _get_arg_spec(f, params, param_args):
     elif all(isinstance(x, int) for x in params):
         return params
     else:
-        raise ValueError("params must be all strings or all integers; got %s." % params)
+        raise ValueError(
+            "params must be all strings or all integers; got %s." % params)
 
 
 def gradients_function(f, params=None):
@@ -502,9 +498,8 @@ def val_and_grad_function(f, params=None):
         """Computes the value and gradient of the decorated function."""
         dy = kwds.pop("dy", None)
         if kwds:
-            raise ValueError(
-                "Functions to be differentiated cannot " "receive keyword arguments."
-            )
+            raise ValueError("Functions to be differentiated cannot "
+                             "receive keyword arguments.")
         val, vjp = make_vjp(f, params)(*args, **kwds)
         return val, vjp(dy=dy)
 
@@ -566,8 +561,8 @@ def make_vjp(f, params=None, persistent=True):
             if result is None:
                 raise ValueError(
                     "Cannot differentiate a function that returns None; "
-                    "did you forget to return a value from {}?".format(f.__name__)
-                )
+                    "did you forget to return a value from {}?".format(
+                        f.__name__))
             flat_result = nest.flatten(result)
             flat_result = [gen_array_ops.identity(x) for x in flat_result]
             result = nest.pack_sequence_as(result, flat_result)
@@ -577,9 +572,10 @@ def make_vjp(f, params=None, persistent=True):
         def vjp(dy=None):
             if dy is not None:
                 dy = [ops.convert_to_tensor(x) for x in nest.flatten(dy)]
-            return imperative_grad.imperative_grad(
-                this_tape, nest.flatten(result), sources, output_gradients=dy
-            )
+            return imperative_grad.imperative_grad(this_tape,
+                                                   nest.flatten(result),
+                                                   sources,
+                                                   output_gradients=dy)
 
         return result, vjp
 
@@ -593,9 +589,9 @@ def flatten_nested_indexed_slices(grad):
     else:
         assert isinstance(grad.values, ops.IndexedSlices)
         g = flatten_nested_indexed_slices(grad.values)
-        return ops.IndexedSlices(
-            g.values, array_ops.gather(grad.indices, g.indices), g.dense_shape
-        )
+        return ops.IndexedSlices(g.values,
+                                 array_ops.gather(grad.indices, g.indices),
+                                 g.dense_shape)
 
 
 def aggregate_indexed_slices_gradients(grads):
@@ -643,7 +639,8 @@ def _aggregate_grads(gradients):
     if all(isinstance(g, ops.Tensor) for g in gradients):
         return gen_math_ops.add_n(gradients)
     else:
-        assert all(isinstance(g, (ops.Tensor, ops.IndexedSlices)) for g in gradients)
+        assert all(
+            isinstance(g, (ops.Tensor, ops.IndexedSlices)) for g in gradients)
         return aggregate_indexed_slices_gradients(gradients)
 
 
@@ -858,8 +855,7 @@ class GradientTape(object):
         if self._recording:
             raise ValueError(
                 "Tape is still recording, This can happen if you try to "
-                "re-enter an already-active tape."
-            )
+                "re-enter an already-active tape.")
         if self._tape is None:
             self._tape = tape.push_new_tape(
                 persistent=self._persistent,
@@ -896,8 +892,8 @@ class GradientTape(object):
         for t in nest.flatten(tensor):
             if not (_pywrap_utils.IsTensor(t) or _pywrap_utils.IsVariable(t)):
                 raise ValueError(
-                    "Passed in object of type {}, not tf.Tensor".format(type(t))
-                )
+                    "Passed in object of type {}, not tf.Tensor".format(
+                        type(t)))
             if not backprop_util.IsTrainable(t):
                 logging.log_first_n(
                     logging.WARN,
@@ -939,8 +935,7 @@ class GradientTape(object):
         """
         if self._tape is None:
             raise RuntimeError(
-                "Trying to stop recording a tape which is not recording."
-            )
+                "Trying to stop recording a tape which is not recording.")
         self._pop_tape()
         try:
             yield
@@ -990,11 +985,11 @@ class GradientTape(object):
         return self._watched_variables
 
     def gradient(
-        self,
-        target,
-        sources,
-        output_gradients=None,
-        unconnected_gradients=UnconnectedGradients.NONE,
+            self,
+            target,
+            sources,
+            output_gradients=None,
+            unconnected_gradients=UnconnectedGradients.NONE,
     ):
         """Computes the gradient using operations recorded in context of this tape.
 
@@ -1024,8 +1019,7 @@ class GradientTape(object):
         if self._tape is None:
             raise RuntimeError(
                 "GradientTape.gradient can only be called once on "
-                "non-persistent tapes."
-            )
+                "non-persistent tapes.")
         if self._recording:
             if not self._persistent:
                 self._pop_tape()
@@ -1096,12 +1090,12 @@ class GradientTape(object):
         return grad
 
     def jacobian(
-        self,
-        target,
-        sources,
-        unconnected_gradients=UnconnectedGradients.NONE,
-        parallel_iterations=None,
-        experimental_use_pfor=True,
+            self,
+            target,
+            sources,
+            unconnected_gradients=UnconnectedGradients.NONE,
+            parallel_iterations=None,
+            experimental_use_pfor=True,
     ):
         """Computes the jacobian using operations recorded in context of this tape.
 
@@ -1160,9 +1154,9 @@ class GradientTape(object):
             self._push_tape()
             y = array_ops.gather(target, i)
             self._pop_tape()
-            return self.gradient(
-                y, flat_sources, unconnected_gradients=unconnected_gradients
-            )
+            return self.gradient(y,
+                                 flat_sources,
+                                 unconnected_gradients=unconnected_gradients)
 
         try:
             target_size = int(target.shape[0])
@@ -1171,17 +1165,17 @@ class GradientTape(object):
 
         if experimental_use_pfor:
             try:
-                output = pfor_ops.pfor(
-                    loop_fn, target_size, parallel_iterations=parallel_iterations
-                )
+                output = pfor_ops.pfor(loop_fn,
+                                       target_size,
+                                       parallel_iterations=parallel_iterations)
             except ValueError as err:
                 six.reraise(
                     ValueError,
                     ValueError(
-                        str(err) + "\nEncountered an exception while vectorizing the "
+                        str(err) +
+                        "\nEncountered an exception while vectorizing the "
                         "jacobian computation. Vectorization can be disabled by setting"
-                        " experimental_use_pfor to False."
-                    ),
+                        " experimental_use_pfor to False."),
                     sys.exc_info()[2],
                 )
         else:
@@ -1189,8 +1183,7 @@ class GradientTape(object):
                 raise RuntimeError(
                     "GradientTape must be created with persistent=True"
                     " to compute the jacobian with eager execution enabled and with "
-                    " experimental_use_pfor set to False."
-                )
+                    " experimental_use_pfor set to False.")
             output = pfor_ops.for_loop(
                 loop_fn,
                 [target.dtype] * len(flat_sources),
@@ -1201,24 +1194,22 @@ class GradientTape(object):
         for i, out in enumerate(output):
             if out is not None:
                 new_shape = array_ops.concat(
-                    [target_shape, array_ops.shape(out)[1:]], axis=0
-                )
+                    [target_shape, array_ops.shape(out)[1:]], axis=0)
                 out = array_ops.reshape(out, new_shape)
                 if context.executing_eagerly():
                     out.set_shape(
-                        target_static_shape.concatenate(flat_sources[i].shape)
-                    )
+                        target_static_shape.concatenate(flat_sources[i].shape))
             output[i] = out
 
         return nest.pack_sequence_as(sources, output)
 
     def batch_jacobian(
-        self,
-        target,
-        source,
-        unconnected_gradients=UnconnectedGradients.NONE,
-        parallel_iterations=None,
-        experimental_use_pfor=True,
+            self,
+            target,
+            source,
+            unconnected_gradients=UnconnectedGradients.NONE,
+            parallel_iterations=None,
+            experimental_use_pfor=True,
     ):
         """Computes and stacks per-example jacobians.
 
@@ -1276,15 +1267,12 @@ class GradientTape(object):
             dim = tensor_shape.Dimension(None)
         else:
             dim = target_shape.dims[0]
-        if not (
-            target_shape.with_rank_at_least(2)
-            and source.shape.with_rank_at_least(2)
-            and dim.is_compatible_with(source.shape[0])
-        ):
-            raise ValueError(
-                "Need first dimension of target shape (%s) and "
-                "source shape (%s) to match." % (target.shape, source.shape)
-            )
+        if not (target_shape.with_rank_at_least(2)
+                and source.shape.with_rank_at_least(2)
+                and dim.is_compatible_with(source.shape[0])):
+            raise ValueError("Need first dimension of target shape (%s) and "
+                             "source shape (%s) to match." %
+                             (target.shape, source.shape))
         if target_shape.is_fully_defined():
             batch_size = int(target_shape[0])
             target_row_size = target_shape.num_elements() // batch_size
@@ -1298,8 +1286,7 @@ class GradientTape(object):
         # need gradients through the enclosed operations.
         self._push_tape()
         with ops.control_dependencies(
-            [check_ops.assert_equal(batch_size, source_shape[0])]
-        ):
+            [check_ops.assert_equal(batch_size, source_shape[0])]):
             target = array_ops.reshape(target, [batch_size, target_row_size])
         self._pop_tape()
 
@@ -1307,21 +1294,23 @@ class GradientTape(object):
             self._push_tape()
             y = array_ops.gather(target, i, axis=1)
             self._pop_tape()
-            return self.gradient(y, source, unconnected_gradients=unconnected_gradients)
+            return self.gradient(y,
+                                 source,
+                                 unconnected_gradients=unconnected_gradients)
 
         if experimental_use_pfor:
             try:
-                output = pfor_ops.pfor(
-                    loop_fn, target_row_size, parallel_iterations=parallel_iterations
-                )
+                output = pfor_ops.pfor(loop_fn,
+                                       target_row_size,
+                                       parallel_iterations=parallel_iterations)
             except ValueError as err:
                 six.reraise(
                     ValueError,
                     ValueError(
-                        str(err) + "\nEncountered an exception while vectorizing the "
+                        str(err) +
+                        "\nEncountered an exception while vectorizing the "
                         "batch_jacobian computation. Vectorization can be disabled by "
-                        "setting experimental_use_pfor to False."
-                    ),
+                        "setting experimental_use_pfor to False."),
                     sys.exc_info()[2],
                 )
         else:
@@ -1329,8 +1318,7 @@ class GradientTape(object):
                 raise RuntimeError(
                     "GradientTape must be created with persistent=True"
                     " to compute the batch_jacobian with eager execution enabled and "
-                    " with experimental_use_pfor set to False."
-                )
+                    " with experimental_use_pfor set to False.")
             output = pfor_ops.for_loop(
                 loop_fn,
                 target.dtype,
@@ -1341,6 +1329,7 @@ class GradientTape(object):
         if output is None:
             return array_ops.zeros(new_shape)
         else:
-            output = array_ops.reshape(output, [target_row_size, batch_size, -1])
+            output = array_ops.reshape(output,
+                                       [target_row_size, batch_size, -1])
             output = array_ops.transpose(output, [1, 0, 2])
             return array_ops.reshape(output, new_shape)
