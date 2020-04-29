@@ -14,27 +14,20 @@
 # ==============================================================================
 """Eager-graph unified check numerics callback."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import threading
 
 import numpy as np
-
 from tensorflow.core.protobuf import debug_event_pb2
-from tensorflow.python.debug.lib import op_callbacks_common
-from tensorflow.python.debug.lib import source_utils
+from tensorflow.python.debug.lib import op_callbacks_common, source_utils
 from tensorflow.python.eager import monitoring
-from tensorflow.python.framework import op_callbacks
-from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import gen_debug_ops
+from tensorflow.python.framework import op_callbacks, ops
+from tensorflow.python.ops import array_ops, gen_debug_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util import compat
 from tensorflow.python.util.tf_export import tf_export
-
 
 # Many ops have benign NaN outputs, and running them with check_numerics
 # on will create unwanted errors
