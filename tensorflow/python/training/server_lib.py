@@ -28,8 +28,7 @@ from tensorflow.python.util import deprecation
 from tensorflow.python.util.tf_export import tf_export
 
 
-def _make_server_def(server_or_cluster_def, job_name, task_index, protocol,
-                     config):
+def _make_server_def(server_or_cluster_def, job_name, task_index, protocol, config):
     """Creates a `tf.train.ServerDef` protocol buffer.
 
     Args:
@@ -69,8 +68,10 @@ def _make_server_def(server_or_cluster_def, job_name, task_index, protocol,
         try:
             cluster_spec = ClusterSpec(server_or_cluster_def)
         except TypeError:
-            raise TypeError("Could not convert `server_or_cluster_def` to a "
-                            "`tf.train.ServerDef` or `tf.train.ClusterSpec`.")
+            raise TypeError(
+                "Could not convert `server_or_cluster_def` to a "
+                "`tf.train.ServerDef` or `tf.train.ClusterSpec`."
+            )
         if job_name is None:
             if len(cluster_spec.jobs) == 1:
                 job_name = cluster_spec.jobs[0]
@@ -89,7 +90,8 @@ def _make_server_def(server_or_cluster_def, job_name, task_index, protocol,
             cluster=cluster_spec.as_cluster_def(),
             job_name=job_name,
             task_index=task_index,
-            protocol=protocol)
+            protocol=protocol,
+        )
         if config is not None:
             server_def.default_session_config.MergeFrom(config)
     return server_def
@@ -108,13 +110,15 @@ class Server(object):
     communicate with any other server in the same cluster.
     """
 
-    def __init__(self,
-                 server_or_cluster_def,
-                 job_name=None,
-                 task_index=None,
-                 protocol=None,
-                 config=None,
-                 start=True):
+    def __init__(
+        self,
+        server_or_cluster_def,
+        job_name=None,
+        task_index=None,
+        protocol=None,
+        config=None,
+        start=True,
+    ):
         """Creates a new server with the given definition.
 
         The `job_name`, `task_index`, and `protocol` arguments are optional, and
@@ -143,8 +147,9 @@ class Server(object):
           tf.errors.OpError: Or one of its subclasses if an error occurs while
             creating the TensorFlow server.
         """
-        self._server_def = _make_server_def(server_or_cluster_def, job_name,
-                                            task_index, protocol, config)
+        self._server_def = _make_server_def(
+            server_or_cluster_def, job_name, task_index, protocol, config
+        )
         self._server = c_api.TF_NewServer(self._server_def.SerializeToString())
         if start:
             self.start()
@@ -237,10 +242,9 @@ class Server(object):
         """
         # Specifying port 0 means that the OS will choose a free port for the
         # server.
-        return Server({"localhost": ["localhost:0"]},
-                      protocol="grpc",
-                      config=config,
-                      start=start)
+        return Server(
+            {"localhost": ["localhost:0"]}, protocol="grpc", config=config, start=start
+        )
 
 
 @tf_export("train.ClusterSpec")
@@ -295,8 +299,10 @@ class ClusterSpec(object):
                 elif isinstance(tasks, dict):
                     job_tasks = {i: task for i, task in tasks.items()}
                 else:
-                    raise TypeError("The tasks for job %r must be a list or a dictionary "
-                                    "from integers to strings." % job_name)
+                    raise TypeError(
+                        "The tasks for job %r must be a list or a dictionary "
+                        "from integers to strings." % job_name
+                    )
                 self._cluster_spec[job_name] = job_tasks
             self._make_cluster_def()
         elif isinstance(cluster, cluster_pb2.ClusterDef):
@@ -315,9 +321,11 @@ class ClusterSpec(object):
                     i: t for i, t in job_def.tasks.items()
                 }
         else:
-            raise TypeError("`cluster` must be a dictionary mapping one or more "
-                            "job names to lists of network addresses, or a "
-                            "`ClusterDef` protocol buffer")
+            raise TypeError(
+                "`cluster` must be a dictionary mapping one or more "
+                "job names to lists of network addresses, or a "
+                "`ClusterDef` protocol buffer"
+            )
 
     def __nonzero__(self):
         return bool(self._cluster_spec)
@@ -436,8 +444,7 @@ class ClusterSpec(object):
         try:
             return job[task_index]
         except KeyError:
-            raise ValueError("No task with index %r in job %r" %
-                             (task_index, job_name))
+            raise ValueError("No task with index %r in job %r" % (task_index, job_name))
 
     def job_tasks(self, job_name):
         """Returns a mapping from task ID to address in the given job.
@@ -482,8 +489,7 @@ class ClusterSpec(object):
             try:
                 job_name = compat.as_bytes(job_name)
             except TypeError:
-                raise TypeError(
-                    "Job name %r must be bytes or unicode" % job_name)
+                raise TypeError("Job name %r must be bytes or unicode" % job_name)
 
             job_def = self._cluster_def.job.add()
             job_def.name = job_name
@@ -492,8 +498,9 @@ class ClusterSpec(object):
                 try:
                     task_address = compat.as_bytes(task_address)
                 except TypeError:
-                    raise TypeError("Task address %r must be bytes or unicode" %
-                                    task_address)
+                    raise TypeError(
+                        "Task address %r must be bytes or unicode" % task_address
+                    )
                 job_def.tasks[i] = task_address
 
 
@@ -539,8 +546,7 @@ class ClusterDeviceFilters(object):
         """Set the device filters for given job name and task id."""
         assert all(isinstance(df, str) for df in device_filters)
         self._device_filters.setdefault(job_name, {})
-        self._device_filters[job_name][task_index] = [
-            df for df in device_filters]
+        self._device_filters[job_name][task_index] = [df for df in device_filters]
         # Due to updates in data, invalidate the serialized proto cache.
         self._cluster_device_filters = None
 
@@ -566,8 +572,7 @@ class ClusterDeviceFilters(object):
             try:
                 job_name = compat.as_bytes(job_name)
             except TypeError:
-                raise TypeError(
-                    "Job name %r must be bytes or unicode" % job_name)
+                raise TypeError("Job name %r must be bytes or unicode" % job_name)
 
             jdf = self._cluster_device_filters.jobs.add()
             jdf.name = job_name
@@ -578,5 +583,6 @@ class ClusterDeviceFilters(object):
                         tdf = compat.as_bytes(tdf)
                     except TypeError:
                         raise TypeError(
-                            "Device filter %r must be bytes or unicode" % tdf)
+                            "Device filter %r must be bytes or unicode" % tdf
+                        )
                     jdf.tasks[i].device_filters.append(tdf)
