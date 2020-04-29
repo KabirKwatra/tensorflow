@@ -1,8 +1,8 @@
 # Tensorflow Lite Core ML Delegate
 
 TensorFlow Lite Core ML Delegate enables running TensorFlow Lite models on
-[Core ML framework](https://developer.apple.com/documentation/coreml),
-which results in faster model inference on iOS devices.
+[Core ML framework](https://developer.apple.com/documentation/coreml), which
+results in faster model inference on iOS devices.
 
 Note: This delegate is in experimental (beta) phase.
 
@@ -10,12 +10,12 @@ Note: Core ML delegate is using Core ML version 2.1.
 
 **Supported iOS versions and devices:**
 
-*   iOS 12 and later. In the older iOS versions, Core ML delegate will
-    automatically fallback to CPU.
-*   By default, Core ML delegate will only be enabled on devices with A12 SoC
-    and later (iPhone Xs and later) to use Neural Engine for faster inference.
-    If you want to use Core ML delegate also on the older devices, please see
-    [best practices](#best-practices)
+- iOS 12 and later. In the older iOS versions, Core ML delegate will
+  automatically fallback to CPU.
+- By default, Core ML delegate will only be enabled on devices with A12 SoC and
+  later (iPhone Xs and later) to use Neural Engine for faster inference. If you
+  want to use Core ML delegate also on the older devices, please see
+  [best practices](#best-practices)
 
 **Supported models**
 
@@ -35,8 +35,8 @@ target 'YourProjectName'
 ```
 
 Note: After updating `Podfile`, you should run `pod update` to reflect changes.
-If you can't see the latest `CoreMLDelegate.swift` file, try running `pod cache
-clean TensorFlowLiteSwift`.
+If you can't see the latest `CoreMLDelegate.swift` file, try running
+`pod cache clean TensorFlowLiteSwift`.
 
 ### Swift
 
@@ -151,8 +151,8 @@ if (delegate == nullptr) {
 interpreter->ModifyGraphWithDelegate(delegate);
 ```
 
-The delegate creation logic reads device's machine id (e.g. iPhone11,1)
-to determine its Neural Engine availability. See the
+The delegate creation logic reads device's machine id (e.g. iPhone11,1) to
+determine its Neural Engine availability. See the
 [code](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/experimental/delegates/coreml/coreml_delegate.mm)
 for more detail. Alternatively, you can implement your own set of blacklist
 devices using other libraries such as
@@ -162,36 +162,36 @@ devices using other libraries such as
 
 Following ops are supported by the Core ML delegate.
 
-*   Add
-    *   Only certain shapes are broadcastable. In Core ML tensor layout,
-        following tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1,
-        1]`, `[B, 1, H, W]`, `[B, 1, 1, 1]`.
-*   AveragePool2D
-*   Concat
-*   Conv2D
-    *   Weights and bias should be constant.
-*   DepthwiseConv2D
-    *   Weights and bias should be constant.
-*   FullyConnected (aka Dense or InnerProduct)
-    *   Weights and bias (if present) should be constant.
-    *   Only supports single-batch case. Input dimensions should be 1, except
-        the last dimension.
-*   Hardswish
-*   Logistic (aka Sigmoid)
-*   MaxPool2D
-*   Mul
-    *   Only certain shapes are broadcastable. In Core ML tensor layout,
-        following tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1,
-        1]`, `[B, 1, H, W]`, `[B, 1, 1, 1]`.
-*   Relu
-*   ReluN1To1
-*   Relu6
-*   Reshape
-*   ResizeBilinear
-*   SoftMax
-*   Tanh
-*   TransposeConv
-    *   Weights should be constant.
+- Add
+  - Only certain shapes are broadcastable. In Core ML tensor layout, following
+    tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1, 1]`,
+    `[B, 1, H, W]`, `[B, 1, 1, 1]`.
+- AveragePool2D
+- Concat
+- Conv2D
+  - Weights and bias should be constant.
+- DepthwiseConv2D
+  - Weights and bias should be constant.
+- FullyConnected (aka Dense or InnerProduct)
+  - Weights and bias (if present) should be constant.
+  - Only supports single-batch case. Input dimensions should be 1, except the
+    last dimension.
+- Hardswish
+- Logistic (aka Sigmoid)
+- MaxPool2D
+- Mul
+  - Only certain shapes are broadcastable. In Core ML tensor layout, following
+    tensor shapes are broadcastable. `[B, C, H, W]`, `[B, C, 1, 1]`,
+    `[B, 1, H, W]`, `[B, 1, 1, 1]`.
+- Relu
+- ReluN1To1
+- Relu6
+- Reshape
+- ResizeBilinear
+- SoftMax
+- Tanh
+- TransposeConv
+  - Weights should be constant.
 
 ## Feedback
 
@@ -201,20 +201,20 @@ issue with all the necessary details to reproduce.
 
 ## FAQ
 
-* Does CoreML delegate support fallback to CPU if a graph contains unsupported
+- Does CoreML delegate support fallback to CPU if a graph contains unsupported
   ops?
-  * Yes
-* Does CoreML delegate work on iOS Simulator?
-  * Yes. The library includes x86 and x86_64 targets so it can run on
-    a simulator, but you will not see performance boost over CPU.
-* Does TensorFlow Lite and CoreML delegate support MacOS?
-  * TensorFlow Lite is only tested on iOS but not MacOS.
-* Is custom TF Lite ops supported?
-  * No, CoreML delegate does not support custom ops and they will fallback to
+  - Yes
+- Does CoreML delegate work on iOS Simulator?
+  - Yes. The library includes x86 and x86_64 targets so it can run on a
+    simulator, but you will not see performance boost over CPU.
+- Does TensorFlow Lite and CoreML delegate support MacOS?
+  - TensorFlow Lite is only tested on iOS but not MacOS.
+- Is custom TF Lite ops supported?
+  - No, CoreML delegate does not support custom ops and they will fallback to
     CPU.
 
 ## APIs
 
-*   [Core ML delegate Swift API](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/experimental/swift/Sources/CoreMLDelegate.swift)
-*   [Core ML delegate C API](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/experimental/delegates/coreml/coreml_delegate.h)
-    *   This can be used for Objective-C codes.
+- [Core ML delegate Swift API](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/experimental/swift/Sources/CoreMLDelegate.swift)
+- [Core ML delegate C API](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/experimental/delegates/coreml/coreml_delegate.h)
+  - This can be used for Objective-C codes.
