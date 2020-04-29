@@ -33,13 +33,8 @@ import org.tensorflow.lite.support.common.SupportPreconditions;
  * interpreter instance to run it.
  */
 public class Model {
-
   /** The runtime device type used for executing classification. */
-  public enum Device {
-    CPU,
-    NNAPI,
-    GPU
-  }
+  public enum Device { CPU, NNAPI, GPU }
 
   /**
    * Options for running the model. Configurable parameters includes:
@@ -164,9 +159,8 @@ public class Model {
    * @param options The options for running the model.
    * @throws IOException if any exception occurs when open the model file.
    */
-  public static Model createModel(
-      @NonNull Context context, @NonNull String modelPath, @NonNull Options options)
-      throws IOException {
+  public static Model createModel(@NonNull Context context, @NonNull String modelPath,
+      @NonNull Options options) throws IOException {
     SupportPreconditions.checkNotEmpty(
         modelPath, "Model path in the asset folder cannot be empty.");
     MappedByteBuffer byteModel = FileUtil.loadMappedFile(context, modelPath);
@@ -248,11 +242,8 @@ public class Model {
     }
   }
 
-  private Model(
-      @NonNull String modelPath,
-      @NonNull MappedByteBuffer byteModel,
-      @NonNull Interpreter interpreter,
-      @Nullable GpuDelegate gpuDelegate) {
+  private Model(@NonNull String modelPath, @NonNull MappedByteBuffer byteModel,
+      @NonNull Interpreter interpreter, @Nullable GpuDelegate gpuDelegate) {
     this.modelPath = modelPath;
     this.byteModel = byteModel;
     this.interpreter = interpreter;
