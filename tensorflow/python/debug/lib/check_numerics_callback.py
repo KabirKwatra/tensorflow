@@ -47,13 +47,11 @@ IGNORE_OP_OUTPUTS = (
     (b"FusedBatchNorm", 2),  # batch_variance
     (b"FusedBatchNorm", 3),  # reserve_space_1
     (b"FusedBatchNorm", 4),  # reserve_space_2
-
     # Same as above
     (b"FusedBatchNormV2", 1),  # batch_mean
     (b"FusedBatchNormV2", 2),  # batch_variance
     (b"FusedBatchNormV2", 3),  # reserve_space_1
     (b"FusedBatchNormV2", 4),  # reserve_space_2
-
     # Same as above, but reserve_space_3 holds additional intermediate values
     (b"FusedBatchNormV3", 1),  # batch_mean
     (b"FusedBatchNormV3", 2),  # batch_variance
@@ -92,7 +90,8 @@ _state = threading.local()
 
 _check_numerics_callback_create_counter = monitoring.Counter(
     "/tensorflow/api/python/debugging/check_numerics_callback_create_counter",
-    "Counter for number of times the check_numerics op callback is created.")
+    "Counter for number of times the check_numerics op callback is created.",
+)
 
 
 def limit_string_length(string, max_len=50):
@@ -108,7 +107,7 @@ def limit_string_length(string, max_len=50):
     if max_len is None or len(string) <= max_len:
         return string
     else:
-        return "..." + string[len(string) - max_len:]
+        return "..." + string[len(string) - max_len :]
 
 
 # A dictionary that supports looking up the original input tensor names.
@@ -116,23 +115,27 @@ _CHECK_NUMERICS_INPUT_LOOKUP = collections.defaultdict(dict)
 
 
 def _maybe_lookup_original_input_tensor(graph, tensor):
-    if (graph and
-        graph in _CHECK_NUMERICS_INPUT_LOOKUP and
-            tensor.name in _CHECK_NUMERICS_INPUT_LOOKUP[graph]):
+    if (
+        graph
+        and graph in _CHECK_NUMERICS_INPUT_LOOKUP
+        and tensor.name in _CHECK_NUMERICS_INPUT_LOOKUP[graph]
+    ):
         return _CHECK_NUMERICS_INPUT_LOOKUP[graph][tensor.name]
     else:
         return tensor
 
 
-def get_check_numerics_error_message(slot,
-                                     num_outputs,
-                                     op_type,
-                                     tensor,
-                                     inputs,
-                                     graph=None,
-                                     traceback=None,
-                                     stack_height_limit=30,
-                                     path_length_limit=50):
+def get_check_numerics_error_message(
+    slot,
+    num_outputs,
+    op_type,
+    tensor,
+    inputs,
+    graph=None,
+    traceback=None,
+    stack_height_limit=30,
+    path_length_limit=50,
+):
     """Create a meaningful and user-friendly error message about offending tensor.
 
     The error message reveals the following info about the op that outputs
@@ -162,8 +165,9 @@ def get_check_numerics_error_message(slot,
     message = "\n"
     message += (
         "\n!!! Detected Infinity or NaN in output %d of "
-        "%s op \"%s\" (# of outputs: %d) !!!\n" %
-        (slot, eager_vs_graph_qualifier, op_type, num_outputs))
+        '%s op "%s" (# of outputs: %d) !!!\n'
+        % (slot, eager_vs_graph_qualifier, op_type, num_outputs)
+    )
 
     message += "  dtype: %s\n" % tensor.dtype
     message += "  shape: %s\n" % (tensor.shape,)
@@ -173,8 +177,8 @@ def get_check_numerics_error_message(slot,
         # NaNs and Infs.
         is_inf = np.isinf(tensor)
 
-        num_neg_inf = np.sum(np.logical_and(np.less(tensor, 0.), is_inf))
-        num_pos_inf = np.sum(np.logical_and(np.greater(tensor, 0.), is_inf))
+        num_neg_inf = np.sum(np.logical_and(np.less(tensor, 0.0), is_inf))
+        num_pos_inf = np.sum(np.logical_and(np.greater(tensor, 0.0), is_inf))
         num_nan = np.sum(np.isnan(tensor))
         if num_neg_inf > 0:
             message += "  # of -Inf elements: %s\n" % num_neg_inf
@@ -187,30 +191,35 @@ def get_check_numerics_error_message(slot,
         message += "\n  Input tensors (%d):\n" % len(inputs)
         for slot, input_tensor in enumerate(inputs):
             message += "         %d: %s\n" % (
-                slot, _maybe_lookup_original_input_tensor(graph, input_tensor))
+                slot,
+                _maybe_lookup_original_input_tensor(graph, input_tensor),
+            )
     elif len(inputs) == 1:
         message += "\n  Input tensor: %s\n" % (
-            _maybe_lookup_original_input_tensor(graph, inputs[0]))
+            _maybe_lookup_original_input_tensor(graph, inputs[0])
+        )
     if graph and hasattr(graph, "name") and graph.name:
-        message += "  Graph name: \"%s\"\n" % graph.name
+        message += '  Graph name: "%s"\n' % graph.name
 
     # Format the stack trace for the op's creation. We omit files that
     # belong to tensorflow itself.
     if graph and traceback:
-        message += (
-            "\n  Stack trace of op's creation (\"->\": inferred user code):\n")
+        message += '\n  Stack trace of op\'s creation ("->": inferred user code):\n'
         if stack_height_limit is not None and len(traceback) > stack_height_limit:
             num_omitted_frames = len(traceback) - stack_height_limit
             message += "    + ... (Omitted %d frames)\n" % num_omitted_frames
         for filepath, lineno, function_name, source_line in traceback[
-                -stack_height_limit:]:
+            -stack_height_limit:
+        ]:
             user_code_indicator = "    "
             if not source_utils.guess_is_tensorflow_py_library(filepath):
                 user_code_indicator = " -> "
 
             message += "    + %s (L%d) %s\n" % (
-                limit_string_length(filepath, path_length_limit), lineno,
-                function_name)
+                limit_string_length(filepath, path_length_limit),
+                lineno,
+                function_name,
+            )
             if source_line is not None:
                 message += "%s|   %s\n" % (user_code_indicator, source_line)
     message += "\n"
@@ -220,8 +229,8 @@ def get_check_numerics_error_message(slot,
 def _debug_summary(x):
     return gen_debug_ops.debug_numeric_summary_v2(
         x,
-        tensor_debug_mode=(
-            debug_event_pb2.TensorDebugMode.REDUCE_INF_NAN_THREE_SLOTS))
+        tensor_debug_mode=(debug_event_pb2.TensorDebugMode.REDUCE_INF_NAN_THREE_SLOTS),
+    )
 
 
 class CheckNumericsCallback(object):
@@ -236,19 +245,15 @@ class CheckNumericsCallback(object):
         # tensors as control dependencies of the ops that consume the Placeholder.
         self._placeholder_to_debug_tensor = dict()
 
-    def callback(self,
-                 op_type,
-                 inputs,
-                 attrs,
-                 outputs,
-                 op_name=None,
-                 graph=None):
+    def callback(self, op_type, inputs, attrs, outputs, op_name=None, graph=None):
         """Eager-function unified callback for checking numerics."""
         del attrs, op_name  # Unused
         op_type_bytes = compat.as_bytes(op_type)
         is_v1_graph_mode = not ops.executing_eagerly_outside_functions()
-        if (op_type_bytes in op_callbacks_common.OP_CALLBACK_SKIP_OPS or
-                op_type_bytes in SAFE_OPS):
+        if (
+            op_type_bytes in op_callbacks_common.OP_CALLBACK_SKIP_OPS
+            or op_type_bytes in SAFE_OPS
+        ):
             return None
         if graph:
             # Under graph mode. Insert check_numerics op.
@@ -256,11 +261,16 @@ class CheckNumericsCallback(object):
             if is_v1_graph_mode:
                 for input_tensor in inputs:
                     if input_tensor in self._placeholder_to_debug_tensor and outputs:
-                        outputs[0].op._add_control_input(  # pylint: disable=protected-access
-                            self._placeholder_to_debug_tensor[input_tensor].op)
+                        outputs[
+                            0
+                        ].op._add_control_input(  # pylint: disable=protected-access
+                            self._placeholder_to_debug_tensor[input_tensor].op
+                        )
             for slot, output in enumerate(outputs):
-                if (output.dtype.is_floating and
-                        (op_type_bytes, slot) not in IGNORE_OP_OUTPUTS):
+                if (
+                    output.dtype.is_floating
+                    and (op_type_bytes, slot) not in IGNORE_OP_OUTPUTS
+                ):
                     checked_output = array_ops.check_numerics_v2(
                         # TF v2 has automatic control dependencies added to stateful async
                         # ops, which allows us to run check_numerics asynchronously.
@@ -275,10 +285,15 @@ class CheckNumericsCallback(object):
                             output,
                             inputs,
                             graph=graph,
-                            traceback=output.op.traceback))
+                            traceback=output.op.traceback,
+                        ),
+                    )
                     _CHECK_NUMERICS_INPUT_LOOKUP[graph][checked_output.name] = output
-                    instrumented_outputs.append(self._get_output_tensor(
-                        op_type_bytes, output, checked_output, is_v1_graph_mode))
+                    instrumented_outputs.append(
+                        self._get_output_tensor(
+                            op_type_bytes, output, checked_output, is_v1_graph_mode
+                        )
+                    )
                 else:
                     instrumented_outputs.append(output)
             return instrumented_outputs
@@ -289,20 +304,24 @@ class CheckNumericsCallback(object):
                 return None
             # Under eager mode. Eagerly execute check_numerics op.
             for slot, output in enumerate(outputs):
-                if (output.dtype.is_floating and
-                        (op_type_bytes, slot) not in IGNORE_OP_OUTPUTS):
+                if (
+                    output.dtype.is_floating
+                    and (op_type_bytes, slot) not in IGNORE_OP_OUTPUTS
+                ):
                     array_ops.check_numerics_v2(
                         output,
                         get_check_numerics_error_message(
-                            slot, len(outputs), op_type, output, inputs,
+                            slot,
+                            len(outputs),
+                            op_type,
+                            output,
+                            inputs,
                             stack_height_limit=self._stack_height_limit,
-                            path_length_limit=self._path_length_limit))
+                            path_length_limit=self._path_length_limit,
+                        ),
+                    )
 
-    def _get_output_tensor(self,
-                           op_type,
-                           tensor,
-                           checked_tensor,
-                           is_v1_graph_mode):
+    def _get_output_tensor(self, op_type, tensor, checked_tensor, is_v1_graph_mode):
         """Determine what tensor to output from callback.
 
         Args:
@@ -334,8 +353,7 @@ class CheckNumericsCallback(object):
 
 
 @tf_export("debugging.enable_check_numerics")
-def enable_check_numerics(stack_height_limit=30,
-                          path_length_limit=50):
+def enable_check_numerics(stack_height_limit=30, path_length_limit=50):
     r"""Enable tensor numerics checking in an eager/graph unified fashion.
 
     The numerics checking mechanism will cause any TensorFlow eager execution or
@@ -418,12 +436,13 @@ def enable_check_numerics(stack_height_limit=30,
     """
     if not hasattr(_state, "check_numerics_callback"):
         _state.check_numerics_callback = CheckNumericsCallback(
-            stack_height_limit, path_length_limit)
+            stack_height_limit, path_length_limit
+        )
     op_callbacks.add_op_callback(_state.check_numerics_callback.callback)
 
     logging.info(
-        "Enabled check-numerics callback in thread %s",
-        threading.current_thread().name)
+        "Enabled check-numerics callback in thread %s", threading.current_thread().name
+    )
     _check_numerics_callback_create_counter.get_cell().increase_by(1)
 
 
@@ -443,12 +462,12 @@ def disable_check_numerics():
     if not hasattr(_state, "check_numerics_callback"):
         return
     try:
-        op_callbacks.remove_op_callback(
-            _state.check_numerics_callback.callback)
+        op_callbacks.remove_op_callback(_state.check_numerics_callback.callback)
         delattr(_state, "check_numerics_callback")
         logging.info(
             "Disabled check-numerics callback in thread %s",
-            threading.current_thread().name)
+            threading.current_thread().name,
+        )
     except KeyError:
         # Tolerate disabling the check numerics callback without
         # enable_check_numerics() being called first.
