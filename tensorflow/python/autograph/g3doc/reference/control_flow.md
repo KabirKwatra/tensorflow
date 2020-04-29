@@ -46,14 +46,15 @@ In the example above, we've optimized away the conditional on a constant
 condition. The AutoGraph dispatch rules have the same effect: anything that is
 not a TensorFlow object is a compile-time constant for TensorFlow, and can be
 optimized away. For this reason, you can usually mix Python and TensorFlow
-computation and it will transparently have the expected result even
-when only some computations are executed in the graph.
+computation and it will transparently have the expected result even when only
+some computations are executed in the graph.
 
 <!-- TODO(mdan): This is actually a limitation (a very subtle one) -->
+
 Caution: The assumption of invariant code made above is not true if the
-TensorFlow graph had callbacks into the Python code. If you modify data
-from within a `tf.py_function`, then the code outside a `tf.py_function`
-will have unpredictable behavior if it depends on the same data.
+TensorFlow graph had callbacks into the Python code. If you modify data from
+within a `tf.py_function`, then the code outside a `tf.py_function` will have
+unpredictable behavior if it depends on the same data.
 
 For example, the `tf.cond` that runs as part of the `if` statement below will
 miss the update made by `f`:
@@ -102,8 +103,8 @@ This is useful in methods, which can operate on properties of `self`, as well as
 working directly on more complex object structures or collections.
 
 Caution: There are certain [limitations](limitations.md) around using Python
-collections and object mutation. When in doubt, place the values you work
-with into local variables and operate on those.
+collections and object mutation. When in doubt, place the values you work with
+into local variables and operate on those.
 
 ### Effects of the tracing process
 
@@ -202,11 +203,11 @@ else:
 (see [limitations](limitations.md)). All symbols affected by the statement and
 used thereafter must be:
 
- * of a data type understood by TensorFlow
- * defined in both branches
- * of consistent dtypes in both branches, for TensorFlow entities
- * of consistent structure in both branches, for static collections (such as
-   lists or tuples)
+- of a data type understood by TensorFlow
+- defined in both branches
+- of consistent dtypes in both branches, for TensorFlow entities
+- of consistent structure in both branches, for static collections (such as
+  lists or tuples)
 
 ### `while` statements
 
@@ -228,18 +229,18 @@ while np.random.uniform() > 0.5:
   x = x + 1
 ```
 
-`while` statements executed as TensorFlow loops are subject to restrictions
-(see [limitations](limitations.md)). All symbols affected by the statement and
-used thereafter must be:
+`while` statements executed as TensorFlow loops are subject to restrictions (see
+[limitations](limitations.md)). All symbols affected by the statement and used
+thereafter must be:
 
- * of a data type understood by TensorFlow
- * defined before the loop
- * of consistent dtype at the beginning and the end of the loop,
-   for TensorFlow entities
- * either of consistent shape at the beginning and the end of the loop,
-   for TensorFlow entities, or declared in `shape_invariants`
- * of consistent structure  at the beginning and the end of the loop, for
-   static collections (such as lists or tuples)
+- of a data type understood by TensorFlow
+- defined before the loop
+- of consistent dtype at the beginning and the end of the loop, for TensorFlow
+  entities
+- either of consistent shape at the beginning and the end of the loop, for
+  TensorFlow entities, or declared in `shape_invariants`
+- of consistent structure at the beginning and the end of the loop, for static
+  collections (such as lists or tuples)
 
 Caution: A `while` loop whose condition is a Python scalar will execute as
 normal Python. If you intended to run the loop as a TensorFlow loop, the loop
@@ -252,7 +253,7 @@ For example, the following loop is unrolled, even though the list contains
 ```
 l = [tf.constant(1), tf.constant(2), tf.constant(3)]
 for i in l:
-  tf.print(i)  # This is unrolled - three `tf.print`s are built in the graph. 
+  tf.print(i)  # This is unrolled - three `tf.print`s are built in the graph.
 ```
 
 If you wish for the loop to run as a TensorFlow loop, stack the loop:
@@ -264,6 +265,7 @@ for i in tf.stack(l):
 ```
 
 <!-- TODO(mdan): List this under limitations -->
+
 Caution: A loop in which the type of the condition condition changes across
 iterations, in a way that would influence the way the loop is executed, is not
 allowed in AutoGraph.
@@ -293,8 +295,8 @@ iteration: [1, 2]
 iteration: [3, 4]
 ```
 
-Note: If possible, AutoGraph will also set the `maximum_iteration` parameter
-of the `tf.while_loop`.
+Note: If possible, AutoGraph will also set the `maximum_iteration` parameter of
+the `tf.while_loop`.
 
 `for` statements that iterate over a the output of a `tf.range` are executed as
 TensorFlow loops by converting them to a `tf.while_loop` which uses the
@@ -324,10 +326,10 @@ for i in tf.distribute.OneDeviceStrategy('cpu').experimental_distribute_dataset(
   tf.print('iteration:', i)
 ```
 
-`for` statements that iterate over a `tf.data.Dataset` and which contain
-`break` or `return` statements are executed as TensorFlow loops by converting
-them to a combination of `tf.data.Dataset.scan`, `tf.data.Dataset.take_while`
-and `tf.data.Dataset.reduce` ops:
+`for` statements that iterate over a `tf.data.Dataset` and which contain `break`
+or `return` statements are executed as TensorFlow loops by converting them to a
+combination of `tf.data.Dataset.scan`, `tf.data.Dataset.take_while` and
+`tf.data.Dataset.reduce` ops:
 
 ```
 for i in tf.data.Dataset.range(3):
@@ -340,8 +342,8 @@ iteration: 1
 ```
 
 `for` statements that iterate over a `tf.data.Dataset` _iterator_ are executed
-as TensorFlow loops by converting them to a combination of `tf.while_loop`,
-and `tf.cond` ops:
+as TensorFlow loops by converting them to a combination of `tf.while_loop`, and
+`tf.cond` ops:
 
 ```
 for i in iter(tf.data.Dataset.range(3)):
@@ -358,16 +360,16 @@ for i in [1, 2, 3]:
 
 Caution: A `for` loop over a `list` or `tuple` of `tf.Tensor` is considered to
 iterate over a Python `list` (or respectively `tuple`), therefore will be
-executed as normal Python. If you intended to run it as a TensorFlow loop,
-use `tf.stack` or `tf.concat`.
+executed as normal Python. If you intended to run it as a TensorFlow loop, use
+`tf.stack` or `tf.concat`.
 
-Caution: A `for` loop over a Python `range` will execute as normal Python.
-If you intended to run it as a TensorFlow loop, use `tf.range`.
+Caution: A `for` loop over a Python `range` will execute as normal Python. If
+you intended to run it as a TensorFlow loop, use `tf.range`.
 
-Note: AutoGraph may output a warning when it believes that you are unrolling
-a loop inefficiently. However, the warning thresholds are very conservative.
-The warning is only printed when
-[__debug__](https://docs.python.org/3/library/constants.html#__debug__) is
+Note: AutoGraph may output a warning when it believes that you are unrolling a
+loop inefficiently. However, the warning thresholds are very conservative. The
+warning is only printed when
+[**debug**](https://docs.python.org/3/library/constants.html#__debug__) is
 `True`.
 
 Note: If `__debug__` is `True`, AutoGraph limits the number of iterations in
@@ -380,8 +382,8 @@ to trigger an error.
 Code blocks in which `break` statements are used are rewritten with equivalent
 code that uses extra control booleans and conditionals. The control booleans are
 used directly in `while` loops. In the case of `for` loops, the AutoGraph
-corresponding operator accepts an `extra_test` argument which is similar to
-the conditional of a while loop, and which contains the control boolean.
+corresponding operator accepts an `extra_test` argument which is similar to the
+conditional of a while loop, and which contains the control boolean.
 
 For example, the `while` loop below is rewritten as (showing the output of the
 `break` transformation only):
@@ -468,16 +470,16 @@ not influence the number of iterations.
 similar to how `break` is converted. In the case of `return` statements, an
 additional symbol keeps track of the return value.
 
-Depending on the structure of the code, the return value might be undefined
-in parts of the code (for example on code paths in which no return statement
-has executed). AutoGraph keeps track of this by using a special value.
-This special value is converted to `None` (the default return value) upon
-exiting the function.
+Depending on the structure of the code, the return value might be undefined in
+parts of the code (for example on code paths in which no return statement has
+executed). AutoGraph keeps track of this by using a special value. This special
+value is converted to `None` (the default return value) upon exiting the
+function.
 
 Caution: TensorFlow control flow doe not support undefined values, and an
-undefined return value is no exception. Therefore, AutoGraph will raise an
-error for TensorFlow control flow in which the return value is not known for
-all code paths.
+undefined return value is no exception. Therefore, AutoGraph will raise an error
+for TensorFlow control flow in which the return value is not known for all code
+paths.
 
 For example, the following code raises an error because the return value would
 be undefined when the random number would be less than 0.5:
@@ -536,5 +538,3 @@ def f():
   else:
    i += 1
 ```
-
-
