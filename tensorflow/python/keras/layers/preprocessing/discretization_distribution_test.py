@@ -31,14 +31,14 @@ from tensorflow.python.platform import test
 
 @combinations.generate(
     combinations.combine(
-        distribution=strategy_combinations.all_strategies,
-        mode=["eager", "graph"]))
+        distribution=strategy_combinations.all_strategies, mode=["eager", "graph"]
+    )
+)
 class DiscretizationDistributionTest(
-        keras_parameterized.TestCase,
-        preprocessing_test_utils.PreprocessingLayerTest):
-
+    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
+):
     def test_distribution(self, distribution):
-        input_array = np.array([[-1.5, 1.0, 3.4, .5], [0.0, 3.0, 1.3, 0.0]])
+        input_array = np.array([[-1.5, 1.0, 3.4, 0.5], [0.0, 3.0, 1.3, 0.0]])
 
         expected_output = [[0, 2, 3, 1], [1, 3, 2, 1]]
         expected_output_shape = [None, None]
@@ -46,10 +46,10 @@ class DiscretizationDistributionTest(
         with distribution.scope():
             input_data = keras.Input(shape=(None,))
             layer = discretization.Discretization(
-                bins=[0., 1., 2.], output_mode=discretization.INTEGER)
+                bins=[0.0, 1.0, 2.0], output_mode=discretization.INTEGER
+            )
             bucket_data = layer(input_data)
-            self.assertAllEqual(expected_output_shape,
-                                bucket_data.shape.as_list())
+            self.assertAllEqual(expected_output_shape, bucket_data.shape.as_list())
 
             model = keras.Model(inputs=input_data, outputs=bucket_data)
         output_dataset = model.predict(input_array)

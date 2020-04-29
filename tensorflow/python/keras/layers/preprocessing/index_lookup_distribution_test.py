@@ -43,22 +43,34 @@ def get_layer_class():
 
 @combinations.generate(
     combinations.combine(
-        distribution=strategy_combinations.all_strategies,
-        mode=["eager", "graph"]))
+        distribution=strategy_combinations.all_strategies, mode=["eager", "graph"]
+    )
+)
 class IndexLookupDistributionTest(
-        keras_parameterized.TestCase,
-        preprocessing_test_utils.PreprocessingLayerTest):
-
+    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
+):
     def test_tpu_distribution(self, distribution):
-        vocab_data = [[
-            "earth", "earth", "earth", "earth", "wind", "wind", "wind", "and",
-            "and", "fire"
-        ]]
+        vocab_data = [
+            [
+                "earth",
+                "earth",
+                "earth",
+                "earth",
+                "wind",
+                "wind",
+                "wind",
+                "and",
+                "and",
+                "fire",
+            ]
+        ]
         vocab_dataset = dataset_ops.Dataset.from_tensors(vocab_data)
-        input_array = np.array([["earth", "wind", "and", "fire"],
-                                ["fire", "and", "earth", "michigan"]])
+        input_array = np.array(
+            [["earth", "wind", "and", "fire"], ["fire", "and", "earth", "michigan"]]
+        )
         input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
-            2, drop_remainder=True)
+            2, drop_remainder=True
+        )
         expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
 
         config.set_soft_device_placement(True)
