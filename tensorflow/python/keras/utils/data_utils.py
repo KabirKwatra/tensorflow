@@ -15,13 +15,14 @@
 # ==============================================================================
 # pylint: disable=g-import-not-at-top
 """Utilities for file download and caching."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import errno
 import functools
 import gc
 import hashlib
-import multiprocessing
 import multiprocessing.dummy
 import os
 import random
@@ -38,13 +39,16 @@ from contextlib import closing
 
 import numpy as np
 import six
-from six.moves.urllib.error import HTTPError, URLError
+from six.moves.urllib.error import HTTPError
+from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen
+
 from tensorflow.python.framework import ops
 from tensorflow.python.keras.utils.generic_utils import Progbar
 from tensorflow.python.keras.utils.io_utils import path_to_string
 from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.util import deprecation, tf_inspect
+from tensorflow.python.util import deprecation
+from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import keras_export
 
 try:
