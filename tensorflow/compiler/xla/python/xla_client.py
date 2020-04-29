@@ -37,7 +37,6 @@ from tensorflow.compiler.xla.python import xla_extension as _xla
 # of TensorFlow. If we use protocol buffers here, then importing both jaxlib
 # and TensorFlow may fail with duplicate protocol buffer message definitions.
 
-
 # Most functions are snake_case for consistency with other modules, some
 # method names are CamelCase for consistency with XLA.
 # pylint: disable=invalid-name
@@ -47,7 +46,6 @@ from tensorflow.compiler.xla.python import xla_extension as _xla
 
 ops = _xla.ops
 profiler = _xla.profiler
-
 
 xla_platform_names = {
     "cpu": "Host",
@@ -67,8 +65,7 @@ def _gpu_backend_factory(distributed_client=None, node_id=0):
     if allocator not in ("default", "platform", "bfc"):
         raise ValueError(
             'XLA_PYTHON_CLIENT_ALLOCATOR env var must be "default", "platform", or '
-            '"bfc", got "%s"' % allocator
-        )
+            '"bfc", got "%s"' % allocator)
     config = _xla.GpuAllocatorConfig()
     if allocator == "default":
         config.kind = _xla.GpuAllocatorConfig.Kind.DEFAULT
@@ -89,9 +86,10 @@ def _gpu_backend_factory(distributed_client=None, node_id=0):
 
 
 # Backend factories, keyed by user-visible name, in increasing priority order.
-_local_backend_factories = collections.OrderedDict(
-    [("cpu", _cpu_backend_factory), ("gpu", _gpu_backend_factory),]
-)
+_local_backend_factories = collections.OrderedDict([
+    ("cpu", _cpu_backend_factory),
+    ("gpu", _gpu_backend_factory),
+])
 
 
 def register_local_backend_factory(name, factory):
@@ -161,9 +159,10 @@ def CurrentSourceInfoMetadata(op_type=None, op_name=None, skip_frames=1):
     """Helper for use in source mapping that returns an OpMetadata object."""
     full_filename, lineno = inspect.stack()[skip_frames][1:3]
     filename = os.path.basename(full_filename)
-    return OpMetadata(
-        op_type=op_type, op_name=op_name, source_file=filename, source_line=lineno
-    )
+    return OpMetadata(op_type=op_type,
+                      op_name=op_name,
+                      source_file=filename,
+                      source_line=lineno)
 
 
 PrimitiveType = _xla.PrimitiveType
@@ -194,7 +193,8 @@ XLA_ELEMENT_TYPE_TO_DTYPE = {
 # doesn't work as expected (https://github.com/numpy/numpy/issues/7242). Thus,
 # when keying by dtype in this dict, we use the string form of dtypes.
 DTYPE_TO_XLA_ELEMENT_TYPE = {
-    str(dt): et for et, dt in XLA_ELEMENT_TYPE_TO_DTYPE.items()
+    str(dt): et
+    for et, dt in XLA_ELEMENT_TYPE_TO_DTYPE.items()
 }
 
 
@@ -347,7 +347,8 @@ def transfer_from_outfeed(shape, device=None):
     # TODO(phawkins): support non-default backends.
     backend = get_local_backend()
     device = device or backend.local_devices()[0]
-    return device.transfer_from_outfeed(shape.with_major_to_minor_layout_if_absent())
+    return device.transfer_from_outfeed(
+        shape.with_major_to_minor_layout_if_absent())
 
 
 DeviceAssignment = _xla.DeviceAssignment
@@ -372,7 +373,6 @@ def computation_count():
 
 Device = _xla.Device
 CompileOptions = _xla.CompileOptions
-
 
 # An Executable is a C++ class that duck types with the following API:
 # class Executable(object):
@@ -403,7 +403,8 @@ def execute_with_python_values(executable, arguments, backend):
     """Execute on one replica with Python values as arguments and output."""
 
     def put(arg):
-        return backend.buffer_from_pyval(arg, device=executable.local_devices()[0])
+        return backend.buffer_from_pyval(arg,
+                                         device=executable.local_devices()[0])
 
     arguments = [put(arg) for arg in arguments]
     outputs = executable.Execute(arguments)
@@ -424,21 +425,18 @@ def execute_with_python_values_replicated(executable, arguments, backend):
     """
     devices = executable.local_devices()
     # pylint: disable=g-complex-comprehension
-    flat_args = [
-        (arg, devices[replica])
-        for replica, replica_args in enumerate(arguments)
-        for arg in replica_args
-    ]
+    flat_args = [(arg, devices[replica])
+                 for replica, replica_args in enumerate(arguments)
+                 for arg in replica_args]
     flat_arg_buffers = [
         backend.buffer_from_pyval(pyval, device) for pyval, device in flat_args
     ]
     arg_buffers = []
     for replica_args in arguments:
-        arg_buffers.append(flat_arg_buffers[: len(replica_args)])
-        flat_arg_buffers = flat_arg_buffers[len(replica_args) :]
-    return [
-        [x.to_py() for x in xs] for xs in executable.ExecuteOnLocalDevices(arg_buffers)
-    ]
+        arg_buffers.append(flat_arg_buffers[:len(replica_args)])
+        flat_arg_buffers = flat_arg_buffers[len(replica_args):]
+    return [[x.to_py() for x in xs]
+            for xs in executable.ExecuteOnLocalDevices(arg_buffers)]
 
 
 class PaddingType(enum.Enum):
@@ -446,7 +444,8 @@ class PaddingType(enum.Enum):
     SAME = 2
 
 
-def window_padding_type_to_pad_values(padding_type, lhs_dims, rhs_dims, window_strides):
+def window_padding_type_to_pad_values(padding_type, lhs_dims, rhs_dims,
+                                      window_strides):
     """Maps PaddingType or string to pad values (list of pairs of ints)."""
     if not isinstance(padding_type, (str, PaddingType)):
         msg = "padding_type must be str or PaddingType, got {}."
@@ -464,14 +463,15 @@ def window_padding_type_to_pad_values(padding_type, lhs_dims, rhs_dims, window_s
     if padding_type == PaddingType.VALID:
         return [(0, 0)] * len(window_strides)
     elif padding_type == PaddingType.SAME:
-        out_shape = np.ceil(np.true_divide(lhs_dims, window_strides)).astype(int)
+        out_shape = np.ceil(np.true_divide(lhs_dims,
+                                           window_strides)).astype(int)
         pad_sizes = [
             max((out_size - 1) * stride + filter_size - in_size, 0)
             for out_size, stride, filter_size, in_size in zip(
-                out_shape, window_strides, rhs_dims, lhs_dims
-            )
+                out_shape, window_strides, rhs_dims, lhs_dims)
         ]
-        return [(pad_size // 2, pad_size - pad_size // 2) for pad_size in pad_sizes]
+        return [(pad_size // 2, pad_size - pad_size // 2)
+                for pad_size in pad_sizes]
     else:
         msg = "Unexpected PaddingType value: {}"
         raise ValueError(msg.format(padding_type))
@@ -511,14 +511,14 @@ class PaddingConfigDimension(object):
 class PaddingConfig(object):
     """Python representation of a xla.PaddingConfig protobuf."""
 
-    __slots__ = ("dimensions",)
+    __slots__ = ("dimensions", )
 
     def __init__(self):
         self.dimensions = []
 
 
 def make_padding_config(
-    padding_config: Union[PaddingConfig, Sequence[Tuple[int, int, int]]]
+        padding_config: Union[PaddingConfig, Sequence[Tuple[int, int, int]]]
 ) -> PaddingConfig:
     """Create PaddingConfig proto from list of triples of integers.
 
@@ -559,12 +559,10 @@ class DotDimensionNumbers(object):
         self.rhs_batch_dimensions = []
 
 
-def make_dot_dimension_numbers(
-    dimension_numbers: Union[
+def make_dot_dimension_numbers(dimension_numbers: Union[
         DotDimensionNumbers,
-        Tuple[Tuple[List[int], List[int]], Tuple[List[int], List[int]]],
-    ]
-) -> DotDimensionNumbers:
+        Tuple[Tuple[List[int], List[int]], Tuple[List[int], List[int]]], ]
+                               ) -> DotDimensionNumbers:
     """Builds a DotDimensionNumbers object from a specification.
 
     Args:
@@ -577,7 +575,8 @@ def make_dot_dimension_numbers(
       A `DotDimensionNumbers` object.
     """
     if isinstance(dimension_numbers, (list, tuple)):
-        (lhs_contract, rhs_contract), (lhs_batch, rhs_batch) = dimension_numbers
+        (lhs_contract, rhs_contract), (lhs_batch,
+                                       rhs_batch) = dimension_numbers
         dot_dims_proto = DotDimensionNumbers()
         dot_dims_proto.lhs_contracting_dimensions.extend(lhs_contract)
         dot_dims_proto.rhs_contracting_dimensions.extend(rhs_contract)
@@ -616,8 +615,9 @@ class ConvolutionDimensionNumbers(object):
 
 
 def make_convolution_dimension_numbers(
-    dimension_numbers: Union[None, ConvolutionDimensionNumbers, Tuple[str, str, str]],
-    num_spatial_dimensions: int,
+        dimension_numbers: Union[None, ConvolutionDimensionNumbers,
+                                 Tuple[str, str, str]],
+        num_spatial_dimensions: int,
 ) -> ConvolutionDimensionNumbers:
     """Builds a ConvolutionDimensionNumbers object from a specification.
 
@@ -669,20 +669,17 @@ def make_convolution_dimension_numbers(
         dimension_numbers.kernel_input_feature_dimension = rhs_spec.index("I")
 
         dimension_numbers.kernel_spatial_dimensions.extend(
-            i for i, c in enumerate(rhs_spec) if c not in {"I", "O"}
-        )
+            i for i, c in enumerate(rhs_spec) if c not in {"I", "O"})
         dimension_numbers.input_spatial_dimensions.extend(
             sorted(
                 (i for i, c in enumerate(lhs_spec) if c not in {"N", "C"}),
                 key=lambda i: rhs_spec.index(lhs_spec[i]),
-            )
-        )
+            ))
         dimension_numbers.output_spatial_dimensions.extend(
             sorted(
                 (i for i, c in enumerate(out_spec) if c not in {"N", "C"}),
                 key=lambda i: rhs_spec.index(out_spec[i]),
-            )
-        )
+            ))
     return dimension_numbers
 
 
@@ -708,7 +705,7 @@ class OpSharding(object):
 class PrecisionConfig(object):
     """Python representation of a xla.PrecisionConfig protobuf."""
 
-    __slots__ = ("operand_precision",)
+    __slots__ = ("operand_precision", )
 
     Precision = _xla.PrecisionConfig_Precision
 
@@ -753,7 +750,7 @@ class ScatterDimensionNumbers(object):
 class ReplicaGroup(object):
     """Python representation of a xla.ReplicaGroup protobuf."""
 
-    __slots__ = ("replica_ids",)
+    __slots__ = ("replica_ids", )
 
     def __init__(self):
         self.replica_ids = []

@@ -38,8 +38,7 @@ class TpuBackend(object):
             raise ValueError(
                 "Failed to create TpuBackend. The `worker` parameter must not be "
                 "`None`. Use `local` to connect to a local TPU or "
-                "`grpc://host:port` to connect to a remote TPU."
-            )
+                "`grpc://host:port` to connect to a remote TPU.")
 
         if worker == "local" or "local://" in worker:
             # We usually want to cache for local backends to prevent double
