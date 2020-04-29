@@ -31,33 +31,33 @@ Status FunctionDefToBodyHelper(
     const FunctionLibraryDefinition* const lib_def,
     const std::function<Status(const string&, const OpDef**)>& get_func_sig,
     std::unique_ptr<FunctionBody>* fbody) {
-  // Instantiates the function template into a graph def.
-  InstantiationResult result;
-  TF_RETURN_IF_ERROR(InstantiateFunction(fdef, attrs, get_func_sig, &result));
+    // Instantiates the function template into a graph def.
+    InstantiationResult result;
+    TF_RETURN_IF_ERROR(InstantiateFunction(fdef, attrs, get_func_sig, &result));
 
-  std::unique_ptr<Graph> graph(new Graph(lib_def));
-  GraphConstructorOptions opts;
-  opts.allow_internal_ops = true;
-  opts.expect_device_spec = false;
-  TF_RETURN_IF_ERROR(ConvertNodeDefsToGraph(opts, result.nodes, graph.get()));
+    std::unique_ptr<Graph> graph(new Graph(lib_def));
+    GraphConstructorOptions opts;
+    opts.allow_internal_ops = true;
+    opts.expect_device_spec = false;
+    TF_RETURN_IF_ERROR(ConvertNodeDefsToGraph(opts, result.nodes, graph.get()));
 
-  // Call BuildControlFlowInfo to validate that this function body has
-  // well-formed control flow.
-  std::vector<ControlFlowInfo> dummy;
-  TF_RETURN_IF_ERROR(BuildControlFlowInfo(graph.get(), &dummy));
+    // Call BuildControlFlowInfo to validate that this function body has
+    // well-formed control flow.
+    std::vector<ControlFlowInfo> dummy;
+    TF_RETURN_IF_ERROR(BuildControlFlowInfo(graph.get(), &dummy));
 
-  *fbody = absl::make_unique<FunctionBody>(fdef, result.arg_types,
-                                           result.ret_types, graph.release());
-  return Status::OK();
+    *fbody = absl::make_unique<FunctionBody>(fdef, result.arg_types,
+             result.ret_types, graph.release());
+    return Status::OK();
 }
 
 Status FunctionDefToBodyHelper(const FunctionDef& fdef, const AttrSlice& attrs,
                                const FunctionLibraryDefinition* lib_def,
                                std::unique_ptr<FunctionBody>* fbody) {
-  const auto get_func_sig = [&lib_def](const string& op, const OpDef** sig) {
-    return lib_def->LookUpOpDef(op, sig);
-  };
-  return FunctionDefToBodyHelper(fdef, attrs, lib_def, get_func_sig, fbody);
+    const auto get_func_sig = [&lib_def](const string& op, const OpDef** sig) {
+        return lib_def->LookUpOpDef(op, sig);
+    };
+    return FunctionDefToBodyHelper(fdef, attrs, lib_def, get_func_sig, fbody);
 }
 
 }  // end namespace tensorflow
