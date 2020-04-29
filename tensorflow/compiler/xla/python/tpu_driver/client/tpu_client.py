@@ -24,33 +24,33 @@ from tensorflow.compiler.xla.python.tpu_driver.client import tpu_client_extensio
 
 
 class TpuBackend(object):
-  """XLA backend implemented using the Tpu driver API."""
+    """XLA backend implemented using the Tpu driver API."""
 
-  # Cache the backends to prevent double driver initializations.
-  _local_backend = None
+    # Cache the backends to prevent double driver initializations.
+    _local_backend = None
 
-  @staticmethod
-  def create(worker=None, force=False):
-    """Constructs a Cloud TPU backend."""
-    # `force` == True will skip caching any backends (if applicable) and will
-    # always try to create a new client.
-    if worker is None:
-      raise ValueError(
-          'Failed to create TpuBackend. The `worker` parameter must not be '
-          '`None`. Use `local` to connect to a local TPU or '
-          '`grpc://host:port` to connect to a remote TPU.')
+    @staticmethod
+    def create(worker=None, force=False):
+        """Constructs a Cloud TPU backend."""
+        # `force` == True will skip caching any backends (if applicable) and will
+        # always try to create a new client.
+        if worker is None:
+            raise ValueError(
+                'Failed to create TpuBackend. The `worker` parameter must not be '
+                '`None`. Use `local` to connect to a local TPU or '
+                '`grpc://host:port` to connect to a remote TPU.')
 
-    if worker == 'local' or 'local://' in worker:
-      # We usually want to cache for local backends to prevent double
-      # initialization, except where `force` == True.
-      if worker == 'local':
-        worker = 'local://'
-      if force:
-        return _tpu_client.TpuClient.Get(worker)
-      if TpuBackend._local_backend is None:
-        logging.info('Starting the local TPU driver.')
-        TpuBackend._local_backend = _tpu_client.TpuClient.Get(worker)
-      return TpuBackend._local_backend
-    else:
-      # We do not cache for non-local backends.
-      return _tpu_client.TpuClient.Get(worker)
+        if worker == 'local' or 'local://' in worker:
+            # We usually want to cache for local backends to prevent double
+            # initialization, except where `force` == True.
+            if worker == 'local':
+                worker = 'local://'
+            if force:
+                return _tpu_client.TpuClient.Get(worker)
+            if TpuBackend._local_backend is None:
+                logging.info('Starting the local TPU driver.')
+                TpuBackend._local_backend = _tpu_client.TpuClient.Get(worker)
+            return TpuBackend._local_backend
+        else:
+            # We do not cache for non-local backends.
+            return _tpu_client.TpuClient.Get(worker)
