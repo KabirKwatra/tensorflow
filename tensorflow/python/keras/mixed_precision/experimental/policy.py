@@ -13,11 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 """Contains the Policy class for mixed precision training."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import contextlib
 
 import six
+
 from tensorflow.python.framework import dtypes
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.engine import base_layer_utils

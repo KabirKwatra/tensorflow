@@ -14,8 +14,9 @@
 # ==============================================================================
 # pylint: disable=unidiomatic-typecheck
 """Prototype decorator for defining graph functions with eager semantics."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import functools
 import threading
@@ -24,6 +25,7 @@ import weakref
 import six
 from google.protobuf import text_format as _text_format
 from google.protobuf.message import DecodeError
+
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.python import pywrap_tfe
 from tensorflow.python.eager import context
@@ -31,14 +33,18 @@ from tensorflow.python.eager import function as function_lib
 from tensorflow.python.eager import lift_to_graph
 from tensorflow.python.framework import func_graph as func_graph_module
 from tensorflow.python.framework import ops
-from tensorflow.python.ops import (array_ops, control_flow_ops,
-                                   control_flow_util, math_ops,
-                                   resource_variable_ops)
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import control_flow_util
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.profiler import traceme
 from tensorflow.python.training.tracking import base as trackable
-from tensorflow.python.util import (deprecation, nest, object_identity,
-                                    tf_decorator)
+from tensorflow.python.util import deprecation
+from tensorflow.python.util import nest
+from tensorflow.python.util import object_identity
+from tensorflow.python.util import tf_decorator
 from tensorflow.python.util.tf_export import tf_export
 
 FREQUENT_TRACING_WARNING_MAX_CALL_HISTORY = 10

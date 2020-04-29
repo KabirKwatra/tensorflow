@@ -14,19 +14,28 @@
 # ==============================================================================
 """for_loop and pfor ops."""
 # pylint: disable=g-direct-tensorflow-import
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import functools
 
-from tensorflow.python.eager import context, def_function
-from tensorflow.python.framework import (indexed_slices, ops, sparse_tensor,
-                                         tensor_util)
-from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
-                                   tensor_array_ops)
-from tensorflow.python.ops.parallel_for.pfor import PFor, PForConfig
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.framework import indexed_slices
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.ops.parallel_for.pfor import PFor
+from tensorflow.python.ops.parallel_for.pfor import PForConfig
 from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.util import nest, tf_decorator, tf_inspect
+from tensorflow.python.util import nest
+from tensorflow.python.util import tf_decorator
+from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.tf_export import tf_export
 
 

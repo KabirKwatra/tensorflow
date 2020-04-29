@@ -13,20 +13,31 @@
 # limitations under the License.
 # ==============================================================================
 """V1 Training-related part of the Keras engine."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 
 import numpy as np
+
 from tensorflow.python import tf2
-from tensorflow.python.data.ops import dataset_ops, iterator_ops
-from tensorflow.python.distribute import (distribution_strategy_context,
-                                          parameter_server_strategy)
-from tensorflow.python.eager import context, def_function, monitoring
-from tensorflow.python.framework import (composite_tensor,
-                                         composite_tensor_utils, constant_op,
-                                         ops, sparse_tensor, tensor_shape,
-                                         tensor_spec, tensor_util, type_spec)
+from tensorflow.python.data.ops import dataset_ops
+from tensorflow.python.data.ops import iterator_ops
+from tensorflow.python.distribute import distribution_strategy_context
+from tensorflow.python.distribute import parameter_server_strategy
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.eager import monitoring
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import composite_tensor_utils
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.framework import type_spec
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import losses
 from tensorflow.python.keras import metrics as metrics_module
@@ -34,23 +45,28 @@ from tensorflow.python.keras import optimizers
 from tensorflow.python.keras.distribute import distributed_training_utils
 from tensorflow.python.keras.engine import network
 from tensorflow.python.keras.engine import training as training_lib
-from tensorflow.python.keras.engine import (training_arrays,
-                                            training_distributed,
-                                            training_eager, training_generator,
-                                            training_utils)
+from tensorflow.python.keras.engine import training_arrays
+from tensorflow.python.keras.engine import training_distributed
+from tensorflow.python.keras.engine import training_eager
+from tensorflow.python.keras.engine import training_generator
+from tensorflow.python.keras.engine import training_utils
 from tensorflow.python.keras.mixed_precision.experimental import \
     loss_scale_optimizer
 from tensorflow.python.keras.optimizer_v2 import optimizer_v2
 from tensorflow.python.keras.saving.saved_model import model_serialization
-from tensorflow.python.keras.utils import data_utils, losses_utils
+from tensorflow.python.keras.utils import data_utils
+from tensorflow.python.keras.utils import losses_utils
 from tensorflow.python.keras.utils.mode_keys import ModeKeys
-from tensorflow.python.ops import array_ops, math_ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
 from tensorflow.python.ops.losses import util as tf_losses_utils
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.training.tracking import \
     layer_utils as trackable_layer_utils
-from tensorflow.python.util import deprecation, nest, tf_inspect
+from tensorflow.python.util import deprecation
+from tensorflow.python.util import nest
+from tensorflow.python.util import tf_inspect
 from tensorflow.python.util.compat import collections_abc
 
 try:
