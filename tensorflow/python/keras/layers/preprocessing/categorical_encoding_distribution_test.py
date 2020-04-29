@@ -35,27 +35,27 @@ from tensorflow.python.platform import test
         distribution=strategy_combinations.all_strategies,
         mode=["eager", "graph"]))
 class CategoricalEncodingDistributionTest(
-    keras_parameterized.TestCase,
-    preprocessing_test_utils.PreprocessingLayerTest):
+        keras_parameterized.TestCase,
+        preprocessing_test_utils.PreprocessingLayerTest):
 
-  def test_distribution(self, distribution):
-    input_array = np.array([[1, 2, 3, 1], [0, 3, 1, 0]])
+    def test_distribution(self, distribution):
+        input_array = np.array([[1, 2, 3, 1], [0, 3, 1, 0]])
 
-    # pyformat: disable
-    expected_output = [[0, 1, 1, 1, 0, 0],
-                       [1, 1, 0, 1, 0, 0]]
-    # pyformat: enable
-    max_tokens = 6
+        # pyformat: disable
+        expected_output = [[0, 1, 1, 1, 0, 0],
+                           [1, 1, 0, 1, 0, 0]]
+        # pyformat: enable
+        max_tokens = 6
 
-    with distribution.scope():
-      input_data = keras.Input(shape=(4,), dtype=dtypes.int32)
-      layer = categorical_encoding.CategoricalEncoding(
-          max_tokens=max_tokens, output_mode=categorical_encoding.BINARY)
-      int_data = layer(input_data)
-      model = keras.Model(inputs=input_data, outputs=int_data)
-    output_dataset = model.predict(input_array)
-    self.assertAllEqual(expected_output, output_dataset)
+        with distribution.scope():
+            input_data = keras.Input(shape=(4,), dtype=dtypes.int32)
+            layer = categorical_encoding.CategoricalEncoding(
+                max_tokens=max_tokens, output_mode=categorical_encoding.BINARY)
+            int_data = layer(input_data)
+            model = keras.Model(inputs=input_data, outputs=int_data)
+        output_dataset = model.predict(input_array)
+        self.assertAllEqual(expected_output, output_dataset)
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()

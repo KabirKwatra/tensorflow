@@ -35,10 +35,10 @@ from tensorflow.python.platform import test
 
 
 def get_layer_class():
-  if context.executing_eagerly():
-    return index_lookup.IndexLookup
-  else:
-    return index_lookup_v1.IndexLookup
+    if context.executing_eagerly():
+        return index_lookup.IndexLookup
+    else:
+        return index_lookup_v1.IndexLookup
 
 
 @combinations.generate(
@@ -46,32 +46,32 @@ def get_layer_class():
         distribution=strategy_combinations.all_strategies,
         mode=["eager", "graph"]))
 class IndexLookupDistributionTest(
-    keras_parameterized.TestCase,
-    preprocessing_test_utils.PreprocessingLayerTest):
+        keras_parameterized.TestCase,
+        preprocessing_test_utils.PreprocessingLayerTest):
 
-  def test_tpu_distribution(self, distribution):
-    vocab_data = [[
-        "earth", "earth", "earth", "earth", "wind", "wind", "wind", "and",
-        "and", "fire"
-    ]]
-    vocab_dataset = dataset_ops.Dataset.from_tensors(vocab_data)
-    input_array = np.array([["earth", "wind", "and", "fire"],
-                            ["fire", "and", "earth", "michigan"]])
-    input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
-        2, drop_remainder=True)
-    expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
+    def test_tpu_distribution(self, distribution):
+        vocab_data = [[
+            "earth", "earth", "earth", "earth", "wind", "wind", "wind", "and",
+            "and", "fire"
+        ]]
+        vocab_dataset = dataset_ops.Dataset.from_tensors(vocab_data)
+        input_array = np.array([["earth", "wind", "and", "fire"],
+                                ["fire", "and", "earth", "michigan"]])
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
+            2, drop_remainder=True)
+        expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
 
-    config.set_soft_device_placement(True)
+        config.set_soft_device_placement(True)
 
-    with distribution.scope():
-      input_data = keras.Input(shape=(None,), dtype=dtypes.string)
-      layer = get_layer_class()()
-      layer.adapt(vocab_dataset)
-      int_data = layer(input_data)
-      model = keras.Model(inputs=input_data, outputs=int_data)
-    output_dataset = model.predict(input_dataset)
-    self.assertAllEqual(expected_output, output_dataset)
+        with distribution.scope():
+            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            layer = get_layer_class()()
+            layer.adapt(vocab_dataset)
+            int_data = layer(input_data)
+            model = keras.Model(inputs=input_data, outputs=int_data)
+        output_dataset = model.predict(input_dataset)
+        self.assertAllEqual(expected_output, output_dataset)
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()

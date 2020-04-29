@@ -34,26 +34,27 @@ from tensorflow.python.platform import test
         distribution=strategy_combinations.all_strategies,
         mode=["eager", "graph"]))
 class DiscretizationDistributionTest(
-    keras_parameterized.TestCase,
-    preprocessing_test_utils.PreprocessingLayerTest):
+        keras_parameterized.TestCase,
+        preprocessing_test_utils.PreprocessingLayerTest):
 
-  def test_distribution(self, distribution):
-    input_array = np.array([[-1.5, 1.0, 3.4, .5], [0.0, 3.0, 1.3, 0.0]])
+    def test_distribution(self, distribution):
+        input_array = np.array([[-1.5, 1.0, 3.4, .5], [0.0, 3.0, 1.3, 0.0]])
 
-    expected_output = [[0, 2, 3, 1], [1, 3, 2, 1]]
-    expected_output_shape = [None, None]
+        expected_output = [[0, 2, 3, 1], [1, 3, 2, 1]]
+        expected_output_shape = [None, None]
 
-    with distribution.scope():
-      input_data = keras.Input(shape=(None,))
-      layer = discretization.Discretization(
-          bins=[0., 1., 2.], output_mode=discretization.INTEGER)
-      bucket_data = layer(input_data)
-      self.assertAllEqual(expected_output_shape, bucket_data.shape.as_list())
+        with distribution.scope():
+            input_data = keras.Input(shape=(None,))
+            layer = discretization.Discretization(
+                bins=[0., 1., 2.], output_mode=discretization.INTEGER)
+            bucket_data = layer(input_data)
+            self.assertAllEqual(expected_output_shape,
+                                bucket_data.shape.as_list())
 
-      model = keras.Model(inputs=input_data, outputs=bucket_data)
-    output_dataset = model.predict(input_array)
-    self.assertAllEqual(expected_output, output_dataset)
+            model = keras.Model(inputs=input_data, outputs=bucket_data)
+        output_dataset = model.predict(input_array)
+        self.assertAllEqual(expected_output, output_dataset)
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
