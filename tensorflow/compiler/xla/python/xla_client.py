@@ -47,8 +47,8 @@ profiler = _xla.profiler
 
 
 xla_platform_names = {
-    'cpu': 'Host',
-    'gpu': 'CUDA',
+    "cpu": "Host",
+    "gpu": "CUDA",
 }
 
 
@@ -58,36 +58,37 @@ def _cpu_backend_factory():
 
 def _gpu_backend_factory(distributed_client=None, node_id=0):
     """Returns a GPU backend. BFC allocator is used by default."""
-    allocator = os.getenv('XLA_PYTHON_CLIENT_ALLOCATOR', 'default').lower()
-    memory_fraction = os.getenv('XLA_PYTHON_CLIENT_MEM_FRACTION')
-    preallocate = os.getenv('XLA_PYTHON_CLIENT_PREALLOCATE')
-    if allocator not in ('default', 'platform', 'bfc'):
+    allocator = os.getenv("XLA_PYTHON_CLIENT_ALLOCATOR", "default").lower()
+    memory_fraction = os.getenv("XLA_PYTHON_CLIENT_MEM_FRACTION")
+    preallocate = os.getenv("XLA_PYTHON_CLIENT_PREALLOCATE")
+    if allocator not in ("default", "platform", "bfc"):
         raise ValueError(
             'XLA_PYTHON_CLIENT_ALLOCATOR env var must be "default", "platform", or '
-            '"bfc", got "%s"' % allocator)
+            '"bfc", got "%s"' % allocator
+        )
     config = _xla.GpuAllocatorConfig()
-    if allocator == 'default':
+    if allocator == "default":
         config.kind = _xla.GpuAllocatorConfig.Kind.DEFAULT
-    if allocator == 'platform':
+    if allocator == "platform":
         config.kind = _xla.GpuAllocatorConfig.Kind.PLATFORM
-    if allocator == 'bfc':
+    if allocator == "bfc":
         config.kind = _xla.GpuAllocatorConfig.Kind.BFC
     if memory_fraction:
         config.memory_fraction = float(memory_fraction)
-    config.preallocate = preallocate not in ('0', 'false', 'False')
+    config.preallocate = preallocate not in ("0", "false", "False")
 
     return _xla.get_nvidia_gpu_client(
         asynchronous=True,
         allocator_config=config,
         distributed_client=distributed_client,
-        node_id=node_id)
+        node_id=node_id,
+    )
 
 
 # Backend factories, keyed by user-visible name, in increasing priority order.
-_local_backend_factories = collections.OrderedDict([
-    ('cpu', _cpu_backend_factory),
-    ('gpu', _gpu_backend_factory),
-])
+_local_backend_factories = collections.OrderedDict(
+    [("cpu", _cpu_backend_factory), ("gpu", _gpu_backend_factory),]
+)
 
 
 def register_local_backend_factory(name, factory):
@@ -109,7 +110,7 @@ def _get_local_backends():
         try:
             backend = factory()
         except RuntimeError:
-            if name == 'cpu':
+            if name == "cpu":
                 # We always expect CPU to initialize successfully.
                 raise
             else:
@@ -136,16 +137,17 @@ def get_local_backend(name=None):
         try:
             return backends[name]
         except KeyError:
-            raise RuntimeError('Unknown backend {}'.format(name))
+            raise RuntimeError("Unknown backend {}".format(name))
 
     return list(backends.values())[-1]
 
 
 class OpMetadata(object):
     """Python representation of a xla.OpMetadata protobuf."""
-    __slots__ = ('op_type', 'op_name', 'source_file', 'source_line')
 
-    def __init__(self, op_type='', op_name='', source_file='', source_line=0):
+    __slots__ = ("op_type", "op_name", "source_file", "source_line")
+
+    def __init__(self, op_type="", op_name="", source_file="", source_line=0):
         self.op_type = op_type
         self.op_name = op_name
         self.source_file = source_file
@@ -157,10 +159,8 @@ def CurrentSourceInfoMetadata(op_type=None, op_name=None, skip_frames=1):
     full_filename, lineno = inspect.stack()[skip_frames][1:3]
     filename = os.path.basename(full_filename)
     return OpMetadata(
-        op_type=op_type,
-        op_name=op_name,
-        source_file=filename,
-        source_line=lineno)
+        op_type=op_type, op_name=op_name, source_file=filename, source_line=lineno
+    )
 
 
 PrimitiveType = _xla.PrimitiveType
@@ -168,21 +168,21 @@ PrimitiveType = _xla.PrimitiveType
 bfloat16 = _xla.bfloat16_dtype()
 
 XLA_ELEMENT_TYPE_TO_DTYPE = {
-    PrimitiveType.PRED: np.dtype('bool'),
-    PrimitiveType.S8: np.dtype('int8'),
-    PrimitiveType.S16: np.dtype('int16'),
-    PrimitiveType.S32: np.dtype('int32'),
-    PrimitiveType.S64: np.dtype('int64'),
-    PrimitiveType.U8: np.dtype('uint8'),
-    PrimitiveType.U16: np.dtype('uint16'),
-    PrimitiveType.U32: np.dtype('uint32'),
-    PrimitiveType.U64: np.dtype('uint64'),
+    PrimitiveType.PRED: np.dtype("bool"),
+    PrimitiveType.S8: np.dtype("int8"),
+    PrimitiveType.S16: np.dtype("int16"),
+    PrimitiveType.S32: np.dtype("int32"),
+    PrimitiveType.S64: np.dtype("int64"),
+    PrimitiveType.U8: np.dtype("uint8"),
+    PrimitiveType.U16: np.dtype("uint16"),
+    PrimitiveType.U32: np.dtype("uint32"),
+    PrimitiveType.U64: np.dtype("uint64"),
     PrimitiveType.BF16: np.dtype(bfloat16),
-    PrimitiveType.F16: np.dtype('float16'),
-    PrimitiveType.F32: np.dtype('float32'),
-    PrimitiveType.F64: np.dtype('float64'),
-    PrimitiveType.C64: np.dtype('complex64'),
-    PrimitiveType.C128: np.dtype('complex128'),
+    PrimitiveType.F16: np.dtype("float16"),
+    PrimitiveType.F32: np.dtype("float32"),
+    PrimitiveType.F64: np.dtype("float64"),
+    PrimitiveType.C64: np.dtype("complex64"),
+    PrimitiveType.C128: np.dtype("complex128"),
     PrimitiveType.TUPLE: np.dtype(np.object),
     PrimitiveType.TOKEN: np.dtype(np.object),
 }
@@ -344,8 +344,7 @@ def transfer_from_outfeed(shape, device=None):
     # TODO(phawkins): support non-default backends.
     backend = get_local_backend()
     device = device or backend.local_devices()[0]
-    return device.transfer_from_outfeed(
-        shape.with_major_to_minor_layout_if_absent())
+    return device.transfer_from_outfeed(shape.with_major_to_minor_layout_if_absent())
 
 
 DeviceAssignment = _xla.DeviceAssignment
@@ -422,19 +421,21 @@ def execute_with_python_values_replicated(executable, arguments, backend):
     """
     devices = executable.local_devices()
     # pylint: disable=g-complex-comprehension
-    flat_args = [(arg, devices[replica])
-                 for replica, replica_args in enumerate(arguments)
-                 for arg in replica_args]
+    flat_args = [
+        (arg, devices[replica])
+        for replica, replica_args in enumerate(arguments)
+        for arg in replica_args
+    ]
     flat_arg_buffers = [
         backend.buffer_from_pyval(pyval, device) for pyval, device in flat_args
     ]
     arg_buffers = []
     for replica_args in arguments:
-        arg_buffers.append(flat_arg_buffers[:len(replica_args)])
-        flat_arg_buffers = flat_arg_buffers[len(replica_args):]
-    return [[x.to_py()
-             for x in xs]
-            for xs in executable.ExecuteOnLocalDevices(arg_buffers)]
+        arg_buffers.append(flat_arg_buffers[: len(replica_args)])
+        flat_arg_buffers = flat_arg_buffers[len(replica_args) :]
+    return [
+        [x.to_py() for x in xs] for xs in executable.ExecuteOnLocalDevices(arg_buffers)
+    ]
 
 
 class PaddingType(enum.Enum):
@@ -442,17 +443,16 @@ class PaddingType(enum.Enum):
     SAME = 2
 
 
-def window_padding_type_to_pad_values(padding_type, lhs_dims, rhs_dims,
-                                      window_strides):
+def window_padding_type_to_pad_values(padding_type, lhs_dims, rhs_dims, window_strides):
     """Maps PaddingType or string to pad values (list of pairs of ints)."""
     if not isinstance(padding_type, (str, PaddingType)):
-        msg = 'padding_type must be str or PaddingType, got {}.'
+        msg = "padding_type must be str or PaddingType, got {}."
         raise TypeError(msg.format(type(padding_type)))
 
     if isinstance(padding_type, str):
-        if padding_type.upper() == 'VALID':
+        if padding_type.upper() == "VALID":
             padding_type = PaddingType.VALID
-        elif padding_type.upper() == 'SAME':
+        elif padding_type.upper() == "SAME":
             padding_type = PaddingType.SAME
         else:
             msg = 'Unknown padding type string: expected "VALID" or "SAME", got {}.'
@@ -461,16 +461,16 @@ def window_padding_type_to_pad_values(padding_type, lhs_dims, rhs_dims,
     if padding_type == PaddingType.VALID:
         return [(0, 0)] * len(window_strides)
     elif padding_type == PaddingType.SAME:
-        out_shape = np.ceil(np.true_divide(
-            lhs_dims, window_strides)).astype(int)
+        out_shape = np.ceil(np.true_divide(lhs_dims, window_strides)).astype(int)
         pad_sizes = [
             max((out_size - 1) * stride + filter_size - in_size, 0)
             for out_size, stride, filter_size, in_size in zip(
-                out_shape, window_strides, rhs_dims, lhs_dims)
+                out_shape, window_strides, rhs_dims, lhs_dims
+            )
         ]
         return [(pad_size // 2, pad_size - pad_size // 2) for pad_size in pad_sizes]
     else:
-        msg = 'Unexpected PaddingType value: {}'
+        msg = "Unexpected PaddingType value: {}"
         raise ValueError(msg.format(padding_type))
 
 
@@ -479,7 +479,7 @@ XlaComputation = _xla.XlaComputation
 FftType = _xla.FftType
 
 
-def register_custom_call_target(name, fn, platform='cpu'):
+def register_custom_call_target(name, fn, platform="cpu"):
     """Registers a custom call target.
 
     Args:
@@ -496,7 +496,8 @@ register_cpu_custom_call_target = register_custom_call_target
 
 class PaddingConfigDimension(object):
     """Python representation of a xla.PaddingConfigDimension protobuf."""
-    __slots__ = ('edge_padding_low', 'edge_padding_high', 'interior_padding')
+
+    __slots__ = ("edge_padding_low", "edge_padding_high", "interior_padding")
 
     def __init__(self):
         self.edge_padding_low = 0
@@ -506,7 +507,8 @@ class PaddingConfigDimension(object):
 
 class PaddingConfig(object):
     """Python representation of a xla.PaddingConfig protobuf."""
-    __slots__ = ('dimensions',)
+
+    __slots__ = ("dimensions",)
 
     def __init__(self):
         self.dimensions = []
@@ -539,8 +541,13 @@ def make_padding_config(
 
 class DotDimensionNumbers(object):
     """Python representation of a xla.DotDimensionNumbers protobuf."""
-    __slots__ = ('lhs_contracting_dimensions', 'rhs_contracting_dimensions',
-                 'lhs_batch_dimensions', 'rhs_batch_dimensions')
+
+    __slots__ = (
+        "lhs_contracting_dimensions",
+        "rhs_contracting_dimensions",
+        "lhs_batch_dimensions",
+        "rhs_batch_dimensions",
+    )
 
     def __init__(self):
         self.lhs_contracting_dimensions = []
@@ -550,9 +557,10 @@ class DotDimensionNumbers(object):
 
 
 def make_dot_dimension_numbers(
-    dimension_numbers: Union[DotDimensionNumbers,
-                             Tuple[Tuple[List[int], List[int]],
-                                   Tuple[List[int], List[int]]]]
+    dimension_numbers: Union[
+        DotDimensionNumbers,
+        Tuple[Tuple[List[int], List[int]], Tuple[List[int], List[int]]],
+    ]
 ) -> DotDimensionNumbers:
     """Builds a DotDimensionNumbers object from a specification.
 
@@ -579,11 +587,18 @@ def make_dot_dimension_numbers(
 
 class ConvolutionDimensionNumbers(object):
     """Python representation of a xla.ConvolutionDimensionNumbers protobuf."""
-    __slots__ = ('input_batch_dimension', 'input_feature_dimension',
-                 'input_spatial_dimensions', 'kernel_input_feature_dimension',
-                 'kernel_output_feature_dimension', 'kernel_spatial_dimensions',
-                 'output_batch_dimension', 'output_feature_dimension',
-                 'output_spatial_dimensions')
+
+    __slots__ = (
+        "input_batch_dimension",
+        "input_feature_dimension",
+        "input_spatial_dimensions",
+        "kernel_input_feature_dimension",
+        "kernel_output_feature_dimension",
+        "kernel_spatial_dimensions",
+        "output_batch_dimension",
+        "output_feature_dimension",
+        "output_spatial_dimensions",
+    )
 
     def __init__(self):
         self.input_batch_dimension = 0
@@ -598,9 +613,9 @@ class ConvolutionDimensionNumbers(object):
 
 
 def make_convolution_dimension_numbers(
-        dimension_numbers: Union[None, ConvolutionDimensionNumbers, Tuple[str, str,
-                                                                          str]],
-        num_spatial_dimensions: int) -> ConvolutionDimensionNumbers:
+    dimension_numbers: Union[None, ConvolutionDimensionNumbers, Tuple[str, str, str]],
+    num_spatial_dimensions: int,
+) -> ConvolutionDimensionNumbers:
     """Builds a ConvolutionDimensionNumbers object from a specification.
 
     Args:
@@ -643,28 +658,40 @@ def make_convolution_dimension_numbers(
         lhs_spec, rhs_spec, out_spec = dimension_numbers
         dimension_numbers = ConvolutionDimensionNumbers()
 
-        dimension_numbers.input_batch_dimension = lhs_spec.index('N')
-        dimension_numbers.input_feature_dimension = lhs_spec.index('C')
-        dimension_numbers.output_batch_dimension = out_spec.index('N')
-        dimension_numbers.output_feature_dimension = out_spec.index('C')
-        dimension_numbers.kernel_output_feature_dimension = rhs_spec.index('O')
-        dimension_numbers.kernel_input_feature_dimension = rhs_spec.index('I')
+        dimension_numbers.input_batch_dimension = lhs_spec.index("N")
+        dimension_numbers.input_feature_dimension = lhs_spec.index("C")
+        dimension_numbers.output_batch_dimension = out_spec.index("N")
+        dimension_numbers.output_feature_dimension = out_spec.index("C")
+        dimension_numbers.kernel_output_feature_dimension = rhs_spec.index("O")
+        dimension_numbers.kernel_input_feature_dimension = rhs_spec.index("I")
 
         dimension_numbers.kernel_spatial_dimensions.extend(
-            i for i, c in enumerate(rhs_spec) if c not in {'I', 'O'})
+            i for i, c in enumerate(rhs_spec) if c not in {"I", "O"}
+        )
         dimension_numbers.input_spatial_dimensions.extend(
-            sorted((i for i, c in enumerate(lhs_spec) if c not in {'N', 'C'}),
-                   key=lambda i: rhs_spec.index(lhs_spec[i])))
+            sorted(
+                (i for i, c in enumerate(lhs_spec) if c not in {"N", "C"}),
+                key=lambda i: rhs_spec.index(lhs_spec[i]),
+            )
+        )
         dimension_numbers.output_spatial_dimensions.extend(
-            sorted((i for i, c in enumerate(out_spec) if c not in {'N', 'C'}),
-                   key=lambda i: rhs_spec.index(out_spec[i])))
+            sorted(
+                (i for i, c in enumerate(out_spec) if c not in {"N", "C"}),
+                key=lambda i: rhs_spec.index(out_spec[i]),
+            )
+        )
     return dimension_numbers
 
 
 class OpSharding(object):
     """Python representation of a xla.OpSharding protobuf."""
-    __slots__ = ('type', 'tile_assignment_dimensions', 'tile_assignment_devices',
-                 'tuple_shardings')
+
+    __slots__ = (
+        "type",
+        "tile_assignment_dimensions",
+        "tile_assignment_devices",
+        "tuple_shardings",
+    )
 
     Type = _xla.OpSharding_Type
 
@@ -677,7 +704,8 @@ class OpSharding(object):
 
 class PrecisionConfig(object):
     """Python representation of a xla.PrecisionConfig protobuf."""
-    __slots__ = ('operand_precision',)
+
+    __slots__ = ("operand_precision",)
 
     Precision = _xla.PrecisionConfig_Precision
 
@@ -687,8 +715,13 @@ class PrecisionConfig(object):
 
 class GatherDimensionNumbers(object):
     """Python representation of a xla.GatherDimensionNumbers protobuf."""
-    __slots__ = ('offset_dims', 'collapsed_slice_dims', 'start_index_map',
-                 'index_vector_dim')
+
+    __slots__ = (
+        "offset_dims",
+        "collapsed_slice_dims",
+        "start_index_map",
+        "index_vector_dim",
+    )
 
     def __init__(self):
         self.offset_dims = []
@@ -699,8 +732,13 @@ class GatherDimensionNumbers(object):
 
 class ScatterDimensionNumbers(object):
     """Python representation of a xla.ScatterDimensionNumbers protobuf."""
-    __slots__ = ('update_window_dims', 'inserted_window_dims',
-                 'scatter_dims_to_operand_dims', 'index_vector_dim')
+
+    __slots__ = (
+        "update_window_dims",
+        "inserted_window_dims",
+        "scatter_dims_to_operand_dims",
+        "index_vector_dim",
+    )
 
     def __init__(self):
         self.update_window_dims = []
@@ -711,7 +749,8 @@ class ScatterDimensionNumbers(object):
 
 class ReplicaGroup(object):
     """Python representation of a xla.ReplicaGroup protobuf."""
-    __slots__ = ('replica_ids',)
+
+    __slots__ = ("replica_ids",)
 
     def __init__(self):
         self.replica_ids = []

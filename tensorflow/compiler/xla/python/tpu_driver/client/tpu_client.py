@@ -20,7 +20,9 @@ from __future__ import print_function
 
 from absl import logging
 
-from tensorflow.compiler.xla.python.tpu_driver.client import tpu_client_extension as _tpu_client
+from tensorflow.compiler.xla.python.tpu_driver.client import (
+    tpu_client_extension as _tpu_client,
+)
 
 
 class TpuBackend(object):
@@ -36,19 +38,20 @@ class TpuBackend(object):
         # always try to create a new client.
         if worker is None:
             raise ValueError(
-                'Failed to create TpuBackend. The `worker` parameter must not be '
-                '`None`. Use `local` to connect to a local TPU or '
-                '`grpc://host:port` to connect to a remote TPU.')
+                "Failed to create TpuBackend. The `worker` parameter must not be "
+                "`None`. Use `local` to connect to a local TPU or "
+                "`grpc://host:port` to connect to a remote TPU."
+            )
 
-        if worker == 'local' or 'local://' in worker:
+        if worker == "local" or "local://" in worker:
             # We usually want to cache for local backends to prevent double
             # initialization, except where `force` == True.
-            if worker == 'local':
-                worker = 'local://'
+            if worker == "local":
+                worker = "local://"
             if force:
                 return _tpu_client.TpuClient.Get(worker)
             if TpuBackend._local_backend is None:
-                logging.info('Starting the local TPU driver.')
+                logging.info("Starting the local TPU driver.")
                 TpuBackend._local_backend = _tpu_client.TpuClient.Get(worker)
             return TpuBackend._local_backend
         else:
