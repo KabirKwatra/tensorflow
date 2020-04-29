@@ -60,10 +60,15 @@ except ImportError:
 
 try:
     import typing
-    def is_iterator(x): return isinstance(x, typing.Iterator)
+
+    def is_iterator(x):
+        return isinstance(x, typing.Iterator)
+
+
 except ImportError:
     # Python2 uses next, and Python3 should have typing so __next__ is not needed.
-    def is_iterator(x): return hasattr(x, '__iter__') and hasattr(x, 'next')
+    def is_iterator(x):
+        return hasattr(x, "__iter__") and hasattr(x, "next")
 
 
 if sys.version_info[0] == 2:
@@ -85,7 +90,7 @@ if sys.version_info[0] == 2:
         """
 
         def chunk_read(response, chunk_size=8192, reporthook=None):
-            content_type = response.info().get('Content-Length')
+            content_type = response.info().get("Content-Length")
             total_size = -1
             if content_type is not None:
                 total_size = int(content_type.strip())
@@ -101,9 +106,11 @@ if sys.version_info[0] == 2:
                     break
 
         response = urlopen(url, data)
-        with open(filename, 'wb') as fd:
+        with open(filename, "wb") as fd:
             for chunk in chunk_read(response, reporthook=reporthook):
                 fd.write(chunk)
+
+
 else:
     from six.moves.urllib.request import urlretrieve
 
@@ -116,7 +123,7 @@ def is_generator_or_sequence(x):
     return tf_inspect.isgenerator(x) or isinstance(x, Sequence) or is_iterator(x)
 
 
-def _extract_archive(file_path, path='.', archive_format='auto'):
+def _extract_archive(file_path, path=".", archive_format="auto"):
     """Extracts an archive if it matches tar, tar.gz, tar.bz, or zip formats.
 
     Arguments:
@@ -134,8 +141,8 @@ def _extract_archive(file_path, path='.', archive_format='auto'):
     """
     if archive_format is None:
         return False
-    if archive_format == 'auto':
-        archive_format = ['tar', 'zip']
+    if archive_format == "auto":
+        archive_format = ["tar", "zip"]
     if isinstance(archive_format, six.string_types):
         archive_format = [archive_format]
 
@@ -143,10 +150,10 @@ def _extract_archive(file_path, path='.', archive_format='auto'):
     path = path_to_string(path)
 
     for archive_type in archive_format:
-        if archive_type == 'tar':
+        if archive_type == "tar":
             open_fn = tarfile.open
             is_match_fn = tarfile.is_tarfile
-        if archive_type == 'zip':
+        if archive_type == "zip":
             open_fn = zipfile.ZipFile
             is_match_fn = zipfile.is_zipfile
 
@@ -165,17 +172,19 @@ def _extract_archive(file_path, path='.', archive_format='auto'):
     return False
 
 
-@keras_export('keras.utils.get_file')
-def get_file(fname,
-             origin,
-             untar=False,
-             md5_hash=None,
-             file_hash=None,
-             cache_subdir='datasets',
-             hash_algorithm='auto',
-             extract=False,
-             archive_format='auto',
-             cache_dir=None):
+@keras_export("keras.utils.get_file")
+def get_file(
+    fname,
+    origin,
+    untar=False,
+    md5_hash=None,
+    file_hash=None,
+    cache_subdir="datasets",
+    hash_algorithm="auto",
+    extract=False,
+    archive_format="auto",
+    cache_dir=None,
+):
     """Downloads a file from a URL if it not already in the cache.
 
     By default the file at the url `origin` is downloaded to the
@@ -225,13 +234,13 @@ def get_file(fname,
         Path to the downloaded file
     """
     if cache_dir is None:
-        cache_dir = os.path.join(os.path.expanduser('~'), '.keras')
+        cache_dir = os.path.join(os.path.expanduser("~"), ".keras")
     if md5_hash is not None and file_hash is None:
         file_hash = md5_hash
-        hash_algorithm = 'md5'
+        hash_algorithm = "md5"
     datadir_base = os.path.expanduser(cache_dir)
     if not os.access(datadir_base, os.W_OK):
-        datadir_base = os.path.join('/tmp', '.keras')
+        datadir_base = os.path.join("/tmp", ".keras")
     datadir = os.path.join(datadir_base, cache_subdir)
     _makedirs_exist_ok(datadir)
 
@@ -239,7 +248,7 @@ def get_file(fname,
 
     if untar:
         untar_fpath = os.path.join(datadir, fname)
-        fpath = untar_fpath + '.tar.gz'
+        fpath = untar_fpath + ".tar.gz"
     else:
         fpath = os.path.join(datadir, fname)
 
@@ -248,16 +257,20 @@ def get_file(fname,
         # File found; verify integrity if a hash was provided.
         if file_hash is not None:
             if not validate_file(fpath, file_hash, algorithm=hash_algorithm):
-                print('A local file was found, but it seems to be '
-                      'incomplete or outdated because the ' + hash_algorithm +
-                      ' file hash does not match the original value of ' + file_hash +
-                      ' so we will re-download the data.')
+                print(
+                    "A local file was found, but it seems to be "
+                    "incomplete or outdated because the "
+                    + hash_algorithm
+                    + " file hash does not match the original value of "
+                    + file_hash
+                    + " so we will re-download the data."
+                )
                 download = True
     else:
         download = True
 
     if download:
-        print('Downloading data from', origin)
+        print("Downloading data from", origin)
 
         class ProgressTracker(object):
             # Maintain progbar for the lifetime of download.
@@ -272,7 +285,7 @@ def get_file(fname,
             else:
                 ProgressTracker.progbar.update(count * block_size)
 
-        error_msg = 'URL fetch failure on {}: {} -- {}'
+        error_msg = "URL fetch failure on {}: {} -- {}"
         try:
             try:
                 urlretrieve(origin, fpath, dl_progress)
@@ -288,7 +301,7 @@ def get_file(fname,
 
     if untar:
         if not os.path.exists(untar_fpath):
-            _extract_archive(fpath, datadir, archive_format='tar')
+            _extract_archive(fpath, datadir, archive_format="tar")
         return untar_fpath
 
     if extract:
@@ -306,11 +319,10 @@ def _makedirs_exist_ok(datadir):
             if e.errno != errno.EEXIST:
                 raise
     else:
-        os.makedirs(
-            datadir, exist_ok=True)  # pylint: disable=unexpected-keyword-arg
+        os.makedirs(datadir, exist_ok=True)  # pylint: disable=unexpected-keyword-arg
 
 
-def _hash_file(fpath, algorithm='sha256', chunk_size=65535):
+def _hash_file(fpath, algorithm="sha256", chunk_size=65535):
     """Calculates a file sha256 or md5 hash.
 
     Example:
@@ -329,19 +341,19 @@ def _hash_file(fpath, algorithm='sha256', chunk_size=65535):
     Returns:
         The file hash
     """
-    if (algorithm == 'sha256') or (algorithm == 'auto' and len(hash) == 64):
+    if (algorithm == "sha256") or (algorithm == "auto" and len(hash) == 64):
         hasher = hashlib.sha256()
     else:
         hasher = hashlib.md5()
 
-    with open(fpath, 'rb') as fpath_file:
-        for chunk in iter(lambda: fpath_file.read(chunk_size), b''):
+    with open(fpath, "rb") as fpath_file:
+        for chunk in iter(lambda: fpath_file.read(chunk_size), b""):
             hasher.update(chunk)
 
     return hasher.hexdigest()
 
 
-def validate_file(fpath, file_hash, algorithm='auto', chunk_size=65535):
+def validate_file(fpath, file_hash, algorithm="auto", chunk_size=65535):
     """Validates a file against a sha256 or md5 hash.
 
     Arguments:
@@ -355,10 +367,10 @@ def validate_file(fpath, file_hash, algorithm='auto', chunk_size=65535):
     Returns:
         Whether the file is valid
     """
-    if (algorithm == 'sha256') or (algorithm == 'auto' and len(file_hash) == 64):
-        hasher = 'sha256'
+    if (algorithm == "sha256") or (algorithm == "auto" and len(file_hash) == 64):
+        hasher = "sha256"
     else:
-        hasher = 'md5'
+        hasher = "md5"
 
     if str(_hash_file(fpath, hasher, chunk_size)) == str(file_hash):
         return True
@@ -401,7 +413,6 @@ class ThreadsafeIter(object):
 
 
 def threadsafe_generator(f):
-
     @functools.wraps(f)
     def g(*a, **kw):
         return ThreadsafeIter(f(*a, **kw))
@@ -409,7 +420,7 @@ def threadsafe_generator(f):
     return g
 
 
-@keras_export('keras.utils.Sequence')
+@keras_export("keras.utils.Sequence")
 class Sequence(object):
     """Base object for fitting to a sequence of data, such as a dataset.
 
@@ -527,6 +538,7 @@ def dont_use_multiprocessing_pool(f):
             out = f(*args, **kwargs)
             _FORCE_THREADPOOL = old_force_threadpool
             return out
+
     return wrapped
 
 
@@ -535,9 +547,10 @@ def get_pool_class(use_multiprocessing):
     if not use_multiprocessing or _FORCE_THREADPOOL:
         return multiprocessing.dummy.Pool  # ThreadPool
     logging.warning(
-        'multiprocessing can interact badly with TensorFlow, causing '
-        'nondeterministic deadlocks. For high performance data pipelines tf.data '
-        'is recommended.')
+        "multiprocessing can interact badly with TensorFlow, causing "
+        "nondeterministic deadlocks. For high performance data pipelines tf.data "
+        "is recommended."
+    )
     return multiprocessing.Pool
 
 
@@ -554,9 +567,10 @@ def init_pool(seqs):
     _SHARED_SEQUENCES = seqs
 
 
-@deprecation.deprecated('2020-06-07', 'Please manage pools using the standard '
-                        'Python lib.')
-@keras_export('keras.experimental.terminate_keras_multiprocessing_pools')
+@deprecation.deprecated(
+    "2020-06-07", "Please manage pools using the standard " "Python lib."
+)
+@keras_export("keras.experimental.terminate_keras_multiprocessing_pools")
 def terminate_keras_multiprocessing_pools(grace_period=0.1, use_sigkill=False):
     """Destroy Keras' multiprocessing pools to prevent deadlocks.
 
@@ -603,10 +617,10 @@ def terminate_keras_multiprocessing_pools(grace_period=0.1, use_sigkill=False):
     # be able to gracefully handle shutdown, so we send a SIGTERM and then
     # optionally follow up with a SIGKILL.
     visited_workers = set()
-    cleanup_passes = ['.terminate', 'SIGTERM']
+    cleanup_passes = [".terminate", "SIGTERM"]
     if use_sigkill:
-        cleanup_passes.append('SIGKILL')
-    cleanup_passes.append('log')
+        cleanup_passes.append("SIGKILL")
+    cleanup_passes.append("log")
 
     for cleanup_pass in cleanup_passes:
         while True:
@@ -623,22 +637,29 @@ def terminate_keras_multiprocessing_pools(grace_period=0.1, use_sigkill=False):
             ident = worker.ident
             if ident in _WORKER_IDS and worker.is_alive():
                 try:
-                    if cleanup_pass == '.terminate':
+                    if cleanup_pass == ".terminate":
                         # First we ask nicely.
                         worker.terminate()
                         worker.join(timeout=grace_period)
                         visited_workers.add(ident)
                         workers_terminated_this_pass = True
-                    elif cleanup_pass in ('SIGTERM', 'SIGKILL'):
+                    elif cleanup_pass in ("SIGTERM", "SIGKILL"):
                         # Then we ask increasingly tersely.
-                        os.kill(worker.pid, signal.SIGKILL if cleanup_pass == 'SIGKILL'
-                                else signal.SIGTERM)
+                        os.kill(
+                            worker.pid,
+                            signal.SIGKILL
+                            if cleanup_pass == "SIGKILL"
+                            else signal.SIGTERM,
+                        )
                         workers_terminated_this_pass = True
 
-                    elif cleanup_pass == 'log':
+                    elif cleanup_pass == "log":
                         # And finally we give up and log the failure.
-                        errors.append('worker still alive: {}, pid={}, hash={}'
-                                      .format(worker.name, worker.pid, hash(worker)))
+                        errors.append(
+                            "worker still alive: {}, pid={}, hash={}".format(
+                                worker.name, worker.pid, hash(worker)
+                            )
+                        )
 
                 except OSError:
                     # Worker exited since the start of this loop.
@@ -658,8 +679,7 @@ def terminate_keras_multiprocessing_pools(grace_period=0.1, use_sigkill=False):
 
     gc.collect()
     for pool in _DATA_POOLS:
-        errors.append(
-            'pool still exists: {}, hash={}'.format(pool, hash(pool)))
+        errors.append("pool still exists: {}, hash={}".format(pool, hash(pool)))
 
     return errors
 
@@ -681,7 +701,7 @@ def get_index(uid, i):
     return _SHARED_SEQUENCES[uid][i]
 
 
-@keras_export('keras.utils.SequenceEnqueuer')
+@keras_export("keras.utils.SequenceEnqueuer")
 class SequenceEnqueuer(object):
     """Base class to enqueue inputs.
 
@@ -703,15 +723,14 @@ class SequenceEnqueuer(object):
     The `enqueuer.get()` should be an infinite stream of datas.
     """
 
-    def __init__(self, sequence,
-                 use_multiprocessing=False):
+    def __init__(self, sequence, use_multiprocessing=False):
         self.sequence = sequence
         self.use_multiprocessing = use_multiprocessing
 
         global _SEQUENCE_COUNTER
         if _SEQUENCE_COUNTER is None:
             try:
-                _SEQUENCE_COUNTER = multiprocessing.Value('i', 0)
+                _SEQUENCE_COUNTER = multiprocessing.Value("i", 0)
             except OSError:
                 # In this case the OS does not allow us to use
                 # multiprocessing. We resort to an int
@@ -810,7 +829,7 @@ class SequenceEnqueuer(object):
         raise NotImplementedError
 
 
-@keras_export('keras.utils.OrderedEnqueuer')
+@keras_export("keras.utils.OrderedEnqueuer")
 class OrderedEnqueuer(SequenceEnqueuer):
     """Builds a Enqueuer from a Sequence.
 
@@ -835,10 +854,13 @@ class OrderedEnqueuer(SequenceEnqueuer):
         Returns:
             Function, a Function to initialize the pool
         """
+
         def pool_fn(seqs):
             pool = get_pool_class(True)(
-                workers, initializer=init_pool_generator,
-                initargs=(seqs, None, get_worker_id_queue()))
+                workers,
+                initializer=init_pool_generator,
+                initargs=(seqs, None, get_worker_id_queue()),
+            )
             _DATA_POOLS.add(pool)
             return pool
 
@@ -865,7 +887,8 @@ class OrderedEnqueuer(SequenceEnqueuer):
                         return
 
                     self.queue.put(
-                        executor.apply_async(get_index, (self.uid, i)), block=True)
+                        executor.apply_async(get_index, (self.uid, i)), block=True
+                    )
 
                 # Done with the current epoch, waiting for the final batches
                 self._wait_queue()
@@ -916,7 +939,7 @@ def init_pool_generator(gens, random_seed=None, id_queue=None):
 
     # name isn't used for anything, but setting a more descriptive name is helpful
     # when diagnosing orphaned processes.
-    worker_proc.name = 'Keras_worker_{}'.format(worker_proc.name)
+    worker_proc.name = "Keras_worker_{}".format(worker_proc.name)
 
     if random_seed is not None:
         np.random.seed(random_seed + worker_proc.ident)
@@ -942,7 +965,7 @@ def next_sample(uid):
     return six.next(_SHARED_SEQUENCES[uid])
 
 
-@keras_export('keras.utils.GeneratorEnqueuer')
+@keras_export("keras.utils.GeneratorEnqueuer")
 class GeneratorEnqueuer(SequenceEnqueuer):
     """Builds a queue out of a data generator.
 
@@ -959,9 +982,7 @@ class GeneratorEnqueuer(SequenceEnqueuer):
             will be incremented by one for each worker.
     """
 
-    def __init__(self, sequence,
-                 use_multiprocessing=False,
-                 random_seed=None):
+    def __init__(self, sequence, use_multiprocessing=False, random_seed=None):
         super(GeneratorEnqueuer, self).__init__(sequence, use_multiprocessing)
         self.random_seed = random_seed
 
@@ -974,12 +995,16 @@ class GeneratorEnqueuer(SequenceEnqueuer):
         Returns:
             A Function to initialize the pool
         """
+
         def pool_fn(seqs):
             pool = get_pool_class(True)(
-                workers, initializer=init_pool_generator,
-                initargs=(seqs, self.random_seed, get_worker_id_queue()))
+                workers,
+                initializer=init_pool_generator,
+                initargs=(seqs, self.random_seed, get_worker_id_queue()),
+            )
             _DATA_POOLS.add(pool)
             return pool
+
         return pool_fn
 
     def _run(self):
@@ -991,7 +1016,8 @@ class GeneratorEnqueuer(SequenceEnqueuer):
                     return
 
                 self.queue.put(
-                    executor.apply_async(next_sample, (self.uid,)), block=True)
+                    executor.apply_async(next_sample, (self.uid,)), block=True
+                )
 
     def get(self):
         """Creates a generator to extract data from the queue.
@@ -1018,16 +1044,16 @@ class GeneratorEnqueuer(SequenceEnqueuer):
             for f in last_ones:
                 f.wait()
             # Keep the good ones
-            last_ones = [future.get()
-                         for future in last_ones if future.successful()]
+            last_ones = [future.get() for future in last_ones if future.successful()]
             for inputs in last_ones:
                 if inputs is not None:
                     yield inputs
         except Exception as e:  # pylint: disable=broad-except
             self.stop()
-            if 'generator already executing' in str(e):
+            if "generator already executing" in str(e):
                 raise RuntimeError(
-                    'Your generator is NOT thread-safe. '
-                    'Keras requires a thread-safe generator when '
-                    '`use_multiprocessing=False, workers > 1`. ')
+                    "Your generator is NOT thread-safe. "
+                    "Keras requires a thread-safe generator when "
+                    "`use_multiprocessing=False, workers > 1`. "
+                )
             six.reraise(*sys.exc_info())
