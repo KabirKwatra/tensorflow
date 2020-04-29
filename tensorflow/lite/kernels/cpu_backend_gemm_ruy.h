@@ -28,61 +28,61 @@ namespace detail {
 template <typename Scalar, typename DataPointer>
 void MakeRuyMatrix(const MatrixParams<Scalar>& params, DataPointer data_ptr,
                    ruy::Matrix<Scalar>* dst) {
-  ruy::Order ruy_order = params.order == Order::kColMajor
-                             ? ruy::Order::kColMajor
-                             : ruy::Order::kRowMajor;
-  ruy::MakeSimpleLayout(params.rows, params.cols, ruy_order,
-                        dst->mutable_layout());
-  // Note that ruy::Matrix::data is a ConstCheckingPtr, not a plain pointer.
-  // It does care whether we assign to it a Scalar* or a const Scalar*.
-  dst->set_data(data_ptr);
-  dst->set_zero_point(params.zero_point);
+    ruy::Order ruy_order = params.order == Order::kColMajor
+                           ? ruy::Order::kColMajor
+                           : ruy::Order::kRowMajor;
+    ruy::MakeSimpleLayout(params.rows, params.cols, ruy_order,
+                          dst->mutable_layout());
+    // Note that ruy::Matrix::data is a ConstCheckingPtr, not a plain pointer.
+    // It does care whether we assign to it a Scalar* or a const Scalar*.
+    dst->set_data(data_ptr);
+    dst->set_zero_point(params.zero_point);
 #ifdef TFLITE_WITH_RUY_GEMV
-  dst->set_cacheable(params.cacheable);
+    dst->set_cacheable(params.cacheable);
 #endif
 }
 
 template <typename GemmParamsType, typename RuySpecType>
 void MakeRuyMulParams(const GemmParamsType& params,
                       RuySpecType* ruy_mul_params) {
-  // This validation has already been performed by the Gemm API entry point,
-  // but it doesn't hurt to test specifically this again here, where it's
-  // being used.
-  ValidateGemmParams(params);
+    // This validation has already been performed by the Gemm API entry point,
+    // but it doesn't hurt to test specifically this again here, where it's
+    // being used.
+    ValidateGemmParams(params);
 
-  ruy_mul_params->set_multiplier_fixedpoint(params.multiplier_fixedpoint);
-  ruy_mul_params->set_multiplier_exponent(params.multiplier_exponent);
-  ruy_mul_params->set_multiplier_fixedpoint_perchannel(
-      params.multiplier_fixedpoint_perchannel);
-  ruy_mul_params->set_multiplier_exponent_perchannel(
-      params.multiplier_exponent_perchannel);
-  ruy_mul_params->set_bias(params.bias);
-  ruy_mul_params->set_clamp_min(params.clamp_min);
-  ruy_mul_params->set_clamp_max(params.clamp_max);
+    ruy_mul_params->set_multiplier_fixedpoint(params.multiplier_fixedpoint);
+    ruy_mul_params->set_multiplier_exponent(params.multiplier_exponent);
+    ruy_mul_params->set_multiplier_fixedpoint_perchannel(
+        params.multiplier_fixedpoint_perchannel);
+    ruy_mul_params->set_multiplier_exponent_perchannel(
+        params.multiplier_exponent_perchannel);
+    ruy_mul_params->set_bias(params.bias);
+    ruy_mul_params->set_clamp_min(params.clamp_min);
+    ruy_mul_params->set_clamp_max(params.clamp_max);
 }
 
 template <typename LhsScalar, typename RhsScalar, typename AccumScalar,
           typename DstScalar, QuantizationFlavor quantization_flavor>
 struct GemmImplUsingRuy {
-  static void Run(
-      const MatrixParams<LhsScalar>& lhs_params, const LhsScalar* lhs_data,
-      const MatrixParams<RhsScalar>& rhs_params, const RhsScalar* rhs_data,
-      const MatrixParams<DstScalar>& dst_params, DstScalar* dst_data,
-      const GemmParams<AccumScalar, DstScalar, quantization_flavor>& params,
-      CpuBackendContext* context) {
-    ruy::Matrix<LhsScalar> ruy_lhs;
-    ruy::Matrix<RhsScalar> ruy_rhs;
-    ruy::Matrix<DstScalar> ruy_dst;
-    MakeRuyMatrix(lhs_params, lhs_data, &ruy_lhs);
-    MakeRuyMatrix(rhs_params, rhs_data, &ruy_rhs);
-    MakeRuyMatrix(dst_params, dst_data, &ruy_dst);
+    static void Run(
+        const MatrixParams<LhsScalar>& lhs_params, const LhsScalar* lhs_data,
+        const MatrixParams<RhsScalar>& rhs_params, const RhsScalar* rhs_data,
+        const MatrixParams<DstScalar>& dst_params, DstScalar* dst_data,
+        const GemmParams<AccumScalar, DstScalar, quantization_flavor>& params,
+        CpuBackendContext* context) {
+        ruy::Matrix<LhsScalar> ruy_lhs;
+        ruy::Matrix<RhsScalar> ruy_rhs;
+        ruy::Matrix<DstScalar> ruy_dst;
+        MakeRuyMatrix(lhs_params, lhs_data, &ruy_lhs);
+        MakeRuyMatrix(rhs_params, rhs_data, &ruy_rhs);
+        MakeRuyMatrix(dst_params, dst_data, &ruy_dst);
 
-    ruy::MulParams<AccumScalar, DstScalar> ruy_mul_params;
-    MakeRuyMulParams(params, &ruy_mul_params);
+        ruy::MulParams<AccumScalar, DstScalar> ruy_mul_params;
+        MakeRuyMulParams(params, &ruy_mul_params);
 
-    ruy::Mul(ruy_lhs, ruy_rhs, ruy_mul_params, context->ruy_context(),
-             &ruy_dst);
-  }
+        ruy::Mul(ruy_lhs, ruy_rhs, ruy_mul_params, context->ruy_context(),
+                 &ruy_dst);
+    }
 };
 
 }  // namespace detail
