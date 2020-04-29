@@ -41,28 +41,24 @@ def get_layer_class():
 
 
 @combinations.generate(
-    combinations.combine(
-        distribution=strategy_combinations.all_strategies, mode=["eager", "graph"]
-    )
-)
+    combinations.combine(distribution=strategy_combinations.all_strategies,
+                         mode=["eager", "graph"]))
 class TextVectorizationDistributionTest(
-    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
-):
+        keras_parameterized.TestCase,
+        preprocessing_test_utils.PreprocessingLayerTest):
     def test_distribution_strategy_output(self, distribution):
         vocab_data = ["earth", "wind", "and", "fire"]
-        input_array = np.array(
-            [["earth", "wind", "and", "fire"], ["fire", "and", "earth", "michigan"]]
-        )
-        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
-            2, drop_remainder=True
-        )
+        input_array = np.array([["earth", "wind", "and", "fire"],
+                                ["fire", "and", "earth", "michigan"]])
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(
+            input_array).batch(2, drop_remainder=True)
 
         expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
 
         config.set_soft_device_placement(True)
 
         with distribution.scope():
-            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            input_data = keras.Input(shape=(None, ), dtype=dtypes.string)
             layer = get_layer_class()(
                 max_tokens=None,
                 standardize=None,
@@ -77,34 +73,30 @@ class TextVectorizationDistributionTest(
         self.assertAllEqual(expected_output, output_dataset)
 
     def test_distribution_strategy_output_with_adapt(self, distribution):
-        vocab_data = [
-            [
-                "earth",
-                "earth",
-                "earth",
-                "earth",
-                "wind",
-                "wind",
-                "wind",
-                "and",
-                "and",
-                "fire",
-            ]
-        ]
+        vocab_data = [[
+            "earth",
+            "earth",
+            "earth",
+            "earth",
+            "wind",
+            "wind",
+            "wind",
+            "and",
+            "and",
+            "fire",
+        ]]
         vocab_dataset = dataset_ops.Dataset.from_tensors(vocab_data)
-        input_array = np.array(
-            [["earth", "wind", "and", "fire"], ["fire", "and", "earth", "michigan"]]
-        )
-        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_array).batch(
-            2, drop_remainder=True
-        )
+        input_array = np.array([["earth", "wind", "and", "fire"],
+                                ["fire", "and", "earth", "michigan"]])
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(
+            input_array).batch(2, drop_remainder=True)
 
         expected_output = [[2, 3, 4, 5], [5, 4, 2, 1]]
 
         config.set_soft_device_placement(True)
 
         with distribution.scope():
-            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            input_data = keras.Input(shape=(None, ), dtype=dtypes.string)
             layer = get_layer_class()(
                 max_tokens=None,
                 standardize=None,
