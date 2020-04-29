@@ -58,22 +58,23 @@ OP_SOURCE_PATH = (
 
 
 def main(unused_argv):
-  merged_source = pathlib.Path(tempfile.mkdtemp())
-  shutil.copytree(SOURCE_PATH, merged_source / 'java')
+    merged_source = pathlib.Path(tempfile.mkdtemp())
+    shutil.copytree(SOURCE_PATH, merged_source / 'java')
 
-  if FLAGS.gen_ops:
-    subprocess.check_call(
-        ['bazel', 'build', '//tensorflow/java:java_op_gen_sources'],
-        cwd=TENSORFLOW_ROOT)
-    shutil.copytree(OP_SOURCE_PATH, merged_source / 'java/org/tensorflow/ops')
+    if FLAGS.gen_ops:
+        subprocess.check_call(
+            ['bazel', 'build', '//tensorflow/java:java_op_gen_sources'],
+            cwd=TENSORFLOW_ROOT)
+        shutil.copytree(OP_SOURCE_PATH, merged_source /
+                        'java/org/tensorflow/ops')
 
-  gen_java.gen_java_docs(
-      package='org.tensorflow',
-      source_path=merged_source / 'java',
-      output_dir=pathlib.Path(FLAGS.output_dir),
-      site_path=pathlib.Path(FLAGS.site_path))
+    gen_java.gen_java_docs(
+        package='org.tensorflow',
+        source_path=merged_source / 'java',
+        output_dir=pathlib.Path(FLAGS.output_dir),
+        site_path=pathlib.Path(FLAGS.site_path))
 
 
 if __name__ == '__main__':
-  flags.mark_flags_as_required(['output_dir'])
-  app.run(main)
+    flags.mark_flags_as_required(['output_dir'])
+    app.run(main)
