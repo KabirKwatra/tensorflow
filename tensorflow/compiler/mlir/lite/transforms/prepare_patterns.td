@@ -204,4 +204,3 @@ def : Pat<(TF_MatrixSetDiagV3Op $input, $diagonal,
             (ConstantOp ConstantAttr<I32ElementsAttr, "{0}">),
             $align),
           (TF_MatrixSetDiagOp $input, $diagonal)>;
-

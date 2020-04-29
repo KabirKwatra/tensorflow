@@ -1493,7 +1493,7 @@ def batch_normalization(x, mean, variance, offset, scale, variance_epsilon, name
         `tf.nn.moments(..., keepdims=False)` during training, or running averages
         thereof during inference.
 
-    See equation 11 in Algorithm 2 of source: 
+    See equation 11 in Algorithm 2 of source:
     [Batch Normalization: Accelerating Deep Network Training by
     Reducing Internal Covariate Shift; S. Ioffe, C. Szegedy]
     (http://arxiv.org/abs/1502.03167).
