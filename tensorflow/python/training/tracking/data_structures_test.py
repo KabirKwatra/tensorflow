@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import copy
@@ -23,18 +25,31 @@ import pickle
 import numpy
 import six
 from absl.testing import parameterized
+
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.eager import context, def_function, test
-from tensorflow.python.framework import (constant_op, dtypes, ops,
-                                         tensor_shape, test_util)
-from tensorflow.python.keras.engine import sequential, training
-from tensorflow.python.keras.layers import core, normalization
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.eager import test
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import test_util
+from tensorflow.python.keras.engine import sequential
+from tensorflow.python.keras.engine import training
+from tensorflow.python.keras.layers import core
+from tensorflow.python.keras.layers import normalization
 from tensorflow.python.layers import core as non_keras_core
 from tensorflow.python.module import module
-from tensorflow.python.ops import (array_ops, math_ops, resource_variable_ops,
-                                   variables)
-from tensorflow.python.training.tracking import data_structures, tracking, util
-from tensorflow.python.util import nest, serialization
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.ops import variables
+from tensorflow.python.training.tracking import data_structures
+from tensorflow.python.training.tracking import tracking
+from tensorflow.python.training.tracking import util
+from tensorflow.python.util import nest
+from tensorflow.python.util import serialization
 
 
 class HasList(training.Model):

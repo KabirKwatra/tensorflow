@@ -13,17 +13,27 @@
 # limitations under the License.
 # ==============================================================================
 """Functional tests for tensor_util."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import contextlib
 import sys
 
 import numpy as np
-from tensorflow.python.framework import (constant_op, dtypes, func_graph,
-                                         indexed_slices, sparse_tensor,
-                                         tensor_shape, tensor_util, test_util)
-from tensorflow.python.ops import array_ops, gen_state_ops, math_ops, variables
+
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import func_graph
+from tensorflow.python.framework import indexed_slices
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.framework import test_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import gen_state_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import variables
 from tensorflow.python.ops.ragged import ragged_factory_ops
 from tensorflow.python.platform import test
 

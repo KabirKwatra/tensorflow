@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for the distributed values library."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import itertools
@@ -22,19 +23,33 @@ import os
 
 import numpy as np
 from absl.testing import parameterized
+
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python import tf2
-from tensorflow.python.distribute import (combinations, distribute_lib,
-                                          distribution_strategy_context,
-                                          strategy_combinations, tpu_strategy,
-                                          tpu_values, values)
+from tensorflow.python.distribute import combinations
+from tensorflow.python.distribute import distribute_lib
+from tensorflow.python.distribute import distribution_strategy_context
+from tensorflow.python.distribute import strategy_combinations
+from tensorflow.python.distribute import tpu_strategy
+from tensorflow.python.distribute import tpu_values
+from tensorflow.python.distribute import values
 from tensorflow.python.distribute.cluster_resolver import tpu_cluster_resolver
-from tensorflow.python.eager import context, def_function, test
-from tensorflow.python.framework import (constant_op, dtypes, indexed_slices,
-                                         ops, sparse_tensor, tensor_spec,
-                                         test_util)
-from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
-                                   random_ops, sparse_ops, variable_scope)
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.eager import test
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import indexed_slices
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import test_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import random_ops
+from tensorflow.python.ops import sparse_ops
+from tensorflow.python.ops import variable_scope
 from tensorflow.python.ops import variables as variables_lib
 from tensorflow.python.saved_model.model_utils import mode_keys
 from tensorflow.python.tpu import tpu_strategy_util

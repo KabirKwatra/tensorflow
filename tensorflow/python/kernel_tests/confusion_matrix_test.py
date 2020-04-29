@@ -13,14 +13,20 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for confusion_matrix_ops."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
-from tensorflow.python.framework import dtypes, errors_impl, test_util
-from tensorflow.python.ops import (array_ops, confusion_matrix, math_ops,
-                                   random_ops)
+
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors_impl
+from tensorflow.python.framework import test_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import confusion_matrix
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import random_ops
 from tensorflow.python.platform import test
 
 

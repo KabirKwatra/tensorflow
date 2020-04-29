@@ -13,24 +13,34 @@
 # limitations under the License.
 # =============================================================================
 """Implementation of Neural Net (NN) functions."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import math
 
 from tensorflow.python.compat import compat
 from tensorflow.python.distribute import distribution_strategy_context as ds
-from tensorflow.python.framework import constant_op, dtypes, ops
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import candidate_sampling_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import custom_gradient
+from tensorflow.python.ops import embedding_ops
 from tensorflow.python.ops import \
     gen_array_ops  # pylint: disable=unused-import
-from tensorflow.python.ops import (array_ops, candidate_sampling_ops,
-                                   control_flow_ops, custom_gradient,
-                                   embedding_ops, gen_nn_ops, gen_sparse_ops,
-                                   linalg_ops, math_ops, nn_ops, variables)
+from tensorflow.python.ops import gen_nn_ops
+from tensorflow.python.ops import gen_sparse_ops
+from tensorflow.python.ops import linalg_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import nn_ops
+from tensorflow.python.ops import variables
 from tensorflow.python.ops.losses import util as losses_util
 from tensorflow.python.platform import device_context
-from tensorflow.python.util.deprecation import (deprecated_args,
-                                                deprecated_argument_lookup)
+from tensorflow.python.util.deprecation import deprecated_args
+from tensorflow.python.util.deprecation import deprecated_argument_lookup
 from tensorflow.python.util.tf_export import tf_export
 
 
