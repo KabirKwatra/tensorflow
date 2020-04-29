@@ -27,7 +27,6 @@ import org.tensorflow.lite.TestUtils;
 /** Unit tests for {@link org.tensorflow.lite.gpu.GpuDelegate}. */
 @RunWith(JUnit4.class)
 public final class GpuDelegateTest {
-
   private static final String MODEL_PATH = "tensorflow/lite/java/src/testdata/add.bin";
   private static final ByteBuffer MODEL_BUFFER = TestUtils.getTestFileAsBuffer(MODEL_PATH);
 
@@ -42,7 +41,7 @@ public final class GpuDelegateTest {
   public void testInterpreterWithGpu() throws Exception {
     Interpreter.Options options = new Interpreter.Options();
     try (GpuDelegate delegate = new GpuDelegate();
-        Interpreter interpreter = new Interpreter(MODEL_BUFFER, options.addDelegate(delegate))) {
+         Interpreter interpreter = new Interpreter(MODEL_BUFFER, options.addDelegate(delegate))) {
       float[] oneD = {1.23f, 6.54f, 7.81f};
       float[][] twoD = {oneD, oneD, oneD, oneD, oneD, oneD, oneD, oneD};
       float[][][] threeD = {twoD, twoD, twoD, twoD, twoD, twoD, twoD, twoD};
