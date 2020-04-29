@@ -33,14 +33,15 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(
     "output_dir",
     None,
-    ("Use this branch as the root version and don't" " create in version directory"),
+    ("Use this branch as the root version and don't"
+     " create in version directory"),
 )
 
-flags.DEFINE_string("site_path", "api_docs/java", "Path prefix in the _toc.yaml")
+flags.DEFINE_string("site_path", "api_docs/java",
+                    "Path prefix in the _toc.yaml")
 
-flags.DEFINE_string(
-    "code_url_prefix", None, "[UNUSED] The url prefix for links to code."
-)
+flags.DEFINE_string("code_url_prefix", None,
+                    "[UNUSED] The url prefix for links to code.")
 
 flags.DEFINE_bool(
     "search_hints",
@@ -56,8 +57,8 @@ DOCS_TOOLS_DIR = pathlib.Path(__file__).resolve().parent
 TENSORFLOW_ROOT = DOCS_TOOLS_DIR.parents[2]
 SOURCE_PATH = TENSORFLOW_ROOT / "tensorflow/java/src/main/java"
 OP_SOURCE_PATH = (
-    TENSORFLOW_ROOT / "bazel-bin/tensorflow/java/ops/src/main/java/org/tensorflow/op"
-)
+    TENSORFLOW_ROOT /
+    "bazel-bin/tensorflow/java/ops/src/main/java/org/tensorflow/op")
 
 
 def main(unused_argv):
@@ -69,7 +70,8 @@ def main(unused_argv):
             ["bazel", "build", "//tensorflow/java:java_op_gen_sources"],
             cwd=TENSORFLOW_ROOT,
         )
-        shutil.copytree(OP_SOURCE_PATH, merged_source / "java/org/tensorflow/ops")
+        shutil.copytree(OP_SOURCE_PATH,
+                        merged_source / "java/org/tensorflow/ops")
 
     gen_java.gen_java_docs(
         package="org.tensorflow",

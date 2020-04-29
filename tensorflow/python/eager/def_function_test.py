@@ -140,7 +140,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
         init_fn = fn.get_initialization_function(constant_op.constant(1.0))
         self.assertLen(state, 1)
-        self.assertFalse(resource_variable_ops.var_is_initialized_op(state[0].handle))
+        self.assertFalse(
+            resource_variable_ops.var_is_initialized_op(state[0].handle))
         init_fn()
         self.assertEqual(state[0].numpy(), 2.0)
 
@@ -202,9 +203,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
                     state.append(variables.Variable(2.0 * x))
                 return state[0] * x
 
-            with self.assertRaisesRegexp(
-                lift_to_graph.UnliftableError, r"transitively.* mul .* x"
-            ):
+            with self.assertRaisesRegexp(lift_to_graph.UnliftableError,
+                                         r"transitively.* mul .* x"):
                 fn(constant_op.constant(3.0))
 
     def testMethod(self):
@@ -231,8 +231,7 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         self.assertAllClose(
             3.0,
             def_function.function(functools.partial(lambda x, y: x + y, 1.0))(
-                constant_op.constant(2.0)
-            ),
+                constant_op.constant(2.0)),
         )
 
     def test_functools_partial_new_default(self):
@@ -248,15 +247,17 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return x + y
 
         func = def_function.function(
-            functools.partial(f, x=array_ops.zeros([1]), y=array_ops.zeros([1]))
-        )
+            functools.partial(f,
+                              x=array_ops.zeros([1]),
+                              y=array_ops.zeros([1])))
         self.assertAllEqual(func(), [0.0])
 
     def test_functools_partial_single_positional(self):
         def f(x, y):
             return x + y
 
-        func = def_function.function(functools.partial(f, constant_op.constant(1)))
+        func = def_function.function(
+            functools.partial(f, constant_op.constant(1)))
         self.assertAllEqual(func(5), 6)
 
     def test_complicated_partial_with_defaults(self):
@@ -264,12 +265,12 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return args
 
         def dynamic_unroll(
-            core_fn,
-            input_sequence,
-            initial_state,
-            sequence_length=None,
-            parallel_iterations=1,
-            swap_memory=False,
+                core_fn,
+                input_sequence,
+                initial_state,
+                sequence_length=None,
+                parallel_iterations=1,
+                swap_memory=False,
         ):
             del core_fn
             self.assertIs(None, sequence_length)
@@ -281,8 +282,7 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         initial_state = random_ops.random_uniform([1, 1])
 
         func = def_function.function(
-            functools.partial(dynamic_unroll, identity, swap_memory=True)
-        )
+            functools.partial(dynamic_unroll, identity, swap_memory=True))
         func(input_sequence, initial_state)
 
     def test_unspecified_default_argument(self):
@@ -294,21 +294,19 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     def test_concrete_function_from_signature(self):
         @def_function.function(
-            input_signature=[tensor_spec.TensorSpec(None, dtypes.float32)]
-        )
+            input_signature=[tensor_spec.TensorSpec(None, dtypes.float32)])
         def compute(x):
             return 2.0 * x
 
         concrete = compute.get_concrete_function()
         self.assertAllClose(1.0, concrete(constant_op.constant(0.5)))
         concrete = compute.get_concrete_function(
-            tensor_spec.TensorSpec(None, dtypes.float32)
-        )
+            tensor_spec.TensorSpec(None, dtypes.float32))
         self.assertAllClose(4.0, concrete(constant_op.constant(2.0)))
         signature_args, _ = concrete.structured_input_signature
         self.assertEqual(
-            signature_args, (tensor_spec.TensorSpec(None, dtypes.float32, name="x"),)
-        )
+            signature_args,
+            (tensor_spec.TensorSpec(None, dtypes.float32, name="x"), ))
 
     @test_util.run_in_graph_and_eager_modes
     def test_variable_naming(self):
@@ -345,13 +343,13 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return x
 
         conc = f.get_concrete_function(
-            tensor_spec.TensorSpec(None, dtypes.float32, "y")
-        )
+            tensor_spec.TensorSpec(None, dtypes.float32, "y"))
         conc(y=constant_op.constant(3.0))
         signature_args, _ = conc.structured_input_signature
         self.assertEqual("y", signature_args[0].name)
 
-        conc = f.get_concrete_function(tensor_spec.TensorSpec(None, dtypes.float32))
+        conc = f.get_concrete_function(
+            tensor_spec.TensorSpec(None, dtypes.float32))
         conc(x=constant_op.constant(3.0))
         signature_args, _ = conc.structured_input_signature
         self.assertEqual("x", signature_args[0].name)
@@ -361,21 +359,17 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return x[0]
 
         conc = g.get_concrete_function(
-            [tensor_spec.TensorSpec(None, dtypes.float32, "z"), 2]
-        )
+            [tensor_spec.TensorSpec(None, dtypes.float32, "z"), 2])
         conc(z=constant_op.constant(3.0))
         signature_args, _ = conc.structured_input_signature
         self.assertEqual("z", signature_args[0][0].name)
 
         with self.assertRaisesRegexp(
-            ValueError, "either zero or all names have to be specified"
-        ):
-            conc = g.get_concrete_function(
-                [
-                    tensor_spec.TensorSpec(None, dtypes.float32, "z"),
-                    tensor_spec.TensorSpec(None, dtypes.float32),
-                ]
-            )
+                ValueError, "either zero or all names have to be specified"):
+            conc = g.get_concrete_function([
+                tensor_spec.TensorSpec(None, dtypes.float32, "z"),
+                tensor_spec.TensorSpec(None, dtypes.float32),
+            ])
 
     def test_error_inner_capture(self):
         @def_function.function
@@ -387,8 +381,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return outputs
 
         with self.assertRaisesRegexp(
-            errors.InaccessibleTensorError, "defined in another function or code block"
-        ):
+                errors.InaccessibleTensorError,
+                "defined in another function or code block"):
             f(array_ops.zeros(shape=(8, 42, 3)))
 
     def testRuntimeErrorNotSticky(self):
@@ -425,18 +419,16 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
         self.assertEqual(
             signatures_args,
-            set(
+            set((
                 (
-                    (
-                        tensor_spec.TensorSpec([1, 2], dtypes.float32, name="x"),
-                        tensor_spec.TensorSpec([1], dtypes.float32, name="y"),
-                    ),
-                    (
-                        tensor_spec.TensorSpec([1, 3], dtypes.int32, name="x"),
-                        tensor_spec.TensorSpec([1], dtypes.int32, name="y"),
-                    ),
-                )
-            ),
+                    tensor_spec.TensorSpec([1, 2], dtypes.float32, name="x"),
+                    tensor_spec.TensorSpec([1], dtypes.float32, name="y"),
+                ),
+                (
+                    tensor_spec.TensorSpec([1, 3], dtypes.int32, name="x"),
+                    tensor_spec.TensorSpec([1], dtypes.int32, name="y"),
+                ),
+            )),
         )
 
     @test_util.assert_no_garbage_created
@@ -471,8 +463,9 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
                 _ = a + a
 
         with self.assertRaisesRegexp(
-            TypeError,
-            re.compile("An op outside of the function.*passed.*Const", re.DOTALL),
+                TypeError,
+                re.compile("An op outside of the function.*passed.*Const",
+                           re.DOTALL),
         ):
             failing_function()
 
@@ -584,11 +577,9 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             return 2 * x
 
         func_a = func.get_concrete_function(
-            tensor_spec.TensorSpec([None], dtypes.int32)
-        )
+            tensor_spec.TensorSpec([None], dtypes.int32))
         func_b = func.get_concrete_function(
-            tensor_spec.TensorSpec([None], dtypes.int32)
-        )
+            tensor_spec.TensorSpec([None], dtypes.int32))
 
         self.assertIs(func_a, func_b)
 
@@ -621,13 +612,14 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         @def_function.function()
         def create_variable():
             with ops.init_scope():
-                initial_value = random_ops.random_uniform(
-                    (2, 2), maxval=1000000, dtype=dtypes.int64
-                )
+                initial_value = random_ops.random_uniform((2, 2),
+                                                          maxval=1000000,
+                                                          dtype=dtypes.int64)
 
             if not a:
                 with ops.device("CPU:0"):
-                    a.append(resource_variable_ops.ResourceVariable(initial_value))
+                    a.append(
+                        resource_variable_ops.ResourceVariable(initial_value))
 
             return a[0].read_value()
 
@@ -663,26 +655,24 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         func._decorate(decorator)
         self.assertEqual(func().numpy(), 2)
 
-    @parameterized.parameters(
-        *itertools.product(
-            (None, (tensor_spec.TensorSpec([]),)),  # input_signature
-            (True, False),  # autograph
-            (None, converter.Feature.ALL),  # autograph_options
-            (None, "foo.bar"),  # implements
-            (None, True, False),  # relax_shapes
-            (True, False),  # compile
-            (True, False),  # override_function
-        )
-    )
+    @parameterized.parameters(*itertools.product(
+        (None, (tensor_spec.TensorSpec([]), )),  # input_signature
+        (True, False),  # autograph
+        (None, converter.Feature.ALL),  # autograph_options
+        (None, "foo.bar"),  # implements
+        (None, True, False),  # relax_shapes
+        (True, False),  # compile
+        (True, False),  # override_function
+    ))
     def testClone(
-        self,
-        input_signature,
-        autograph,
-        autograph_options,
-        implements,
-        relax_shapes,
-        compile_,
-        override_function,
+            self,
+            input_signature,
+            autograph,
+            autograph_options,
+            implements,
+            relax_shapes,
+            compile_,
+            override_function,
     ):
         def original_py_function(x):
             return x
@@ -713,7 +703,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         self.assertEqual(input_signature, cloned._input_signature)
         self.assertEqual(autograph, cloned._autograph)
         self.assertEqual(implements, cloned._implements)
-        self.assertEqual(autograph_options, cloned._experimental_autograph_options)
+        self.assertEqual(autograph_options,
+                         cloned._experimental_autograph_options)
         self.assertEqual(relax_shapes, cloned._experimental_relax_shapes)
         self.assertEqual(compile_, cloned._experimental_compile)
 
@@ -721,9 +712,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         # the output of the function if compile is disabled.
         if not compile_:
             x = array_ops.zeros([])
-            self.assertEqual(
-                self.evaluate(cloned(x)), self.evaluate(cloned_py_function(x))
-            )
+            self.assertEqual(self.evaluate(cloned(x)),
+                             self.evaluate(cloned_py_function(x)))
 
     def testLiftPlaceholderInitializedVariable(self):
         with ops.Graph().as_default():
@@ -732,9 +722,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
             @def_function.function
             def use_variable():
                 if not var_list:
-                    initial_value = array_ops.placeholder(
-                        shape=[], dtype=dtypes.float32
-                    )
+                    initial_value = array_ops.placeholder(shape=[],
+                                                          dtype=dtypes.float32)
                     v = variables.Variable(initial_value)
                     var_list.append(v)
                 return var_list[0] + 1.0
@@ -763,18 +752,15 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         # If the graph is deleted, then an exception is raised on reading `captures`
         self.assertEmpty(graph.captures)
 
-    @parameterized.parameters(
-        *itertools.product(
-            (None, (tensor_spec.TensorSpec([]),)),  # input_signature
-            (True, False),  # autograph
-            (None, converter.Feature.ALL),  # autograph_options
-            (None, "foo.bar"),  # implements
-            (None, True, False),  # relax_shapes
-        )
-    )
-    def test_pickle(
-        self, input_signature, autograph, autograph_options, implements, relax_shapes
-    ):
+    @parameterized.parameters(*itertools.product(
+        (None, (tensor_spec.TensorSpec([]), )),  # input_signature
+        (True, False),  # autograph
+        (None, converter.Feature.ALL),  # autograph_options
+        (None, "foo.bar"),  # implements
+        (None, True, False),  # relax_shapes
+    ))
+    def test_pickle(self, input_signature, autograph, autograph_options,
+                    implements, relax_shapes):
         """@function objects can be pickled and unpickled."""
         original_py_function = undecorated_function
 
@@ -793,7 +779,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
         self.assertEqual(input_signature, cloned._input_signature)
         self.assertEqual(autograph, cloned._autograph)
         self.assertEqual(implements, cloned._implements)
-        self.assertEqual(autograph_options, cloned._experimental_autograph_options)
+        self.assertEqual(autograph_options,
+                         cloned._experimental_autograph_options)
         self.assertEqual(relax_shapes, cloned._experimental_relax_shapes)
 
         x = array_ops.ones([])
@@ -801,7 +788,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     def test_frequent_retracing_warning(self):
         if sys.version_info[0] < 3:
-            self.skipTest("self.assertLogs() call is not available in Python 2.")
+            self.skipTest(
+                "self.assertLogs() call is not available in Python 2.")
 
         @def_function.function
         def f(x):
@@ -820,7 +808,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     def test_frequent_retracing_warning_lambda(self):
         if sys.version_info[0] < 3:
-            self.skipTest("self.assertLogs() call is not available in Python 2.")
+            self.skipTest(
+                "self.assertLogs() call is not available in Python 2.")
 
         f = def_function.function(lambda x: x)
 
@@ -836,7 +825,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     def test_frequent_retracing_warning_method(self):
         if sys.version_info[0] < 3:
-            self.skipTest("self.assertLogs() call is not available in Python 2.")
+            self.skipTest(
+                "self.assertLogs() call is not available in Python 2.")
 
         class Foo(object):
             @def_function.function
@@ -857,7 +847,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     def test_frequent_retracing_warning_two_independent_tf_functions(self):
         if sys.version_info[0] < 3:
-            self.skipTest("self.assertLogs() call is not available in Python 2.")
+            self.skipTest(
+                "self.assertLogs() call is not available in Python 2.")
 
         @def_function.function
         def f(x):
@@ -883,7 +874,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     def test_frequent_retracing_warning_nested(self):
         if sys.version_info[0] < 3:
-            self.skipTest("self.assertLogs() call is not available in Python 2.")
+            self.skipTest(
+                "self.assertLogs() call is not available in Python 2.")
 
         @def_function.function
         def inner(x):
@@ -922,7 +914,8 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     def test_frequent_retracing_warning_on_reinstantiation(self):
         if sys.version_info[0] < 3:
-            self.skipTest("self.assertLogs() call is not available in Python 2.")
+            self.skipTest(
+                "self.assertLogs() call is not available in Python 2.")
 
         with self.assertLogs(level="WARN") as logs:
             for i in range(5):

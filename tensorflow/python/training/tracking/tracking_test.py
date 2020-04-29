@@ -68,7 +68,7 @@ class InterfaceTests(test.TestCase):
         root.leaf = duplicate_name_dep
         root._track_trackable(duplicate_name_dep, name="leaf", overwrite=True)
         self.assertIs(duplicate_name_dep, root._lookup_dependency("leaf"))
-        ((_, dep_object),) = root._checkpoint_dependencies
+        ((_, dep_object), ) = root._checkpoint_dependencies
         self.assertIs(duplicate_name_dep, dep_object)
 
     def testNoDependency(self):
@@ -116,7 +116,7 @@ class InterfaceTests(test.TestCase):
         a_deps = util.list_objects(a)
         self.assertIn(b, a_deps)
         self.assertIn(c, a_deps)
-        (direct_a_dep,) = a._checkpoint_dependencies
+        (direct_a_dep, ) = a._checkpoint_dependencies
         self.assertEqual("l", direct_a_dep.name)
         self.assertIn(b, direct_a_dep.ref)
         self.assertIn(c, direct_a_dep.ref)
@@ -129,7 +129,8 @@ class InterfaceTests(test.TestCase):
         c = tracking.AutoTrackable()
         a.l.insert(0, c)
         checkpoint = util.Checkpoint(a=a)
-        with self.assertRaisesRegexp(ValueError, "A list element was replaced"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "A list element was replaced"):
             checkpoint.save(os.path.join(self.get_temp_dir(), "ckpt"))
 
     @test_util.run_in_graph_and_eager_modes
@@ -141,7 +142,8 @@ class InterfaceTests(test.TestCase):
         c = tracking.AutoTrackable()
         held_reference.append(c)
         checkpoint = util.Checkpoint(a=a)
-        with self.assertRaisesRegexp(ValueError, "The wrapped list was modified"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "The wrapped list was modified"):
             checkpoint.save(os.path.join(self.get_temp_dir(), "ckpt"))
 
     @test_util.run_in_graph_and_eager_modes
@@ -177,7 +179,8 @@ class InterfaceTests(test.TestCase):
         checkpoint.save(os.path.join(self.get_temp_dir(), "ckpt"))
         # Dirtying the inner list means the root object is unsaveable.
         a.l[0][1] = 2
-        with self.assertRaisesRegexp(ValueError, "A list element was replaced"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "A list element was replaced"):
             checkpoint.save(os.path.join(self.get_temp_dir(), "ckpt"))
 
     @test_util.run_in_graph_and_eager_modes
@@ -193,15 +196,16 @@ class InterfaceTests(test.TestCase):
         self.assertIn(c, a_deps)
         self.assertIs(b, a.attribute["b"])
         six.assertCountEqual(
-            self, ["b", "c"], [dep.name for dep in a.attribute._checkpoint_dependencies]
-        )
+            self, ["b", "c"],
+            [dep.name for dep in a.attribute._checkpoint_dependencies])
         self.assertEqual([b, c], a.layers)
         self.assertEqual([b, c], a.attribute.layers)
         self.assertEqual([c], a.attribute["c"].layers)
         checkpoint = util.Checkpoint(a=a)
         save_path = checkpoint.save(os.path.join(self.get_temp_dir(), "ckpt"))
         with self.cached_session():
-            checkpoint.restore(save_path).assert_consumed().initialize_or_restore()
+            checkpoint.restore(
+                save_path).assert_consumed().initialize_or_restore()
 
     @test_util.run_in_graph_and_eager_modes
     def testNoDepList(self):
@@ -213,20 +217,22 @@ class InterfaceTests(test.TestCase):
         checkpoint.save(os.path.join(self.get_temp_dir(), "ckpt"))
         a.l2 = []
         a.l2.insert(1, module.Module())
-        with self.assertRaisesRegexp(ValueError, "A list element was replaced"):
+        with self.assertRaisesRegexp(ValueError,
+                                     "A list element was replaced"):
             checkpoint.save(os.path.join(self.get_temp_dir(), "ckpt"))
 
     @test_util.run_in_graph_and_eager_modes
     def testAssertions(self):
         a = tracking.AutoTrackable()
         a.l = {"k": [np.zeros([2, 2])]}
-        self.assertAllEqual(nest.flatten({"k": [np.zeros([2, 2])]}), nest.flatten(a.l))
+        self.assertAllEqual(nest.flatten({"k": [np.zeros([2, 2])]}),
+                            nest.flatten(a.l))
         self.assertAllClose({"k": [np.zeros([2, 2])]}, a.l)
         nest.map_structure(self.assertAllClose, a.l, {"k": [np.zeros([2, 2])]})
         a.tensors = {"k": [array_ops.ones([2, 2]), array_ops.zeros([3, 3])]}
         self.assertAllClose(
-            {"k": [np.ones([2, 2]), np.zeros([3, 3])]}, self.evaluate(a.tensors)
-        )
+            {"k": [np.ones([2, 2]), np.zeros([3, 3])]},
+            self.evaluate(a.tensors))
 
     def test_property_cache(self):
         test_counter = collections.Counter()
@@ -256,7 +262,8 @@ class InterfaceTests(test.TestCase):
         self.assertEqual(second_object.test_property, id(second_object))
 
         # Make sure the cache does not share across objects
-        self.assertNotEqual(first_object.test_property, second_object.test_property)
+        self.assertNotEqual(first_object.test_property,
+                            second_object.test_property)
 
         # Check again (Now the values should be cached.)
         self.assertEqual(first_object.test_property, id(first_object))
@@ -281,7 +288,8 @@ class InterfaceTests(test.TestCase):
                 # because numpy limits the range of seeds) to ensure that an instance
                 # returns the same value in different threads, but different instances
                 # return different values.
-                return int(np.random.RandomState(id(self) % (2 ** 31)).randint(2 ** 16))
+                return int(
+                    np.random.RandomState(id(self) % (2**31)).randint(2**16))
 
             def get_test_property(self, _):
                 """Function provided to .map for threading test."""
@@ -359,8 +367,10 @@ class ResourceTrackerTest(test.TestCase):
             dummy_resource2 = _DummyResource("test2")
 
         self.assertEqual(2, len(resource_tracker.resources))
-        self.assertEqual("test1", resource_tracker.resources[0].resource_handle)
-        self.assertEqual("test2", resource_tracker.resources[1].resource_handle)
+        self.assertEqual("test1",
+                         resource_tracker.resources[0].resource_handle)
+        self.assertEqual("test2",
+                         resource_tracker.resources[1].resource_handle)
 
     def testTwoScopes(self):
         resource_tracker1 = tracking.ResourceTracker()
@@ -372,9 +382,11 @@ class ResourceTrackerTest(test.TestCase):
             dummy_resource2 = _DummyResource("test2")
 
         self.assertEqual(1, len(resource_tracker1.resources))
-        self.assertEqual("test1", resource_tracker1.resources[0].resource_handle)
+        self.assertEqual("test1",
+                         resource_tracker1.resources[0].resource_handle)
         self.assertEqual(1, len(resource_tracker1.resources))
-        self.assertEqual("test2", resource_tracker2.resources[0].resource_handle)
+        self.assertEqual("test2",
+                         resource_tracker2.resources[0].resource_handle)
 
     def testNestedScopesScopes(self):
         resource_tracker = tracking.ResourceTracker()
@@ -388,12 +400,16 @@ class ResourceTrackerTest(test.TestCase):
                 dummy_resource2 = _DummyResource("test2")
 
         self.assertEqual(1, len(resource_tracker1.resources))
-        self.assertEqual("test1", resource_tracker1.resources[0].resource_handle)
+        self.assertEqual("test1",
+                         resource_tracker1.resources[0].resource_handle)
         self.assertEqual(1, len(resource_tracker1.resources))
-        self.assertEqual("test2", resource_tracker2.resources[0].resource_handle)
+        self.assertEqual("test2",
+                         resource_tracker2.resources[0].resource_handle)
         self.assertEqual(2, len(resource_tracker.resources))
-        self.assertEqual("test1", resource_tracker.resources[0].resource_handle)
-        self.assertEqual("test2", resource_tracker.resources[1].resource_handle)
+        self.assertEqual("test1",
+                         resource_tracker.resources[0].resource_handle)
+        self.assertEqual("test2",
+                         resource_tracker.resources[1].resource_handle)
 
 
 if __name__ == "__main__":
