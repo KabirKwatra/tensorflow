@@ -13,15 +13,18 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for keras.layers.preprocessing.normalization."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
+
 from tensorflow.python import keras
-from tensorflow.python.distribute import combinations, strategy_combinations
+from tensorflow.python.distribute import combinations
+from tensorflow.python.distribute import strategy_combinations
 from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras.layers.preprocessing import (
-    discretization, preprocessing_test_utils)
+from tensorflow.python.keras.layers.preprocessing import discretization
+from tensorflow.python.keras.layers.preprocessing import preprocessing_test_utils
 from tensorflow.python.platform import test
 
 

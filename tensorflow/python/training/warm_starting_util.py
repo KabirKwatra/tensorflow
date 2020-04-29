@@ -13,17 +13,22 @@
 # limitations under the License.
 # ==============================================================================
 """Utilities to warm-start TF.Learn Estimators."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 
 import six
-from tensorflow.python.framework import errors, ops
-from tensorflow.python.ops import state_ops, variable_scope
+
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import state_ops
+from tensorflow.python.ops import variable_scope
 from tensorflow.python.ops import variables as variables_lib
 from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.training import checkpoint_ops, checkpoint_utils
+from tensorflow.python.training import checkpoint_ops
+from tensorflow.python.training import checkpoint_utils
 from tensorflow.python.training import saver as saver_lib
 from tensorflow.python.training.saving import saveable_object_util
 from tensorflow.python.util.tf_export import tf_export
