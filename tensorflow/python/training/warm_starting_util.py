@@ -36,19 +36,18 @@ from tensorflow.python.util.tf_export import tf_export
 
 @tf_export(v1=["train.VocabInfo"])
 class VocabInfo(
-    collections.namedtuple(
-        "VocabInfo",
-        [
-            "new_vocab",
-            "new_vocab_size",
-            "num_oov_buckets",
-            "old_vocab",
-            "old_vocab_size",
-            "backup_initializer",
-            "axis",
-        ],
-    )
-):
+        collections.namedtuple(
+            "VocabInfo",
+            [
+                "new_vocab",
+                "new_vocab_size",
+                "num_oov_buckets",
+                "old_vocab",
+                "old_vocab_size",
+                "backup_initializer",
+                "axis",
+            ],
+        )):
     """Vocabulary information for warm-starting.
 
     See `tf.estimator.WarmStartSettings` for examples of using
@@ -115,20 +114,19 @@ class VocabInfo(
     """
 
     def __new__(
-        cls,
-        new_vocab,
-        new_vocab_size,
-        num_oov_buckets,
-        old_vocab,
-        old_vocab_size=-1,
-        backup_initializer=None,
-        axis=0,
+            cls,
+            new_vocab,
+            new_vocab_size,
+            num_oov_buckets,
+            old_vocab,
+            old_vocab_size=-1,
+            backup_initializer=None,
+            axis=0,
     ):
         if axis != 0 and axis != 1:
             raise ValueError(
                 "The only supported values for the axis argument are 0 "
-                "and 1.  Provided axis: {}".format(axis)
-            )
+                "and 1.  Provided axis: {}".format(axis))
 
         return super(VocabInfo, cls).__new__(
             cls,
@@ -158,10 +156,8 @@ def _infer_var_name(var):
     """
     name_to_var_dict = saveable_object_util.op_list_to_dict(var)
     if len(name_to_var_dict) > 1:
-        raise TypeError(
-            "`var` = %s passed as arg violates the constraints.  "
-            "name_to_var_dict = %s" % (var, name_to_var_dict)
-        )
+        raise TypeError("`var` = %s passed as arg violates the constraints.  "
+                        "name_to_var_dict = %s" % (var, name_to_var_dict))
     return list(name_to_var_dict.keys())[0]
 
 
@@ -182,8 +178,7 @@ def _get_var_info(var, prev_tensor_name=None):
     if checkpoint_utils._is_variable(var):  # pylint: disable=protected-access
         current_var_name = _infer_var_name([var])
     elif isinstance(var, list) and all(
-        checkpoint_utils._is_variable(v) for v in var
-    ):  # pylint: disable=protected-access
+            checkpoint_utils._is_variable(v) for v in var):  # pylint: disable=protected-access
         current_var_name = _infer_var_name(var)
     elif isinstance(var, variables_lib.PartitionedVariable):
         current_var_name = _infer_var_name([var])
@@ -191,8 +186,7 @@ def _get_var_info(var, prev_tensor_name=None):
     else:
         raise TypeError(
             "var MUST be one of the following: a Variable, list of Variable or "
-            "PartitionedVariable, but is {}".format(type(var))
-        )
+            "PartitionedVariable, but is {}".format(type(var)))
     if not prev_tensor_name:
         # Assume tensor name remains the same.
         prev_tensor_name = current_var_name
@@ -204,16 +198,16 @@ def _get_var_info(var, prev_tensor_name=None):
 # Accesses protected members of tf.Variable to reset the variable's internal
 # state.
 def _warm_start_var_with_vocab(
-    var,
-    current_vocab_path,
-    current_vocab_size,
-    prev_ckpt,
-    prev_vocab_path,
-    previous_vocab_size=-1,
-    current_oov_buckets=0,
-    prev_tensor_name=None,
-    initializer=None,
-    axis=0,
+        var,
+        current_vocab_path,
+        current_vocab_size,
+        prev_ckpt,
+        prev_vocab_path,
+        previous_vocab_size=-1,
+        current_oov_buckets=0,
+        prev_tensor_name=None,
+        initializer=None,
+        axis=0,
 ):
     """Warm-starts given variable from `prev_tensor_name` tensor in `prev_ckpt`.
 
@@ -250,24 +244,22 @@ def _warm_start_var_with_vocab(
     Raises:
       ValueError: If required args are not provided.
     """
-    if not (
-        current_vocab_path and current_vocab_size and prev_ckpt and prev_vocab_path
-    ):
+    if not (current_vocab_path and current_vocab_size and prev_ckpt
+            and prev_vocab_path):
         raise ValueError(
             "Invalid args: Must provide all of [current_vocab_path, "
-            "current_vocab_size, prev_ckpt, prev_vocab_path}."
-        )
+            "current_vocab_size, prev_ckpt, prev_vocab_path}.")
     if checkpoint_utils._is_variable(var):
         var = [var]
-    elif isinstance(var, list) and all(checkpoint_utils._is_variable(v) for v in var):
+    elif isinstance(var, list) and all(
+            checkpoint_utils._is_variable(v) for v in var):
         var = var
     elif isinstance(var, variables_lib.PartitionedVariable):
         var = var._get_variable_list()
     else:
         raise TypeError(
             "var MUST be one of the following: a Variable, list of Variable or "
-            "PartitionedVariable, but is {}".format(type(var))
-        )
+            "PartitionedVariable, but is {}".format(type(var)))
 
     if not prev_tensor_name:
         # Assume tensor name remains the same.
@@ -280,8 +272,8 @@ def _warm_start_var_with_vocab(
         partition_info = None
         if slice_info:
             partition_info = variable_scope._PartitionInfo(
-                full_shape=slice_info.full_shape, var_offset=slice_info.var_offset
-            )
+                full_shape=slice_info.full_shape,
+                var_offset=slice_info.var_offset)
 
         if axis == 0:
             new_row_vocab_size = current_vocab_size
@@ -309,8 +301,7 @@ def _warm_start_var_with_vocab(
         else:
             raise ValueError(
                 "The only supported values for the axis argument are 0 "
-                "and 1.  Provided axis: {}".format(axis)
-            )
+                "and 1.  Provided axis: {}".format(axis))
 
         init = checkpoint_ops._load_and_remap_matrix_initializer(
             ckpt_path=checkpoint_utils._get_checkpoint_filename(prev_ckpt),
@@ -327,8 +318,7 @@ def _warm_start_var_with_vocab(
             initializer=initializer,
         )
         new_init_val = ops.convert_to_tensor(
-            init(shape=v_shape, partition_info=partition_info)
-        )
+            init(shape=v_shape, partition_info=partition_info))
         v._initializer_op = state_ops.assign(v, new_init_val)
 
 
@@ -358,36 +348,30 @@ def _get_grouped_variables(vars_to_warm_start):
         `Variables`, or a list of strings.
     """
     # TODO(b/143899805): Remove unicode checks when deprecating Python2.
-    if isinstance(vars_to_warm_start, six.string_types) or vars_to_warm_start is None:
+    if isinstance(vars_to_warm_start,
+                  six.string_types) or vars_to_warm_start is None:
         # Both vars_to_warm_start = '.*' and vars_to_warm_start = None will match
         # everything (in TRAINABLE_VARIABLES) here.
         logging.info("Warm-starting variables only in TRAINABLE_VARIABLES.")
-        list_of_vars = ops.get_collection(
-            ops.GraphKeys.TRAINABLE_VARIABLES, scope=vars_to_warm_start
-        )
+        list_of_vars = ops.get_collection(ops.GraphKeys.TRAINABLE_VARIABLES,
+                                          scope=vars_to_warm_start)
     elif isinstance(vars_to_warm_start, list):
         if all(isinstance(v, six.string_types) for v in vars_to_warm_start):
             list_of_vars = []
             for v in vars_to_warm_start:
                 list_of_vars += ops.get_collection(
-                    ops.GraphKeys.GLOBAL_VARIABLES, scope=v
-                )
-        elif all(
-            checkpoint_utils._is_variable(v) for v in vars_to_warm_start
-        ):  # pylint: disable=protected-access
+                    ops.GraphKeys.GLOBAL_VARIABLES, scope=v)
+        elif all(checkpoint_utils._is_variable(v) for v in vars_to_warm_start):  # pylint: disable=protected-access
             list_of_vars = vars_to_warm_start
         else:
             raise ValueError(
                 "If `vars_to_warm_start` is a list, it must be all "
                 "`Variable` or all `str`.  Given types are {}".format(
-                    [type(v) for v in vars_to_warm_start]
-                )
-            )
+                    [type(v) for v in vars_to_warm_start]))
     else:
         raise ValueError(
             "`vars_to_warm_start must be a `list` or `str`.  Given "
-            "type is {}".format(type(vars_to_warm_start))
-        )
+            "type is {}".format(type(vars_to_warm_start)))
     # We have to deal with partitioned variables, since get_collection flattens
     # out the list.
     grouped_variables = {}
@@ -420,9 +404,7 @@ def _get_object_checkpoint_renames(path, variable_names):
     Raises:
       ValueError: If the object-based checkpoint is missing variables.
     """
-    fname = checkpoint_utils._get_checkpoint_filename(
-        path
-    )  # pylint: disable=protected-access
+    fname = checkpoint_utils._get_checkpoint_filename(path)  # pylint: disable=protected-access
     try:
         names_to_keys = saver_lib.object_graph_key_mapping(fname)
     except errors.NotFoundError:
@@ -435,17 +417,16 @@ def _get_object_checkpoint_renames(path, variable_names):
         raise ValueError(
             "Attempting to warm-start from an object-based checkpoint, but found "
             "that the checkpoint did not contain values for all variables. The "
-            "following variables were missing: {}".format(missing_names)
-        )
+            "following variables were missing: {}".format(missing_names))
     return {name: names_to_keys[name] for name in variable_names}
 
 
 @tf_export(v1=["train.warm_start"])
 def warm_start(
-    ckpt_to_initialize_from,
-    vars_to_warm_start=".*",
-    var_name_to_vocab_info=None,
-    var_name_to_prev_var_name=None,
+        ckpt_to_initialize_from,
+        vars_to_warm_start=".*",
+        var_name_to_vocab_info=None,
+        var_name_to_prev_var_name=None,
 ):
     """Warm-starts a model using the given settings.
 
@@ -505,8 +486,7 @@ def warm_start(
         # checkpoint keys. If the user has specified var_name_to_prev_var_name, we
         # do not override it.
         var_name_to_prev_var_name = _get_object_checkpoint_renames(
-            ckpt_to_initialize_from, grouped_variables.keys()
-        )
+            ckpt_to_initialize_from, grouped_variables.keys())
 
     warmstarted_count = 0
 
@@ -536,16 +516,12 @@ def warm_start(
                     vocab_info.new_vocab,
                     vocab_info.new_vocab_size,
                     vocab_info.old_vocab,
-                    (
-                        vocab_info.old_vocab_size
-                        if vocab_info.old_vocab_size > 0
-                        else "All"
-                    ),
+                    (vocab_info.old_vocab_size
+                     if vocab_info.old_vocab_size > 0 else "All"),
                     vocab_info.num_oov_buckets,
                     prev_var_name or "Unchanged",
                     vocab_info.backup_initializer or "zero-initialized",
-                )
-            )
+                ))
             _warm_start_var_with_vocab(
                 variable,
                 current_vocab_path=vocab_info.new_vocab,
@@ -565,9 +541,7 @@ def warm_start(
                 warmstarted_count += 1
                 logging.debug(
                     "Warm-starting variable: {}; prev_var_name: {}".format(
-                        var_name, prev_var_name or "Unchanged"
-                    )
-                )
+                        var_name, prev_var_name or "Unchanged"))
                 # Because we use a default empty list in grouped_variables, single
                 # unpartitioned variables will be lists here, which we rectify in order
                 # for init_from_checkpoint logic to work correctly.
@@ -576,8 +550,10 @@ def warm_start(
                 prev_tensor_name, var = _get_var_info(variable, prev_var_name)
                 vocabless_vars[prev_tensor_name] = var
 
-    checkpoint_utils.init_from_checkpoint(ckpt_to_initialize_from, vocabless_vars)
-    prev_var_name_not_used = set(var_name_to_prev_var_name.keys()) - prev_var_name_used
+    checkpoint_utils.init_from_checkpoint(ckpt_to_initialize_from,
+                                          vocabless_vars)
+    prev_var_name_not_used = set(
+        var_name_to_prev_var_name.keys()) - prev_var_name_used
     vocab_info_not_used = set(var_name_to_vocab_info.keys()) - vocab_info_used
 
     logging.info("Warm-started %d variables.", warmstarted_count)
@@ -587,14 +563,11 @@ def warm_start(
             "You provided the following variables in "
             "var_name_to_prev_var_name that were not used: "
             "{0}.  Perhaps you misspelled them?  Here is the list of viable "
-            "variable names: {1}".format(
-                prev_var_name_not_used, grouped_variables.keys()
-            )
-        )
+            "variable names: {1}".format(prev_var_name_not_used,
+                                         grouped_variables.keys()))
     if vocab_info_not_used:
         raise ValueError(
             "You provided the following variables in "
             "var_name_to_vocab_info that were not used: {0}. "
             " Perhaps you misspelled them?  Here is the list of viable variable "
-            "names: {1}".format(vocab_info_not_used, grouped_variables.keys())
-        )
+            "names: {1}".format(vocab_info_not_used, grouped_variables.keys()))

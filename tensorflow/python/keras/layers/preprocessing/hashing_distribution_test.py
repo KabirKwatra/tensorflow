@@ -32,24 +32,20 @@ from tensorflow.python.platform import test
 
 
 @combinations.generate(
-    combinations.combine(
-        distribution=strategy_combinations.all_strategies, mode=["eager", "graph"]
-    )
-)
-class HashingDistributionTest(
-    keras_parameterized.TestCase, preprocessing_test_utils.PreprocessingLayerTest
-):
+    combinations.combine(distribution=strategy_combinations.all_strategies,
+                         mode=["eager", "graph"]))
+class HashingDistributionTest(keras_parameterized.TestCase,
+                              preprocessing_test_utils.PreprocessingLayerTest):
     def test_distribution(self, distribution):
         input_data = np.asarray([["omar"], ["stringer"], ["marlo"], ["wire"]])
-        input_dataset = dataset_ops.Dataset.from_tensor_slices(input_data).batch(
-            2, drop_remainder=True
-        )
+        input_dataset = dataset_ops.Dataset.from_tensor_slices(
+            input_data).batch(2, drop_remainder=True)
         expected_output = [[0], [0], [1], [0]]
 
         config.set_soft_device_placement(True)
 
         with distribution.scope():
-            input_data = keras.Input(shape=(None,), dtype=dtypes.string)
+            input_data = keras.Input(shape=(None, ), dtype=dtypes.string)
             layer = hashing.Hashing(num_bins=2)
             int_data = layer(input_data)
             model = keras.Model(inputs=input_data, outputs=int_data)
