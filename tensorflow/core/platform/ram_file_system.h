@@ -43,188 +43,198 @@ limitations under the License.
 namespace tensorflow {
 
 class RamRandomAccessFile : public RandomAccessFile, public WritableFile {
- public:
-  RamRandomAccessFile(std::string name, std::shared_ptr<std::string> cord)
-      : name_(name), data_(cord) {}
-  ~RamRandomAccessFile() override {}
+public:
+    RamRandomAccessFile(std::string name, std::shared_ptr<std::string> cord)
+        : name_(name), data_(cord) {}
+    ~RamRandomAccessFile() override {}
 
-  Status Name(StringPiece* result) const override {
-    *result = name_;
-    return Status::OK();
-  }
-
-  Status Read(uint64 offset, size_t n, StringPiece* result,
-              char* scratch) const override {
-    if (offset >= data_->size()) {
-      return errors::OutOfRange("");
+    Status Name(StringPiece* result) const override {
+        *result = name_;
+        return Status::OK();
     }
 
-    uint64 left = std::min(static_cast<uint64>(n), data_->size() - offset);
-    auto start = data_->begin() + offset;
-    auto end = data_->begin() + offset + left;
+    Status Read(uint64 offset, size_t n, StringPiece* result,
+                char* scratch) const override {
+        if (offset >= data_->size()) {
+            return errors::OutOfRange("");
+        }
 
-    std::copy(start, end, scratch);
-    *result = StringPiece(scratch, left);
+        uint64 left = std::min(static_cast<uint64>(n), data_->size() - offset);
+        auto start = data_->begin() + offset;
+        auto end = data_->begin() + offset + left;
 
-    // In case of a partial read, we must still fill `result`, but also return
-    // OutOfRange.
-    if (left < n) {
-      return errors::OutOfRange("");
+        std::copy(start, end, scratch);
+        *result = StringPiece(scratch, left);
+
+        // In case of a partial read, we must still fill `result`, but also return
+        // OutOfRange.
+        if (left < n) {
+            return errors::OutOfRange("");
+        }
+        return Status::OK();
     }
-    return Status::OK();
-  }
 
-  Status Append(StringPiece data) override {
-    data_->append(data.data(), data.size());
-    return Status::OK();
-  }
+    Status Append(StringPiece data) override {
+        data_->append(data.data(), data.size());
+        return Status::OK();
+    }
 
-  Status Close() override { return Status::OK(); }
-  Status Flush() override { return Status::OK(); }
-  Status Sync() override { return Status::OK(); }
+    Status Close() override {
+        return Status::OK();
+    }
+    Status Flush() override {
+        return Status::OK();
+    }
+    Status Sync() override {
+        return Status::OK();
+    }
 
-  Status Tell(int64* position) override {
-    *position = -1;
-    return errors::Unimplemented("This filesystem does not support Tell()");
-  }
+    Status Tell(int64* position) override {
+        *position = -1;
+        return errors::Unimplemented("This filesystem does not support Tell()");
+    }
 
- private:
-  TF_DISALLOW_COPY_AND_ASSIGN(RamRandomAccessFile);
-  string name_;
-  std::shared_ptr<std::string> data_;
+private:
+    TF_DISALLOW_COPY_AND_ASSIGN(RamRandomAccessFile);
+    string name_;
+    std::shared_ptr<std::string> data_;
 };
 
 class RamFileSystem : public FileSystem {
- public:
-  Status NewRandomAccessFile(
-      const string& fname, std::unique_ptr<RandomAccessFile>* result) override {
-    mutex_lock m(mu_);
-    if (fs_.find(fname) == fs_.end()) {
-      return errors::NotFound("");
+public:
+    Status NewRandomAccessFile(
+        const string& fname, std::unique_ptr<RandomAccessFile>* result) override {
+        mutex_lock m(mu_);
+        if (fs_.find(fname) == fs_.end()) {
+            return errors::NotFound("");
+        }
+        *result = std::unique_ptr<RandomAccessFile>(
+                      new RamRandomAccessFile(fname, fs_[fname]));
+        return Status::OK();
     }
-    *result = std::unique_ptr<RandomAccessFile>(
-        new RamRandomAccessFile(fname, fs_[fname]));
-    return Status::OK();
-  }
 
-  Status NewWritableFile(const string& fname,
-                         std::unique_ptr<WritableFile>* result) override {
-    mutex_lock m(mu_);
-    if (fs_.find(fname) == fs_.end()) {
-      fs_[fname] = std::make_shared<std::string>();
-    }
-    *result = std::unique_ptr<WritableFile>(
-        new RamRandomAccessFile(fname, fs_[fname]));
-    return Status::OK();
-  }
-  Status NewAppendableFile(const string& fname,
+    Status NewWritableFile(const string& fname,
                            std::unique_ptr<WritableFile>* result) override {
-    mutex_lock m(mu_);
-    if (fs_.find(fname) == fs_.end()) {
-      fs_[fname] = std::make_shared<std::string>();
+        mutex_lock m(mu_);
+        if (fs_.find(fname) == fs_.end()) {
+            fs_[fname] = std::make_shared<std::string>();
+        }
+        *result = std::unique_ptr<WritableFile>(
+                      new RamRandomAccessFile(fname, fs_[fname]));
+        return Status::OK();
     }
-    *result = std::unique_ptr<WritableFile>(
-        new RamRandomAccessFile(fname, fs_[fname]));
-    return Status::OK();
-  }
-
-  Status NewReadOnlyMemoryRegionFromFile(
-      const string& fname,
-      std::unique_ptr<ReadOnlyMemoryRegion>* result) override {
-    return errors::Unimplemented("");
-  }
-
-  Status FileExists(const string& fname) override {
-    FileStatistics stat;
-    return Stat(fname, &stat);
-  }
-
-  Status GetChildren(const string& dir, std::vector<string>* result) override {
-    mutex_lock m(mu_);
-    auto it = fs_.lower_bound(dir);
-    while (it != fs_.end() && absl::StartsWith(it->first, dir)) {
-      result->push_back(it->first);
-      ++it;
+    Status NewAppendableFile(const string& fname,
+                             std::unique_ptr<WritableFile>* result) override {
+        mutex_lock m(mu_);
+        if (fs_.find(fname) == fs_.end()) {
+            fs_[fname] = std::make_shared<std::string>();
+        }
+        *result = std::unique_ptr<WritableFile>(
+                      new RamRandomAccessFile(fname, fs_[fname]));
+        return Status::OK();
     }
 
-    return Status::OK();
-  }
-
-  Status GetMatchingPaths(const string& pattern,
-                          std::vector<string>* results) override {
-    mutex_lock m(mu_);
-    Env* env = Env::Default();
-    for (auto it = fs_.begin(); it != fs_.end(); ++it) {
-      if (env->MatchPath(it->first, pattern)) {
-        results->push_back(it->first);
-      }
-    }
-    return Status::OK();
-  }
-
-  Status Stat(const string& fname, FileStatistics* stat) override {
-    mutex_lock m(mu_);
-    auto it = fs_.lower_bound(fname);
-    if (it == fs_.end()) {
-      return errors::NotFound("");
+    Status NewReadOnlyMemoryRegionFromFile(
+        const string& fname,
+        std::unique_ptr<ReadOnlyMemoryRegion>* result) override {
+        return errors::Unimplemented("");
     }
 
-    if (it->first == fname) {
-      stat->is_directory = false;
-      stat->length = fs_[fname]->size();
-      stat->mtime_nsec = 0;
-      return Status::OK();
+    Status FileExists(const string& fname) override {
+        FileStatistics stat;
+        return Stat(fname, &stat);
     }
 
-    stat->is_directory = true;
-    stat->length = 0;
-    stat->mtime_nsec = 0;
-    return Status::OK();
-  }
+    Status GetChildren(const string& dir, std::vector<string>* result) override {
+        mutex_lock m(mu_);
+        auto it = fs_.lower_bound(dir);
+        while (it != fs_.end() && absl::StartsWith(it->first, dir)) {
+            result->push_back(it->first);
+            ++it;
+        }
 
-  Status DeleteFile(const string& fname) override {
-    mutex_lock m(mu_);
-    if (fs_.find(fname) != fs_.end()) {
-      fs_.erase(fname);
-      return Status::OK();
+        return Status::OK();
     }
 
-    return errors::NotFound("");
-  }
-
-  Status CreateDir(const string& dirname) override { return Status::OK(); }
-
-  Status RecursivelyCreateDir(const string& dirname) override {
-    return Status::OK();
-  }
-
-  Status DeleteDir(const string& dirname) override { return Status::OK(); }
-
-  Status GetFileSize(const string& fname, uint64* file_size) override {
-    mutex_lock m(mu_);
-    if (fs_.find(fname) != fs_.end()) {
-      *file_size = fs_[fname]->size();
-      return Status::OK();
+    Status GetMatchingPaths(const string& pattern,
+                            std::vector<string>* results) override {
+        mutex_lock m(mu_);
+        Env* env = Env::Default();
+        for (auto it = fs_.begin(); it != fs_.end(); ++it) {
+            if (env->MatchPath(it->first, pattern)) {
+                results->push_back(it->first);
+            }
+        }
+        return Status::OK();
     }
-    return errors::NotFound("");
-  }
 
-  Status RenameFile(const string& src, const string& target) override {
-    mutex_lock m(mu_);
-    if (fs_.find(src) != fs_.end()) {
-      fs_[target] = fs_[src];
-      fs_.erase(fs_.find(src));
-      return Status::OK();
+    Status Stat(const string& fname, FileStatistics* stat) override {
+        mutex_lock m(mu_);
+        auto it = fs_.lower_bound(fname);
+        if (it == fs_.end()) {
+            return errors::NotFound("");
+        }
+
+        if (it->first == fname) {
+            stat->is_directory = false;
+            stat->length = fs_[fname]->size();
+            stat->mtime_nsec = 0;
+            return Status::OK();
+        }
+
+        stat->is_directory = true;
+        stat->length = 0;
+        stat->mtime_nsec = 0;
+        return Status::OK();
     }
-    return errors::NotFound("");
-  }
 
-  RamFileSystem() {}
-  ~RamFileSystem() override {}
+    Status DeleteFile(const string& fname) override {
+        mutex_lock m(mu_);
+        if (fs_.find(fname) != fs_.end()) {
+            fs_.erase(fname);
+            return Status::OK();
+        }
 
- private:
-  mutex mu_;
-  std::map<string, std::shared_ptr<std::string>> fs_;
+        return errors::NotFound("");
+    }
+
+    Status CreateDir(const string& dirname) override {
+        return Status::OK();
+    }
+
+    Status RecursivelyCreateDir(const string& dirname) override {
+        return Status::OK();
+    }
+
+    Status DeleteDir(const string& dirname) override {
+        return Status::OK();
+    }
+
+    Status GetFileSize(const string& fname, uint64* file_size) override {
+        mutex_lock m(mu_);
+        if (fs_.find(fname) != fs_.end()) {
+            *file_size = fs_[fname]->size();
+            return Status::OK();
+        }
+        return errors::NotFound("");
+    }
+
+    Status RenameFile(const string& src, const string& target) override {
+        mutex_lock m(mu_);
+        if (fs_.find(src) != fs_.end()) {
+            fs_[target] = fs_[src];
+            fs_.erase(fs_.find(src));
+            return Status::OK();
+        }
+        return errors::NotFound("");
+    }
+
+    RamFileSystem() {}
+    ~RamFileSystem() override {}
+
+private:
+    mutex mu_;
+    std::map<string, std::shared_ptr<std::string>> fs_;
 };
 
 }  // namespace tensorflow
