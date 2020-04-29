@@ -13,19 +13,15 @@
 # limitations under the License.
 # ==============================================================================
 """Benchmarks for `tf.data.Dataset.map()`."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from tensorflow.python.data.benchmarks import benchmark_base
 from tensorflow.python.data.experimental.ops import stats_aggregator
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.framework import constant_op
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import array_ops, control_flow_ops
 from tensorflow.python.ops import map_fn as map_fn
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import random_ops
+from tensorflow.python.ops import math_ops, random_ops
 
 
 # TODO(b/119837791): Add eager benchmarks.
