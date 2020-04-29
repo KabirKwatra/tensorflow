@@ -31,24 +31,24 @@ namespace tensorflow {
 // IMPORTANT: Although SymbolicGradient is a function call, we currently do not
 // lower it, because it has been deprecated for a while.
 class LowerFunctionalOpsPass : public GraphOptimizationPass {
-public:
-    LowerFunctionalOpsPass() = default;
-    LowerFunctionalOpsPass(bool keep_lowered_nodes_fetchable)
-        : keep_lowered_nodes_fetchable_(keep_lowered_nodes_fetchable) {}
+ public:
+  LowerFunctionalOpsPass() = default;
+  LowerFunctionalOpsPass(bool keep_lowered_nodes_fetchable)
+      : keep_lowered_nodes_fetchable_(keep_lowered_nodes_fetchable) {}
 
-    Status Run(const GraphOptimizationPassOptions& options) override;
+  Status Run(const GraphOptimizationPassOptions& options) override;
 
-    static constexpr const char* const kLowerUsingSwitchMergeAttr =
-        LowerFunctionalOpsConstants::kLowerUsingSwitchMergeAttr;
-    static constexpr const char* const kLowerAsMultiDeviceFunctionAttr =
-        LowerFunctionalOpsConstants::kLowerAsMultiDeviceFunctionAttr;
+  static constexpr const char* const kLowerUsingSwitchMergeAttr =
+      LowerFunctionalOpsConstants::kLowerUsingSwitchMergeAttr;
+  static constexpr const char* const kLowerAsMultiDeviceFunctionAttr =
+      LowerFunctionalOpsConstants::kLowerAsMultiDeviceFunctionAttr;
 
-private:
-    // If defined use the value to control if functional ops must be fetchable
-    // after lowering (we add IdentityN in place of all lowered nodes). If not
-    // defined, this option will be inferred automatically from the graph (in
-    // presence of _Retval or _Arg nodes we do not need to keep nodes fetchable).
-    absl::optional<bool> keep_lowered_nodes_fetchable_;
+ private:
+  // If defined use the value to control if functional ops must be fetchable
+  // after lowering (we add IdentityN in place of all lowered nodes). If not
+  // defined, this option will be inferred automatically from the graph (in
+  // presence of _Retval or _Arg nodes we do not need to keep nodes fetchable).
+  absl::optional<bool> keep_lowered_nodes_fetchable_;
 };
 
 }  // namespace tensorflow
