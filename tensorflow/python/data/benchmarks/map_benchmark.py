@@ -33,22 +33,22 @@ class MapBenchmark(benchmark_base.DatasetBenchmarkBase):
     """Benchmarks for `tf.data.Dataset.map()`."""
 
     def benchmark_chain_of_maps(self):
-
         def benchmark_helper(chain_length, fn, use_inter_op_parallelism, label):
             dataset = dataset_ops.Dataset.range(10000)
             for _ in range(chain_length):
                 dataset = dataset_ops.MapDataset(
-                    dataset, fn, use_inter_op_parallelism=use_inter_op_parallelism)
+                    dataset, fn, use_inter_op_parallelism=use_inter_op_parallelism
+                )
             self.run_and_report_benchmark(
                 dataset,
                 num_elements=10000,
-                name="chain_length_%d%s" % (chain_length, label))
+                name="chain_length_%d%s" % (chain_length, label),
+            )
 
         chain_lengths = [0, 1, 2, 5, 10, 20, 50]
         for chain_length in chain_lengths:
             benchmark_helper(chain_length, lambda x: x + 1, True, "")
-            benchmark_helper(chain_length, lambda x: x +
-                             1, False, "_single_threaded")
+            benchmark_helper(chain_length, lambda x: x + 1, False, "_single_threaded")
             benchmark_helper(chain_length, lambda x: x, True, "_short_circuit")
 
     def benchmark_map_fan_out(self):
@@ -56,19 +56,20 @@ class MapBenchmark(benchmark_base.DatasetBenchmarkBase):
 
         def benchmark_helper(fan_out, fn, use_inter_op_parallelism, label):
             dataset = dataset_ops.Dataset.from_tensors(
-                tuple(0 for _ in range(fan_out))).repeat(None)
+                tuple(0 for _ in range(fan_out))
+            ).repeat(None)
             dataset = dataset_ops.MapDataset(
-                dataset, fn, use_inter_op_parallelism=use_inter_op_parallelism)
+                dataset, fn, use_inter_op_parallelism=use_inter_op_parallelism
+            )
             self.run_and_report_benchmark(
-                dataset,
-                num_elements=10000,
-                name="fan_out_%d%s" % (fan_out, label))
+                dataset, num_elements=10000, name="fan_out_%d%s" % (fan_out, label)
+            )
 
         for fan_out in fan_outs:
+            benchmark_helper(fan_out, lambda *xs: [x + 1 for x in xs], True, "")
             benchmark_helper(
-                fan_out, lambda *xs: [x + 1 for x in xs], True, "")
-            benchmark_helper(fan_out, lambda *xs: [x + 1 for x in xs], False,
-                             "_single_threaded")
+                fan_out, lambda *xs: [x + 1 for x in xs], False, "_single_threaded"
+            )
             benchmark_helper(fan_out, lambda *xs: xs, True, "_short_circuit")
 
     def benchmark_stats(self):
@@ -82,7 +83,8 @@ class MapBenchmark(benchmark_base.DatasetBenchmarkBase):
                 options.experimental_stats.aggregator = aggregator
             dataset = dataset.with_options(options)
             self.run_and_report_benchmark(
-                dataset, num_elements=10000, name="stats_%s" % stats)
+                dataset, num_elements=10000, name="stats_%s" % stats
+            )
 
     def benchmark_sequential_control_flow(self):
         dataset = dataset_ops.Dataset.from_tensors(100000)
@@ -100,31 +102,35 @@ class MapBenchmark(benchmark_base.DatasetBenchmarkBase):
             dataset,
             num_elements=1,
             name="sequential_control_flow",
-            apply_default_optimizations=True)
+            apply_default_optimizations=True,
+        )
 
     def benchmark_parallel_control_flow(self):
         dataset = dataset_ops.Dataset.from_tensors(
-            random_ops.random_uniform([100, 10000000]))
+            random_ops.random_uniform([100, 10000000])
+        )
 
         def fn(x):
             return map_fn.map_fn(
-                lambda y: y * array_ops.transpose(y), x, parallel_iterations=10)
+                lambda y: y * array_ops.transpose(y), x, parallel_iterations=10
+            )
 
         dataset = dataset.map(fn)
         self.run_and_report_benchmark(
             dataset,
             num_elements=1,
             name="parallel_control_flow",
-            apply_default_optimizations=True)
+            apply_default_optimizations=True,
+        )
 
     def benchmark_execution_overhead(self):
         dataset = dataset_ops.Dataset.range(100000)
         dataset = dataset_ops.MapDataset(
-            dataset, lambda x: x + 1, use_inter_op_parallelism=False)
+            dataset, lambda x: x + 1, use_inter_op_parallelism=False
+        )
         self.run_and_report_benchmark(
-            dataset,
-            num_elements=100000,
-            name="execution_overhead")
+            dataset, num_elements=100000, name="execution_overhead"
+        )
 
 
 if __name__ == "__main__":
