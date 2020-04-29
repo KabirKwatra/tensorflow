@@ -14,44 +14,27 @@
 # ==============================================================================
 """Code for backpropagation using the tape utilities."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 import operator
 import sys
 
 import six
-
-from tensorflow.python import pywrap_tfe
-from tensorflow.python import _pywrap_utils
-from tensorflow.python.eager import backprop_util
-from tensorflow.python.eager import context
-from tensorflow.python.eager import execute
-from tensorflow.python.eager import imperative_grad
-from tensorflow.python.eager import tape
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import check_ops
-from tensorflow.python.ops import control_flow_util
-from tensorflow.python.ops import default_gradient
-from tensorflow.python.ops import gen_array_ops
-from tensorflow.python.ops import gen_math_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python import _pywrap_utils, pywrap_tfe
+from tensorflow.python.eager import (backprop_util, context, execute,
+                                     imperative_grad, tape)
+from tensorflow.python.framework import (constant_op, dtypes, ops,
+                                         tensor_shape, tensor_util)
+from tensorflow.python.ops import (array_ops, check_ops, control_flow_util,
+                                   default_gradient, gen_array_ops,
+                                   gen_math_ops, math_ops,
+                                   resource_variable_ops)
 from tensorflow.python.ops.unconnected_gradients import UnconnectedGradients
 from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.util import nest
-from tensorflow.python.util import tf_contextlib
-from tensorflow.python.util import tf_inspect
+from tensorflow.python.util import nest, tf_contextlib, tf_inspect
 from tensorflow.python.util.lazy_loader import LazyLoader
 from tensorflow.python.util.tf_export import tf_export
-
 
 # Note that we need to lazy load the following two modules to avoid creating
 # circular dependencies.

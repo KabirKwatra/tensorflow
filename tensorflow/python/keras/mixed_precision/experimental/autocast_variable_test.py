@@ -13,29 +13,23 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for AutoCastVariable."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
 
-from absl.testing import parameterized
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python import tf2
 from tensorflow.python.distribute import mirrored_strategy
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import indexed_slices
-from tensorflow.python.framework import ops
+from tensorflow.python.eager import context, def_function
+from tensorflow.python.framework import (constant_op, dtypes, indexed_slices,
+                                         ops)
 from tensorflow.python.keras import combinations
-from tensorflow.python.keras.mixed_precision.experimental import autocast_variable
-from tensorflow.python.keras.optimizer_v2 import gradient_descent as gradient_descent_v2
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import state_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.keras.mixed_precision.experimental import \
+    autocast_variable
+from tensorflow.python.keras.optimizer_v2 import \
+    gradient_descent as gradient_descent_v2
+from tensorflow.python.ops import array_ops, state_ops, variables
 from tensorflow.python.platform import test
 from tensorflow.python.training import gradient_descent as gradient_descent_v1
 from tensorflow.python.training.tracking import util as trackable_utils
