@@ -57,7 +57,6 @@ class MyPickleableObject(tracking.AutoTrackable):
 
 
 class InterfaceTests(test.TestCase):
-
     def testMultipleAssignment(self):
         root = tracking.AutoTrackable()
         root.leaf = tracking.AutoTrackable()
@@ -70,7 +69,7 @@ class InterfaceTests(test.TestCase):
         root.leaf = duplicate_name_dep
         root._track_trackable(duplicate_name_dep, name="leaf", overwrite=True)
         self.assertIs(duplicate_name_dep, root._lookup_dependency("leaf"))
-        (_, dep_object), = root._checkpoint_dependencies
+        ((_, dep_object),) = root._checkpoint_dependencies
         self.assertIs(duplicate_name_dep, dep_object)
 
     def testNoDependency(self):
@@ -85,7 +84,6 @@ class InterfaceTests(test.TestCase):
         self.assertIs(root.nodep, nodep)
 
         class NoDependencyModel(training.Model):
-
             @base.no_automatic_dependency_tracking
             def __init__(self):
                 super(NoDependencyModel, self).__init__()
@@ -119,7 +117,7 @@ class InterfaceTests(test.TestCase):
         a_deps = util.list_objects(a)
         self.assertIn(b, a_deps)
         self.assertIn(c, a_deps)
-        direct_a_dep, = a._checkpoint_dependencies
+        (direct_a_dep,) = a._checkpoint_dependencies
         self.assertEqual("l", direct_a_dep.name)
         self.assertIn(b, direct_a_dep.ref)
         self.assertIn(c, direct_a_dep.ref)
@@ -196,17 +194,15 @@ class InterfaceTests(test.TestCase):
         self.assertIn(c, a_deps)
         self.assertIs(b, a.attribute["b"])
         six.assertCountEqual(
-            self,
-            ["b", "c"],
-            [dep.name for dep in a.attribute._checkpoint_dependencies])
+            self, ["b", "c"], [dep.name for dep in a.attribute._checkpoint_dependencies]
+        )
         self.assertEqual([b, c], a.layers)
         self.assertEqual([b, c], a.attribute.layers)
         self.assertEqual([c], a.attribute["c"].layers)
         checkpoint = util.Checkpoint(a=a)
         save_path = checkpoint.save(os.path.join(self.get_temp_dir(), "ckpt"))
         with self.cached_session():
-            checkpoint.restore(
-                save_path).assert_consumed().initialize_or_restore()
+            checkpoint.restore(save_path).assert_consumed().initialize_or_restore()
 
     @test_util.run_in_graph_and_eager_modes
     def testNoDepList(self):
@@ -225,19 +221,18 @@ class InterfaceTests(test.TestCase):
     def testAssertions(self):
         a = tracking.AutoTrackable()
         a.l = {"k": [np.zeros([2, 2])]}
-        self.assertAllEqual(nest.flatten({"k": [np.zeros([2, 2])]}),
-                            nest.flatten(a.l))
+        self.assertAllEqual(nest.flatten({"k": [np.zeros([2, 2])]}), nest.flatten(a.l))
         self.assertAllClose({"k": [np.zeros([2, 2])]}, a.l)
         nest.map_structure(self.assertAllClose, a.l, {"k": [np.zeros([2, 2])]})
         a.tensors = {"k": [array_ops.ones([2, 2]), array_ops.zeros([3, 3])]}
-        self.assertAllClose({"k": [np.ones([2, 2]), np.zeros([3, 3])]},
-                            self.evaluate(a.tensors))
+        self.assertAllClose(
+            {"k": [np.ones([2, 2]), np.zeros([3, 3])]}, self.evaluate(a.tensors)
+        )
 
     def test_property_cache(self):
         test_counter = collections.Counter()
 
         class MyObject(tracking.AutoTrackable):
-
             def __init__(self):
                 super(MyObject, self).__init__()
                 self._frozen = True
@@ -262,8 +257,7 @@ class InterfaceTests(test.TestCase):
         self.assertEqual(second_object.test_property, id(second_object))
 
         # Make sure the cache does not share across objects
-        self.assertNotEqual(first_object.test_property,
-                            second_object.test_property)
+        self.assertNotEqual(first_object.test_property, second_object.test_property)
 
         # Check again (Now the values should be cached.)
         self.assertEqual(first_object.test_property, id(first_object))
@@ -276,14 +270,13 @@ class InterfaceTests(test.TestCase):
         call_count = collections.Counter()
 
         class MyObject(tracking.AutoTrackable):
-
             @property
             @tracking.cached_per_instance
             def test_property(self):
                 # Random sleeps to ensure that the execution thread changes
                 # mid-computation.
                 call_count["test_property"] += 1
-                time.sleep(np.random.random() + 1.)
+                time.sleep(np.random.random() + 1.0)
 
                 # Use a RandomState which is seeded off the instance's id (the mod is
                 # because numpy limits the range of seeds) to ensure that an instance
@@ -351,7 +344,6 @@ class InterfaceTests(test.TestCase):
 
 
 class _DummyResource(tracking.TrackableResource):
-
     def __init__(self, handle_name):
         self._handle_name = handle_name
         super(_DummyResource, self).__init__()
@@ -361,7 +353,6 @@ class _DummyResource(tracking.TrackableResource):
 
 
 class ResourceTrackerTest(test.TestCase):
-
     def testBasic(self):
         resource_tracker = tracking.ResourceTracker()
         with tracking.resource_tracker_scope(resource_tracker):
@@ -369,10 +360,8 @@ class ResourceTrackerTest(test.TestCase):
             dummy_resource2 = _DummyResource("test2")
 
         self.assertEqual(2, len(resource_tracker.resources))
-        self.assertEqual(
-            "test1", resource_tracker.resources[0].resource_handle)
-        self.assertEqual(
-            "test2", resource_tracker.resources[1].resource_handle)
+        self.assertEqual("test1", resource_tracker.resources[0].resource_handle)
+        self.assertEqual("test2", resource_tracker.resources[1].resource_handle)
 
     def testTwoScopes(self):
         resource_tracker1 = tracking.ResourceTracker()
@@ -384,11 +373,9 @@ class ResourceTrackerTest(test.TestCase):
             dummy_resource2 = _DummyResource("test2")
 
         self.assertEqual(1, len(resource_tracker1.resources))
-        self.assertEqual(
-            "test1", resource_tracker1.resources[0].resource_handle)
+        self.assertEqual("test1", resource_tracker1.resources[0].resource_handle)
         self.assertEqual(1, len(resource_tracker1.resources))
-        self.assertEqual(
-            "test2", resource_tracker2.resources[0].resource_handle)
+        self.assertEqual("test2", resource_tracker2.resources[0].resource_handle)
 
     def testNestedScopesScopes(self):
         resource_tracker = tracking.ResourceTracker()
@@ -402,16 +389,12 @@ class ResourceTrackerTest(test.TestCase):
                 dummy_resource2 = _DummyResource("test2")
 
         self.assertEqual(1, len(resource_tracker1.resources))
-        self.assertEqual(
-            "test1", resource_tracker1.resources[0].resource_handle)
+        self.assertEqual("test1", resource_tracker1.resources[0].resource_handle)
         self.assertEqual(1, len(resource_tracker1.resources))
-        self.assertEqual(
-            "test2", resource_tracker2.resources[0].resource_handle)
+        self.assertEqual("test2", resource_tracker2.resources[0].resource_handle)
         self.assertEqual(2, len(resource_tracker.resources))
-        self.assertEqual(
-            "test1", resource_tracker.resources[0].resource_handle)
-        self.assertEqual(
-            "test2", resource_tracker.resources[1].resource_handle)
+        self.assertEqual("test1", resource_tracker.resources[0].resource_handle)
+        self.assertEqual("test2", resource_tracker.resources[1].resource_handle)
 
 
 if __name__ == "__main__":

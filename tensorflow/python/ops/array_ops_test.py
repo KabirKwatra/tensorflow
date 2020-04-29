@@ -29,15 +29,13 @@ from tensorflow.python.platform import test
 
 
 class ArrayOpTest(test.TestCase):
-
     @test_util.deprecated_graph_mode_only
     def testGatherGradHasPartialStaticShape(self):
         # Create a tensor with an unknown dim 1.
         x = random_ops.random_normal([4, 10, 10])
         x = array_ops.gather(
-            x,
-            array_ops.reshape(array_ops.where_v2(x[0, :, 0] > 0.5), [-1]),
-            axis=1)
+            x, array_ops.reshape(array_ops.where_v2(x[0, :, 0] > 0.5), [-1]), axis=1
+        )
         self.assertAllEqual(x.shape.as_list(), [4, None, 10])
 
         a = array_ops.gather(array_ops.gather(x, [0, 1]), [0, 1])
@@ -55,14 +53,12 @@ class ArrayOpTest(test.TestCase):
         # Create a tensor with an unknown dim 1.
         x = random_ops.random_normal([4, 10, 10])
         x = array_ops.gather(
-            x,
-            array_ops.reshape(array_ops.where_v2(x[0, :, 0] > 0.5), [-1]),
-            axis=1)
+            x, array_ops.reshape(array_ops.where_v2(x[0, :, 0] > 0.5), [-1]), axis=1
+        )
         self.assertAllEqual(x.shape.as_list(), [4, None, 10])
         a = array_ops.reshape(x, array_ops.shape(x))
         self.assertAllEqual(a.shape.as_list(), [4, None, 10])
-        b = array_ops.reshape(x, math_ops.cast(
-            array_ops.shape(x), dtypes.int64))
+        b = array_ops.reshape(x, math_ops.cast(array_ops.shape(x), dtypes.int64))
         self.assertAllEqual(b.shape.as_list(), [4, None, 10])
 
         # We do not shape-infer across a tf.cast into anything that's not tf.int32
@@ -70,7 +66,9 @@ class ArrayOpTest(test.TestCase):
         c = array_ops.reshape(
             x,
             math_ops.cast(
-                math_ops.cast(array_ops.shape(x), dtypes.float32), dtypes.int32))
+                math_ops.cast(array_ops.shape(x), dtypes.float32), dtypes.int32
+            ),
+        )
         self.assertAllEqual(c.shape.as_list(), [None, None, None])
 
     def testEmptyMeshgrid(self):

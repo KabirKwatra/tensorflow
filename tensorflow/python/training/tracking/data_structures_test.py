@@ -53,38 +53,37 @@ from tensorflow.python.util import serialization
 
 
 class HasList(training.Model):
-
     def __init__(self):
         super(HasList, self).__init__()
         self.layer_list = data_structures.List([core.Dense(3)])
         self.layer_list.append(core.Dense(4))
         self.layer_list.extend(
-            [core.Dense(5),
-             core.Dense(6, kernel_regularizer=math_ops.reduce_sum)])
+            [core.Dense(5), core.Dense(6, kernel_regularizer=math_ops.reduce_sum)]
+        )
         self.layer_list += [
             core.Dense(7, bias_regularizer=math_ops.reduce_sum),
-            core.Dense(8)
+            core.Dense(8),
         ]
-        self.layer_list += (
-            data_structures.List([core.Dense(9)]) + data_structures.List(
-                [core.Dense(10)]))
+        self.layer_list += data_structures.List([core.Dense(9)]) + data_structures.List(
+            [core.Dense(10)]
+        )
         self.layer_list.extend(
-            data_structures.List(
-                list([core.Dense(11)]) + [core.Dense(12)]))
+            data_structures.List(list([core.Dense(11)]) + [core.Dense(12)])
+        )
         self.layers_with_updates = data_structures.List(
-            (normalization.BatchNormalization(),))
+            (normalization.BatchNormalization(),)
+        )
 
     def call(self, x):
-        aggregation = 0.
+        aggregation = 0.0
         for l in self.layer_list:
             x = l(x)
             aggregation += math_ops.reduce_sum(x)
-        bn, = self.layers_with_updates
+        (bn,) = self.layers_with_updates
         return bn(x) / aggregation
 
 
 class ListTests(test.TestCase):
-
     @test_util.run_in_graph_and_eager_modes
     @test_util.run_v1_only("b/120545219")
     def testTracking(self):
@@ -94,45 +93,42 @@ class ListTests(test.TestCase):
         self.assertEqual(11, len(model.layers))
         self.assertEqual(10, len(model.layer_list.layers))
         six.assertCountEqual(
-            self,
-            model.layers,
-            model.layer_list.layers + model.layers_with_updates)
+            self, model.layers, model.layer_list.layers + model.layers_with_updates
+        )
         for index in range(10):
             self.assertEqual(3 + index, model.layer_list.layers[index].units)
         self.assertEqual(2, len(model._checkpoint_dependencies))
         self.assertIs(model.layer_list, model._checkpoint_dependencies[0].ref)
-        self.assertIs(model.layers_with_updates,
-                      model._checkpoint_dependencies[1].ref)
+        self.assertIs(model.layers_with_updates, model._checkpoint_dependencies[1].ref)
         self.assertEqual(
-            10, len(model._checkpoint_dependencies[0].ref._checkpoint_dependencies))
+            10, len(model._checkpoint_dependencies[0].ref._checkpoint_dependencies)
+        )
         self.evaluate([v.initializer for v in model.variables])
-        self.evaluate(model.variables[0].assign([[1., 2., 3.], [4., 5., 6.]]))
+        self.evaluate(model.variables[0].assign([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]))
         save_path = os.path.join(self.get_temp_dir(), "ckpt")
         model.save_weights(save_path)
         self.evaluate(model.variables[0].assign(array_ops.zeros([2, 3])))
         model.load_weights(save_path)
-        self.assertAllEqual([[1., 2., 3.], [4., 5., 6.]],
-                            self.evaluate(model.variables[0]))
-        v = variables.Variable(1.)
+        self.assertAllEqual(
+            [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], self.evaluate(model.variables[0])
+        )
+        v = variables.Variable(1.0)
         model.var_list = [v]
         self.assertIn(v, model.variables)
         self.assertIn(v, model.trainable_variables)
         self.assertNotIn(v, model.non_trainable_variables)
-        self.assertIn(model.layer_list[0].trainable_weights[0],
-                      model.trainable_weights)
+        self.assertIn(model.layer_list[0].trainable_weights[0], model.trainable_weights)
 
     def testSubModelTracking(self):
         model = training.Model()
-        model.v = variables.Variable(1.)
+        model.v = variables.Variable(1.0)
         self.assertIn(model.v, model.trainable_weights)
         model2 = training.Model()
         model2.m = [model]
         self.assertIn(model.v, model2.trainable_weights)
 
     def testSubSequentialTracking(self):
-
         class _Subclassed(training.Model):
-
             def __init__(self, wrapped):
                 super(_Subclassed, self).__init__()
                 self._wrapped = wrapped
@@ -150,7 +146,6 @@ class ListTests(test.TestCase):
 
     def testLayerTrackedThroughSequential(self):
         class AttrDict(dict):
-
             def __init__(self, *args, **kwargs):
                 super(AttrDict, self).__init__(*args, **kwargs)
                 self.__dict__ = self
@@ -158,20 +153,20 @@ class ListTests(test.TestCase):
         def ffnet(layer_sizes, name):
             ff = sequential.Sequential(name=name)
             for i, width in enumerate(layer_sizes):
-                ff.add(core.Dense(
-                    width,
-                    activation=("relu" if i < len(layer_sizes)-1 else None)))
+                ff.add(
+                    core.Dense(
+                        width, activation=("relu" if i < len(layer_sizes) - 1 else None)
+                    )
+                )
             return ff
 
         class MyModel2(training.Model):
-
             def __init__(self, config, name="my_model_2"):
                 super(MyModel2, self).__init__(name=name)
                 self._num_tokens = config.num_tokens
 
                 # list of sub-models
-                self._ffnet = [
-                    ffnet(config.module_layers + (self._num_tokens,), "ff")]
+                self._ffnet = [ffnet(config.module_layers + (self._num_tokens,), "ff")]
 
             def null_input(self):
                 return array_ops.zeros([1, self._num_tokens], dtype=dtypes.float32)
@@ -179,9 +174,7 @@ class ListTests(test.TestCase):
             def call(self, input_, module_index=None):
                 return self._ffnet[0](input_)
 
-        m2 = MyModel2(AttrDict(
-            num_tokens=5,
-            module_layers=(50, 30)))
+        m2 = MyModel2(AttrDict(num_tokens=5, module_layers=(50, 30)))
 
         # Construct
         m2(m2.null_input())
@@ -199,8 +192,9 @@ class ListTests(test.TestCase):
             model_input = array_ops.ones([32, 2])
             model(model_input)
             self.assertGreater(len(model.layers_with_updates[0].updates), 0)
-            self.assertEqual(set(model.layers_with_updates[0].updates),
-                             set(model.updates))
+            self.assertEqual(
+                set(model.layers_with_updates[0].updates), set(model.updates)
+            )
 
         with context.eager_mode():
             model = HasList()
@@ -218,7 +212,6 @@ class ListTests(test.TestCase):
 
     def testModelContainersCompareEqual(self):
         class HasEqualContainers(training.Model):
-
             def __init__(self):
                 super(HasEqualContainers, self).__init__()
                 self.l1 = []
@@ -240,7 +233,7 @@ class ListTests(test.TestCase):
 
     def testCallNotImplemented(self):
         with self.assertRaisesRegexp(TypeError, "not callable"):
-            data_structures.List()(1.)
+            data_structures.List()(1.0)
 
     def testNoPop(self):
         with self.assertRaises(AttributeError):
@@ -248,20 +241,18 @@ class ListTests(test.TestCase):
 
     @test_util.run_in_graph_and_eager_modes
     def testTensorConversion(self):
-
         class ListToTensor(training.Model):
-
             def __init__(self):
                 super(ListToTensor, self).__init__()
-                self.l = [1., 2., 3.]
+                self.l = [1.0, 2.0, 3.0]
 
         self.assertAllEqual(
-            [1., 2., 3.],
-            self.evaluate(constant_op.constant(ListToTensor().l)))
+            [1.0, 2.0, 3.0], self.evaluate(constant_op.constant(ListToTensor().l))
+        )
 
         self.assertAllEqual(
-            [1., 2., 3.],
-            self.evaluate(array_ops.pack(ListToTensor().l)))
+            [1.0, 2.0, 3.0], self.evaluate(array_ops.pack(ListToTensor().l))
+        )
 
     def testNesting(self):
         with context.graph_mode():
@@ -271,11 +262,11 @@ class ListTests(test.TestCase):
             inner[0](array_ops.ones([2, 3]))
             self.assertEqual(2, len(outer.variables))
             self.assertIsInstance(
-                outer.variables[0],
-                resource_variable_ops.ResourceVariable)
+                outer.variables[0], resource_variable_ops.ResourceVariable
+            )
 
     def testNonLayerVariables(self):
-        v = resource_variable_ops.ResourceVariable([1.])
+        v = resource_variable_ops.ResourceVariable([1.0])
         l = data_structures.List([v])
         self.assertTrue(l.trainable)
         self.assertEqual([], l.layers)
@@ -287,16 +278,16 @@ class ListTests(test.TestCase):
         self.assertEqual([], l.trainable_variables)
         self.assertEqual([v], l.non_trainable_variables)
         l.trainable = True
-        v2 = resource_variable_ops.ResourceVariable(1., trainable=False)
+        v2 = resource_variable_ops.ResourceVariable(1.0, trainable=False)
         l.append(v2)
         self.assertEqual([v, v2], l.weights)
         self.assertEqual([v], l.trainable_weights)
         self.assertEqual([v2], l.non_trainable_weights)
 
     def testCopy(self):
-        v1 = resource_variable_ops.ResourceVariable(1.)
-        v2 = resource_variable_ops.ResourceVariable(1.)
-        v3 = resource_variable_ops.ResourceVariable(1.)
+        v1 = resource_variable_ops.ResourceVariable(1.0)
+        v2 = resource_variable_ops.ResourceVariable(1.0)
+        v3 = resource_variable_ops.ResourceVariable(1.0)
 
         l1 = data_structures.List([v1, v2])
         l2 = l1.copy()
@@ -305,10 +296,10 @@ class ListTests(test.TestCase):
         self.assertEqual(list(l2), [v1, v2, v3])
 
     def testSlicing(self):
-        v1 = resource_variable_ops.ResourceVariable(1.)
-        v2 = resource_variable_ops.ResourceVariable(1.)
-        v3 = resource_variable_ops.ResourceVariable(1.)
-        v4 = resource_variable_ops.ResourceVariable(1.)
+        v1 = resource_variable_ops.ResourceVariable(1.0)
+        v2 = resource_variable_ops.ResourceVariable(1.0)
+        v3 = resource_variable_ops.ResourceVariable(1.0)
+        v4 = resource_variable_ops.ResourceVariable(1.0)
 
         l = data_structures.List([v1, v2, v3, v4])
         self.assertEqual(l[1:], [v2, v3, v4])
@@ -316,8 +307,7 @@ class ListTests(test.TestCase):
         self.assertEqual(l[:-1], [v1, v2, v3])
 
     def testHash(self):
-        has_sequences = set([data_structures.List(),
-                             data_structures.List()])
+        has_sequences = set([data_structures.List(), data_structures.List()])
         self.assertEqual(2, len(has_sequences))
         self.assertNotIn(data_structures.List(), has_sequences)
 
@@ -327,18 +317,18 @@ class ListTests(test.TestCase):
             l *= 0
 
     def testIMul(self):
-        v = resource_variable_ops.ResourceVariable(1.)
+        v = resource_variable_ops.ResourceVariable(1.0)
         l = data_structures.List([v])
         l *= 2
         self.assertEqual(list(l), [v] * 2)
 
     def testMul(self):
-        v = resource_variable_ops.ResourceVariable(1.)
+        v = resource_variable_ops.ResourceVariable(1.0)
         l = data_structures.List([v, v, v])
         self.assertEqual(list(l * 2), [v, v, v] * 2)
 
     def testRMul(self):
-        v = resource_variable_ops.ResourceVariable(1.)
+        v = resource_variable_ops.ResourceVariable(1.0)
         l = data_structures.List([v, v, v])
         self.assertEqual(list(2 * l), [v, v, v] * 2)
 
@@ -379,8 +369,7 @@ class ListWrapperTest(test.TestCase):
 
     def testSameStructure(self):
         l = [1]
-        nest.assert_same_structure(
-            l, data_structures.ListWrapper(copy.copy(l)))
+        nest.assert_same_structure(l, data_structures.ListWrapper(copy.copy(l)))
 
     def testMutateWithoutTrackableComponents(self):
         m = module.Module()
@@ -392,11 +381,12 @@ class ListWrapperTest(test.TestCase):
     def testFunctionCaching(self):
         @def_function.function
         def f(list_input):
-            return list_input[0] + constant_op.constant(1.)
+            return list_input[0] + constant_op.constant(1.0)
 
-        first_trace = f.get_concrete_function([constant_op.constant(2.)])
+        first_trace = f.get_concrete_function([constant_op.constant(2.0)])
         second_trace = f.get_concrete_function(
-            data_structures.ListWrapper([constant_op.constant(3.)]))
+            data_structures.ListWrapper([constant_op.constant(3.0)])
+        )
         self.assertIs(first_trace, second_trace)
 
     def testListWrapperBasic(self):
@@ -404,32 +394,33 @@ class ListWrapperTest(test.TestCase):
         # is used to automatically replace lists).
         a = tracking.AutoTrackable()
         b = tracking.AutoTrackable()
-        self.assertEqual([a, a],
-                         [a, a])
-        self.assertEqual(data_structures.ListWrapper([a, a]),
-                         data_structures.ListWrapper([a, a]))
-        self.assertEqual([a, a],
-                         data_structures.ListWrapper([a, a]))
-        self.assertEqual(data_structures.ListWrapper([a, a]),
-                         [a, a])
-        self.assertNotEqual([a, a],
-                            [b, a])
-        self.assertNotEqual(data_structures.ListWrapper([a, a]),
-                            data_structures.ListWrapper([b, a]))
-        self.assertNotEqual([a, a],
-                            data_structures.ListWrapper([b, a]))
+        self.assertEqual([a, a], [a, a])
+        self.assertEqual(
+            data_structures.ListWrapper([a, a]), data_structures.ListWrapper([a, a])
+        )
+        self.assertEqual([a, a], data_structures.ListWrapper([a, a]))
+        self.assertEqual(data_structures.ListWrapper([a, a]), [a, a])
+        self.assertNotEqual([a, a], [b, a])
+        self.assertNotEqual(
+            data_structures.ListWrapper([a, a]), data_structures.ListWrapper([b, a])
+        )
+        self.assertNotEqual([a, a], data_structures.ListWrapper([b, a]))
         self.assertLess([a], [a, b])
-        self.assertLess(data_structures.ListWrapper([a]),
-                        data_structures.ListWrapper([a, b]))
+        self.assertLess(
+            data_structures.ListWrapper([a]), data_structures.ListWrapper([a, b])
+        )
         self.assertLessEqual([a], [a, b])
-        self.assertLessEqual(data_structures.ListWrapper([a]),
-                             data_structures.ListWrapper([a, b]))
+        self.assertLessEqual(
+            data_structures.ListWrapper([a]), data_structures.ListWrapper([a, b])
+        )
         self.assertGreater([a, b], [a])
-        self.assertGreater(data_structures.ListWrapper([a, b]),
-                           data_structures.ListWrapper([a]))
+        self.assertGreater(
+            data_structures.ListWrapper([a, b]), data_structures.ListWrapper([a])
+        )
         self.assertGreaterEqual([a, b], [a])
-        self.assertGreaterEqual(data_structures.ListWrapper([a, b]),
-                                data_structures.ListWrapper([a]))
+        self.assertGreaterEqual(
+            data_structures.ListWrapper([a, b]), data_structures.ListWrapper([a])
+        )
         self.assertEqual([a], data_structures.ListWrapper([a]))
         self.assertEqual([a], list(data_structures.List([a])))
         self.assertEqual([a, a], data_structures.ListWrapper([a]) + [a])
@@ -437,8 +428,10 @@ class ListWrapperTest(test.TestCase):
         self.assertIsInstance(data_structures.ListWrapper([a]), list)
         self.assertEqual(
             tensor_shape.TensorShape([None, 2]).as_list(),
-            (data_structures.ListWrapper([None])
-             + tensor_shape.TensorShape([2])).as_list())
+            (
+                data_structures.ListWrapper([None]) + tensor_shape.TensorShape([2])
+            ).as_list(),
+        )
 
     def testAcceptsNonTrackableContent(self):
         l = data_structures.ListWrapper([1, 2, 3])
@@ -484,12 +477,13 @@ class ListWrapperTest(test.TestCase):
         l[:] = 2, 8, 9, 0
         self.assertEqual(l, [2, 8, 9, 0])
         l._maybe_initialize_trackable()  # pylint: disable=protected-access
-        self.assertEqual(len(l._checkpoint_dependencies),
-                         0)  # pylint: disable=protected-access
+        self.assertEqual(
+            len(l._checkpoint_dependencies), 0
+        )  # pylint: disable=protected-access
 
     def testSetSlice_cannotSaveIfTrackableModified(self):
-        v1 = resource_variable_ops.ResourceVariable(1.)
-        v2 = resource_variable_ops.ResourceVariable(1.)
+        v1 = resource_variable_ops.ResourceVariable(1.0)
+        v2 = resource_variable_ops.ResourceVariable(1.0)
         l = data_structures.ListWrapper([1, 2, v1, v2])
         l[:] = 2, 8, 9, v2
         self.assertEqual(l, [2, 8, 9, v2])
@@ -512,18 +506,18 @@ class ListWrapperTest(test.TestCase):
         self.assertUnableToSave(l, "Unable to save")
 
     def testIMulPositive(self):
-        v = variables.Variable(1.)
+        v = variables.Variable(1.0)
         l = data_structures.ListWrapper([1, 2, 3, 4, v])
         self.assertEqual([("4", v)], l._checkpoint_dependencies)
         root = util.Checkpoint(l=l)
         prefix = os.path.join(self.get_temp_dir(), "ckpt")
         path = root.save(prefix)
-        v.assign(5.)
+        v.assign(5.0)
         l *= 2
         self.assertEqual(l, [1, 2, 3, 4, v, 1, 2, 3, 4, v])
         self.assertEqual([("4", v), ("9", v)], l._checkpoint_dependencies)
         root.restore(path)
-        self.assertAllClose(1., v.numpy())
+        self.assertAllClose(1.0, v.numpy())
 
     def testSort(self):
         l = data_structures.ListWrapper([[1], [2], [3], [4]])
@@ -542,22 +536,19 @@ class ListWrapperTest(test.TestCase):
 
 
 class HasMapping(training.Model):
-
     def __init__(self):
         super(HasMapping, self).__init__()
         self.layer_dict = data_structures.Mapping(output=core.Dense(7))
         self.layer_dict["norm"] = data_structures.List()
         self.layer_dict["dense"] = data_structures.List()
         self.layer_dict["dense"].extend(
-            [core.Dense(5),
-             core.Dense(6, kernel_regularizer=math_ops.reduce_sum)])
-        self.layer_dict["norm"].append(
-            normalization.BatchNormalization())
-        self.layer_dict["norm"].append(
-            normalization.BatchNormalization())
+            [core.Dense(5), core.Dense(6, kernel_regularizer=math_ops.reduce_sum)]
+        )
+        self.layer_dict["norm"].append(normalization.BatchNormalization())
+        self.layer_dict["norm"].append(normalization.BatchNormalization())
 
     def call(self, x):
-        aggregation = 0.
+        aggregation = 0.0
         for norm, dense in zip(self.layer_dict["norm"], self.layer_dict["dense"]):
             x = norm(dense(x))
             aggregation += math_ops.reduce_sum(x)
@@ -565,7 +556,6 @@ class HasMapping(training.Model):
 
 
 class MappingTests(test.TestCase):
-
     @test_util.run_in_graph_and_eager_modes
     def testTracking(self):
         model = HasMapping()
@@ -582,8 +572,7 @@ class MappingTests(test.TestCase):
         model.save_weights(save_path)
         self.evaluate(test_var.assign(array_ops.zeros([6, 7])))
         model.load_weights(save_path)
-        self.assertAllEqual(numpy.ones([6, 7]),
-                            self.evaluate(test_var))
+        self.assertAllEqual(numpy.ones([6, 7]), self.evaluate(test_var))
 
     def testJSONSerialization(self):
         obj = tracking.AutoTrackable()
@@ -623,16 +612,14 @@ class MappingTests(test.TestCase):
         self.assertEqual([], root.wrapper.trainable_weights)
 
     def testHashing(self):
-        has_mappings = set([data_structures.Mapping(),
-                            data_structures.Mapping()])
+        has_mappings = set([data_structures.Mapping(), data_structures.Mapping()])
         self.assertEqual(2, len(has_mappings))
         self.assertNotIn(data_structures.Mapping(), has_mappings)
         # In contrast to Mapping, dict wrappers are not hashable
         a = tracking.AutoTrackable()
         a.d = {}
         self.assertEqual({}, a.d)
-        self.assertFalse(
-            {} != a.d)  # pylint: disable=g-explicit-bool-comparison
+        self.assertFalse({} != a.d)  # pylint: disable=g-explicit-bool-comparison
         self.assertNotEqual({1: 2}, a.d)
         with self.assertRaisesRegexp(TypeError, "unhashable"):
             set([a.d])
@@ -734,16 +721,16 @@ class MappingTests(test.TestCase):
 
     def testListShallowCopy(self):
         root = tracking.AutoTrackable()
-        orig_list = [[1.]]
+        orig_list = [[1.0]]
         root.a = orig_list
         copied = copy.copy(root.a)
-        self.assertAllEqual([[1.]], copied)
+        self.assertAllEqual([[1.0]], copied)
         self.assertIsNot(root.a, copied)
         self.assertIs(root.a[0], copied[0])
 
         # Dirtiness should be inherited
         util.list_objects(root.a)
-        orig_list.append(1.)
+        orig_list.append(1.0)
         with self.assertRaises(ValueError):
             util.list_objects(root.a)
         with self.assertRaises(ValueError):
@@ -751,16 +738,16 @@ class MappingTests(test.TestCase):
 
     def testListDeepCopy(self):
         root = tracking.AutoTrackable()
-        orig_list = [[1.]]
+        orig_list = [[1.0]]
         root.a = orig_list
         copied = copy.deepcopy(root.a)
-        self.assertAllEqual([[1.]], copied)
+        self.assertAllEqual([[1.0]], copied)
         self.assertIsNot(root.a, copied)
         self.assertIsNot(root.a[0], copied[0])
 
         # Dirtiness should be inherited
         util.list_objects(root.a)
-        orig_list.append(1.)
+        orig_list.append(1.0)
         with self.assertRaises(ValueError):
             util.list_objects(root.a)
         with self.assertRaises(ValueError):
@@ -768,15 +755,15 @@ class MappingTests(test.TestCase):
 
     def testDictShallowCopy(self):
         root = tracking.AutoTrackable()
-        orig_dict = {"a": [1.]}
+        orig_dict = {"a": [1.0]}
         root.a = orig_dict
         copied = copy.copy(root.a)
-        self.assertAllEqual([1.], copied["a"])
+        self.assertAllEqual([1.0], copied["a"])
         self.assertIsNot(root.a, copied)
         self.assertIs(root.a["a"], copied["a"])
 
         copied = root.a.copy()
-        self.assertAllEqual([1.], copied["a"])
+        self.assertAllEqual([1.0], copied["a"])
         self.assertIsNot(root.a, copied)
         self.assertIs(root.a["a"], copied["a"])
 
@@ -790,10 +777,10 @@ class MappingTests(test.TestCase):
 
     def testDictDeepCopy(self):
         root = tracking.AutoTrackable()
-        orig_dict = {"a": [1.]}
+        orig_dict = {"a": [1.0]}
         root.a = orig_dict
         copied = copy.deepcopy(root.a)
-        self.assertAllEqual([1.], copied["a"])
+        self.assertAllEqual([1.0], copied["a"])
         self.assertIsNot(root.a, copied)
         self.assertIsNot(root.a["a"], copied["a"])
 
@@ -808,12 +795,12 @@ class MappingTests(test.TestCase):
     def testShallowCopyTrackable(self):
         original = tracking.AutoTrackable()
         original_sub = tracking.AutoTrackable()
-        original.a = [[1.]]
+        original.a = [[1.0]]
         original.b = {"a": original_sub}
         shallow_copied = copy.copy(original)
         self.assertIs(original_sub, shallow_copied.b["a"])
         self.assertIsNot(original, shallow_copied)
-        self.assertEqual([[1.]], shallow_copied.a)
+        self.assertEqual([[1.0]], shallow_copied.a)
         shallow_deps = util.list_objects(shallow_copied)
         self.assertIn(shallow_copied.a, shallow_deps)
         self.assertIn(shallow_copied.b, shallow_deps)
@@ -822,14 +809,14 @@ class MappingTests(test.TestCase):
     def testDeepCopyTrackable(self):
         original = tracking.AutoTrackable()
         original_sub = tracking.AutoTrackable()
-        original.a = [[1.]]
+        original.a = [[1.0]]
         original.b = {"a": original_sub}
         self.assertIsInstance(original.b, dict)
         deep_copied = copy.deepcopy(original)
         self.assertIsInstance(deep_copied.b, dict)
         self.assertIsNot(original, deep_copied)
         self.assertIsNot(original_sub, deep_copied.b["a"])
-        self.assertEqual([[1.]], deep_copied.a)
+        self.assertEqual([[1.0]], deep_copied.a)
         self.assertIsInstance(deep_copied.b["a"], tracking.AutoTrackable)
         deps = util.list_objects(deep_copied)
         self.assertIn(deep_copied.a, deps)
@@ -850,15 +837,12 @@ class MappingTests(test.TestCase):
         self.assertEqual(dict(a=1, b=2), deserialized)
 
     def testListAddOrder(self):
-        self.assertEqual([1., 2.],
-                         data_structures.ListWrapper([1.])
-                         + data_structures.ListWrapper([2.]))
-        self.assertEqual([1., 2.],
-                         data_structures.ListWrapper([1.])
-                         + [2.])
-        self.assertEqual([1., 2.],
-                         [1.]
-                         + data_structures.ListWrapper([2.]))
+        self.assertEqual(
+            [1.0, 2.0],
+            data_structures.ListWrapper([1.0]) + data_structures.ListWrapper([2.0]),
+        )
+        self.assertEqual([1.0, 2.0], data_structures.ListWrapper([1.0]) + [2.0])
+        self.assertEqual([1.0, 2.0], [1.0] + data_structures.ListWrapper([2.0]))
 
     def testSameStructure(self):
         d = {1: "a"}
@@ -867,34 +851,35 @@ class MappingTests(test.TestCase):
     def testFunctionCaching(self):
         @def_function.function
         def f(dict_input):
-            return dict_input["x"] + constant_op.constant(1.)
+            return dict_input["x"] + constant_op.constant(1.0)
 
-        first_trace = f.get_concrete_function({"x": constant_op.constant(2.)})
+        first_trace = f.get_concrete_function({"x": constant_op.constant(2.0)})
         second_trace = f.get_concrete_function(
-            data_structures._DictWrapper({"x": constant_op.constant(3.)}))
+            data_structures._DictWrapper({"x": constant_op.constant(3.0)})
+        )
         self.assertIs(first_trace, second_trace)
 
 
 class HasTuple(training.Model):
-
     def __init__(self):
         super(HasTuple, self).__init__()
         self.layer_list = (
-            core.Dense(3), core.Dense(4),
-            core.Dense(5, kernel_regularizer=math_ops.reduce_sum))
+            core.Dense(3),
+            core.Dense(4),
+            core.Dense(5, kernel_regularizer=math_ops.reduce_sum),
+        )
         self.layers_with_updates = (normalization.BatchNormalization(),)
 
     def call(self, x):
-        aggregation = 0.
+        aggregation = 0.0
         for l in self.layer_list:
             x = l(x)
             aggregation += math_ops.reduce_sum(x)
-        bn, = self.layers_with_updates
+        (bn,) = self.layers_with_updates
         return bn(x) / aggregation
 
 
 class TupleTests(test.TestCase, parameterized.TestCase):
-
     @test_util.run_in_graph_and_eager_modes
     def testTracking(self):
         model = HasTuple()
@@ -905,49 +890,49 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         six.assertCountEqual(
             self,
             model.layers,
-            tuple(model.layer_list.layers) + model.layers_with_updates)
+            tuple(model.layer_list.layers) + model.layers_with_updates,
+        )
         self.assertEqual(3, model.layer_list.layers[0].units)
         self.assertEqual(4, model.layer_list.layers[1].units)
         self.assertEqual(5, model.layer_list.layers[2].units)
         self.assertLen(model._checkpoint_dependencies, 2)
         self.assertIs(model.layer_list, model._checkpoint_dependencies[0].ref)
-        self.assertIs(model.layers_with_updates,
-                      model._checkpoint_dependencies[1].ref)
+        self.assertIs(model.layers_with_updates, model._checkpoint_dependencies[1].ref)
         self.assertLen(
-            model._checkpoint_dependencies[0].ref._checkpoint_dependencies, 3)
+            model._checkpoint_dependencies[0].ref._checkpoint_dependencies, 3
+        )
         self.evaluate([v.initializer for v in model.variables])
-        self.evaluate(model.variables[0].assign([[1., 2., 3.], [4., 5., 6.]]))
+        self.evaluate(model.variables[0].assign([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]))
         save_path = os.path.join(self.get_temp_dir(), "ckpt")
         model.save_weights(save_path)
         self.evaluate(model.variables[0].assign(array_ops.zeros([2, 3])))
         model.load_weights(save_path)
-        self.assertAllEqual([[1., 2., 3.], [4., 5., 6.]],
-                            self.evaluate(model.variables[0]))
-        v = variables.Variable(1.)
+        self.assertAllEqual(
+            [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], self.evaluate(model.variables[0])
+        )
+        v = variables.Variable(1.0)
         model.var_list = (v,)
         self.assertIn(id(v), [id(obj) for obj in model.variables])
         self.assertIn(id(v), [id(obj) for obj in model.trainable_variables])
-        self.assertNotIn(id(v), [id(obj)
-                                 for obj in model.non_trainable_variables])
-        self.assertIn(id(model.layer_list[0].trainable_weights[0]),
-                      [id(obj) for obj in model.trainable_weights])
+        self.assertNotIn(id(v), [id(obj) for obj in model.non_trainable_variables])
+        self.assertIn(
+            id(model.layer_list[0].trainable_weights[0]),
+            [id(obj) for obj in model.trainable_weights],
+        )
 
     @parameterized.named_parameters(
-        ("Module", module.Module),
-        ("Model", training.Model),
+        ("Module", module.Module), ("Model", training.Model),
     )
     def testSubModelTracking(self, module_subclass):
         model = module_subclass()
-        model.v = variables.Variable(1.)
+        model.v = variables.Variable(1.0)
         self.assertIn(model.v, model.trainable_variables)
         model2 = module_subclass()
         model2.m = (model,)
         self.assertIn(model.v, model2.trainable_variables)
 
     def testSubSequentialTracking(self):
-
         class _Subclassed(training.Model):
-
             def __init__(self, wrapped):
                 super(_Subclassed, self).__init__()
                 self._wrapped = wrapped
@@ -974,8 +959,9 @@ class TupleTests(test.TestCase, parameterized.TestCase):
             model_input = array_ops.ones([32, 2])
             model(model_input)
             self.assertNotEmpty(model.layers_with_updates[0].updates)
-            self.assertEqual(set(model.layers_with_updates[0].updates),
-                             set(model.updates))
+            self.assertEqual(
+                set(model.layers_with_updates[0].updates), set(model.updates)
+            )
 
         model = HasTuple()
         model_input = array_ops.ones([32, 2])
@@ -991,7 +977,6 @@ class TupleTests(test.TestCase, parameterized.TestCase):
 
     def testModelContainersCompareEqual(self):
         class HasEqualContainers(training.Model):
-
             def __init__(self):
                 super(HasEqualContainers, self).__init__()
                 self.l1 = ()
@@ -1012,23 +997,21 @@ class TupleTests(test.TestCase, parameterized.TestCase):
 
     @test_util.run_in_graph_and_eager_modes
     def testTensorConversion(self):
-
         class TupleToTensor(training.Model):
-
             def __init__(self):
                 super(TupleToTensor, self).__init__()
-                self.l = (1., 2., 3.)
+                self.l = (1.0, 2.0, 3.0)
 
         self.assertAllEqual(
-            (1., 2., 3.),
-            self.evaluate(constant_op.constant(TupleToTensor().l)))
+            (1.0, 2.0, 3.0), self.evaluate(constant_op.constant(TupleToTensor().l))
+        )
 
         self.assertAllEqual(
-            (1., 2., 3.),
-            self.evaluate(array_ops.pack(TupleToTensor().l)))
+            (1.0, 2.0, 3.0), self.evaluate(array_ops.pack(TupleToTensor().l))
+        )
 
     def testNonLayerVariables(self):
-        v = resource_variable_ops.ResourceVariable([1.])
+        v = resource_variable_ops.ResourceVariable([1.0])
         l = data_structures._TupleWrapper((v,))
         self.assertEqual([], l.layers)
         self.assertEqual([v], l.variables)
@@ -1036,8 +1019,8 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         self.assertEqual([], l.non_trainable_variables)
 
     def testCopy(self):
-        v1 = resource_variable_ops.ResourceVariable(1.)
-        v2 = resource_variable_ops.ResourceVariable(1.)
+        v1 = resource_variable_ops.ResourceVariable(1.0)
+        v2 = resource_variable_ops.ResourceVariable(1.0)
 
         l1 = data_structures._TupleWrapper((v1, v2))
         l2 = copy.copy(l1)
@@ -1050,10 +1033,10 @@ class TupleTests(test.TestCase, parameterized.TestCase):
             l2.append(v1)
 
     def testSlicing(self):
-        v1 = resource_variable_ops.ResourceVariable(1.)
-        v2 = resource_variable_ops.ResourceVariable(1.)
-        v3 = resource_variable_ops.ResourceVariable(1.)
-        v4 = resource_variable_ops.ResourceVariable(1.)
+        v1 = resource_variable_ops.ResourceVariable(1.0)
+        v2 = resource_variable_ops.ResourceVariable(1.0)
+        v3 = resource_variable_ops.ResourceVariable(1.0)
+        v4 = resource_variable_ops.ResourceVariable(1.0)
 
         l = data_structures._TupleWrapper((v1, v2, v3, v4))
         self.assertEqual(l[1:], (v2, v3, v4))
@@ -1061,8 +1044,9 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         self.assertEqual(l[:-1], (v1, v2, v3))
 
     def testHash(self):
-        has_sequences = set([data_structures._TupleWrapper(),
-                             data_structures._TupleWrapper()])
+        has_sequences = set(
+            [data_structures._TupleWrapper(), data_structures._TupleWrapper()]
+        )
         self.assertLen(has_sequences, 1)
         self.assertIn(data_structures._TupleWrapper(), has_sequences)
 
@@ -1075,7 +1059,7 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         # Note: tuple behavior differs from list behavior. Lists are mutated by
         # imul/iadd, tuples assign a new object to the left hand side of the
         # expression.
-        v = resource_variable_ops.ResourceVariable(1.)
+        v = resource_variable_ops.ResourceVariable(1.0)
         l = data_structures._TupleWrapper((v,))
         original = l
         l *= 2
@@ -1083,7 +1067,7 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         self.assertNotEqual(original, (v,) * 2)
 
     def testIAdd(self):
-        v = resource_variable_ops.ResourceVariable(1.)
+        v = resource_variable_ops.ResourceVariable(1.0)
         l = data_structures._TupleWrapper((v,))
         original = l
         l += (1,)
@@ -1092,12 +1076,12 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         self.assertEqual(original, (v,))
 
     def testMul(self):
-        v = resource_variable_ops.ResourceVariable(1.)
+        v = resource_variable_ops.ResourceVariable(1.0)
         l = data_structures._TupleWrapper((v, v, v))
         self.assertEqual(l * 2, (v, v, v) * 2)
 
     def testRMul(self):
-        v = resource_variable_ops.ResourceVariable(1.)
+        v = resource_variable_ops.ResourceVariable(1.0)
         l = data_structures._TupleWrapper((v, v, v))
         self.assertEqual(2 * l, (v, v, v) * 2)
 
@@ -1117,7 +1101,8 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         self.assertIs(v, m.nt.x)
         self.assertIs(v, m.nt[0])
         self.assertIs(
-            v, m._checkpoint_dependencies[0].ref._checkpoint_dependencies[0].ref)
+            v, m._checkpoint_dependencies[0].ref._checkpoint_dependencies[0].ref
+        )
         self.assertEqual(2, m.nt.y)
 
     def testNamedSubclassing(self):
@@ -1125,7 +1110,6 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         v = variables.Variable(2)
 
         class NamedSubclass(named):
-
             def __new__(cls, x, y):
                 del y  # unused
                 return super(NamedSubclass, cls).__new__(cls, x, 3)
@@ -1140,7 +1124,8 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         self.assertEqual(3, m.nt.y)
         self.assertIs(v, m.nt.x)
         self.assertIs(
-            v, m._checkpoint_dependencies[0].ref._checkpoint_dependencies[0].ref)
+            v, m._checkpoint_dependencies[0].ref._checkpoint_dependencies[0].ref
+        )
         self.assertEqual("x", m.nt._checkpoint_dependencies[0].name)
         self.assertEqual("0", m.nt._checkpoint_dependencies[1].name)
         self.assertEqual(5, self.evaluate(m.nt.summed))
@@ -1149,7 +1134,6 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         v = variables.Variable(2)
 
         class UnnamedSubclass(tuple):
-
             @property
             def summed(self):
                 return self[0] + self[1]
@@ -1160,26 +1144,24 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         self.assertEqual("0", m.unt._checkpoint_dependencies[0].name)
         self.assertLen(m.unt._checkpoint_dependencies, 1)
         self.assertEqual(4, self.evaluate(m.unt.summed))
-        nest.assert_same_structure(
-            [m.unt], nest.map_structure(lambda x: x, [m.unt]))
+        nest.assert_same_structure([m.unt], nest.map_structure(lambda x: x, [m.unt]))
 
     def testNamedtupleSubclassWithCustomNew(self):
         class SubclassWithDifferentArgs(collections.namedtuple("A", ["x"])):
-
             def __new__(cls):
                 return super(SubclassWithDifferentArgs, cls).__new__(cls, [])
 
         nt = SubclassWithDifferentArgs()
         m = module.Module()
         m.nt = nt
-        m.nt.x.append(variables.Variable(1.))
+        m.nt.x.append(variables.Variable(1.0))
         prefix = os.path.join(self.get_temp_dir(), "ckpt")
         ckpt = util.Checkpoint(m=m)
         with self.assertRaises(ValueError):
             ckpt.save(prefix)
 
     def testSameStructure(self):
-        t = (variables.Variable(1.),)
+        t = (variables.Variable(1.0),)
         m = module.Module()
         m.t = t
         nest.assert_same_structure(t, m.t)
@@ -1189,50 +1171,52 @@ class TupleTests(test.TestCase, parameterized.TestCase):
         nt = nt_type(x=1, y=2)
         m.nt = nt
         nest.assert_same_structure(m.nt, nt)
-        with self.assertRaises(TypeError):  # pylint: disable=g-error-prone-assert-raises
+        with self.assertRaises(
+            TypeError
+        ):  # pylint: disable=g-error-prone-assert-raises
             nest.assert_same_structure(m.nt, m.t)
 
     def testFlatten(self):
-        t = data_structures._TupleWrapper(
-            (1, data_structures._TupleWrapper((2,))))
+        t = data_structures._TupleWrapper((1, data_structures._TupleWrapper((2,))))
         self.assertEqual([1, 2], nest.flatten(t))
         self.assertEqual(
-            nest.flatten_with_tuple_paths((1, (2,))),
-            nest.flatten_with_tuple_paths(t))
-        self.assertEqual((3, (4,)),
-                         nest.pack_sequence_as(t, [3, 4]))
+            nest.flatten_with_tuple_paths((1, (2,))), nest.flatten_with_tuple_paths(t)
+        )
+        self.assertEqual((3, (4,)), nest.pack_sequence_as(t, [3, 4]))
         nt_type = collections.namedtuple("nt", ["x", "y"])
-        nt = nt_type(1., 2.)
+        nt = nt_type(1.0, 2.0)
         wrapped_nt = data_structures._TupleWrapper(nt)
         self.assertEqual(
-            nest.flatten_with_tuple_paths(nt),
-            nest.flatten_with_tuple_paths(wrapped_nt))
-        self.assertEqual((3, 4,),
-                         nest.pack_sequence_as(wrapped_nt, [3, 4]))
+            nest.flatten_with_tuple_paths(nt), nest.flatten_with_tuple_paths(wrapped_nt)
+        )
+        self.assertEqual((3, 4,), nest.pack_sequence_as(wrapped_nt, [3, 4]))
         self.assertEqual(3, nest.pack_sequence_as(wrapped_nt, [3, 4]).x)
 
     def testFunctionCaching(self):
         @def_function.function
         def f(tuple_input):
-            return tuple_input[0] + constant_op.constant(1.)
+            return tuple_input[0] + constant_op.constant(1.0)
 
-        first_trace = f.get_concrete_function((constant_op.constant(2.),))
+        first_trace = f.get_concrete_function((constant_op.constant(2.0),))
         second_trace = f.get_concrete_function(
-            data_structures._TupleWrapper((constant_op.constant(3.),)))
+            data_structures._TupleWrapper((constant_op.constant(3.0),))
+        )
         self.assertIs(first_trace, second_trace)
 
     def testPythonMapImpl(self):
-        t = data_structures._TupleWrapper(
-            (1, data_structures._TupleWrapper((2,))))
+        t = data_structures._TupleWrapper((1, data_structures._TupleWrapper((2,))))
         self.assertEqual(
             (4, (5,)),
-            nest.map_structure_up_to((None, (None,)), lambda x: x + 3, t,
-                                     check_types=True))
+            nest.map_structure_up_to(
+                (None, (None,)), lambda x: x + 3, t, check_types=True
+            ),
+        )
         nest.assert_shallow_structure((None, None), t)
 
     def testDatasetMap(self):
         dataset = dataset_ops.Dataset.from_tensor_slices(
-            constant_op.constant([1, 2, 3]))
+            constant_op.constant([1, 2, 3])
+        )
         dataset = dataset.map(lambda x: data_structures._TupleWrapper((x,)))
         for index, element in enumerate(dataset):
             self.assertEqual((index + 1,), self.evaluate(element))
@@ -1240,9 +1224,9 @@ class TupleTests(test.TestCase, parameterized.TestCase):
     def testDatasetMapNamed(self):
         nt_type = collections.namedtuple("A", ["x"])
         dataset = dataset_ops.Dataset.from_tensor_slices(
-            constant_op.constant([1, 2, 3]))
-        dataset = dataset.map(
-            lambda x: data_structures._TupleWrapper(nt_type(x)))
+            constant_op.constant([1, 2, 3])
+        )
+        dataset = dataset.map(lambda x: data_structures._TupleWrapper(nt_type(x)))
         for index, element in enumerate(dataset):
             self.assertEqual((index + 1,), self.evaluate(element))
 
