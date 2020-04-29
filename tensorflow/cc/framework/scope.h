@@ -96,163 +96,169 @@ struct CompositeOpScopes;
 /// A `Scope` object is NOT thread-safe. Threads cannot concurrently call
 /// op-constructor functions on the same `Scope` object.
 class Scope {
- public:
-  Scope(const Scope& other);
-  ~Scope();
-  Scope& operator=(const Scope& other);
+public:
+    Scope(const Scope& other);
+    ~Scope();
+    Scope& operator=(const Scope& other);
 
-  // The following functions are for users making graphs. They return brand new
-  // scopes, or scopes derived from an existing scope object.
+    // The following functions are for users making graphs. They return brand new
+    // scopes, or scopes derived from an existing scope object.
 
-  /// Return a new scope.
-  /// This creates a new graph and all operations constructed in this graph
-  /// should use the returned object as the "root" scope.
-  static Scope NewRootScope();
+    /// Return a new scope.
+    /// This creates a new graph and all operations constructed in this graph
+    /// should use the returned object as the "root" scope.
+    static Scope NewRootScope();
 
-  /// Return a new scope. Ops created with this scope will have
-  /// `name/child_scope_name` as the prefix. The actual name will be unique
-  /// in the current scope. All other properties are inherited from the current
-  /// scope. If `child_scope_name` is empty, the `/` is elided.
-  Scope NewSubScope(const string& child_scope_name) const;
+    /// Return a new scope. Ops created with this scope will have
+    /// `name/child_scope_name` as the prefix. The actual name will be unique
+    /// in the current scope. All other properties are inherited from the current
+    /// scope. If `child_scope_name` is empty, the `/` is elided.
+    Scope NewSubScope(const string& child_scope_name) const;
 
-  /// Return a new scope. All ops created within the returned scope will have
-  /// names of the form `name/StrCat(fragments...)[_suffix]`
-  template <typename... Ty>
-  Scope WithOpName(Ty... fragments) const {
-    return WithOpNameImpl(absl::StrCat(fragments...));
-  }
+    /// Return a new scope. All ops created within the returned scope will have
+    /// names of the form `name/StrCat(fragments...)[_suffix]`
+    template <typename... Ty>
+    Scope WithOpName(Ty... fragments) const {
+        return WithOpNameImpl(absl::StrCat(fragments...));
+    }
 
-  /// Return a new scope. All ops created within the returned scope will have as
-  /// control dependencies the union of operations in the control_deps vector
-  /// and the control dependencies of the current scope.
-  Scope WithControlDependencies(
-      const gtl::ArraySlice<Operation>& control_deps) const;
-  /// Same as above, but convenient to add control dependency on the operation
-  /// producing the control_dep output.
-  Scope WithControlDependencies(const Output& control_dep) const;
+    /// Return a new scope. All ops created within the returned scope will have as
+    /// control dependencies the union of operations in the control_deps vector
+    /// and the control dependencies of the current scope.
+    Scope WithControlDependencies(
+        const gtl::ArraySlice<Operation>& control_deps) const;
+    /// Same as above, but convenient to add control dependency on the operation
+    /// producing the control_dep output.
+    Scope WithControlDependencies(const Output& control_dep) const;
 
-  /// Return a new scope. All ops created within the returned scope will have no
-  /// control dependencies on other operations.
-  Scope WithNoControlDependencies() const;
+    /// Return a new scope. All ops created within the returned scope will have no
+    /// control dependencies on other operations.
+    Scope WithNoControlDependencies() const;
 
-  /// Return a new scope. All ops created within the returned scope will have
-  /// the device field set to 'device'.
-  Scope WithDevice(const string& device) const;
+    /// Return a new scope. All ops created within the returned scope will have
+    /// the device field set to 'device'.
+    Scope WithDevice(const string& device) const;
 
-  /// Returns a new scope.  All ops created within the returned scope will have
-  /// their assigned device set to `assigned_device`.
-  Scope WithAssignedDevice(const string& assigned_device) const;
+    /// Returns a new scope.  All ops created within the returned scope will have
+    /// their assigned device set to `assigned_device`.
+    Scope WithAssignedDevice(const string& assigned_device) const;
 
-  /// Returns a new scope.  All ops created within the returned scope will have
-  /// their _XlaCluster attribute set to `xla_cluster`.
-  Scope WithXlaCluster(const string& xla_cluster) const;
+    /// Returns a new scope.  All ops created within the returned scope will have
+    /// their _XlaCluster attribute set to `xla_cluster`.
+    Scope WithXlaCluster(const string& xla_cluster) const;
 
-  /// Return a new scope. All ops created within the returned scope will be
-  /// co-located on the device where op is placed.
-  /// NOTE: This function is intended to be use internal libraries only for
-  /// controlling placement of ops on to devices. Public use is not encouraged
-  /// because the implementation of device placement is subject to change.
-  Scope ColocateWith(const Operation& op) const;
-  /// Convenience function for above.
-  Scope ColocateWith(const Output& out) const { return ColocateWith(out.op()); }
-  /// Clear all colocation constraints.
-  Scope ClearColocation() const;
+    /// Return a new scope. All ops created within the returned scope will be
+    /// co-located on the device where op is placed.
+    /// NOTE: This function is intended to be use internal libraries only for
+    /// controlling placement of ops on to devices. Public use is not encouraged
+    /// because the implementation of device placement is subject to change.
+    Scope ColocateWith(const Operation& op) const;
+    /// Convenience function for above.
+    Scope ColocateWith(const Output& out) const {
+        return ColocateWith(out.op());
+    }
+    /// Clear all colocation constraints.
+    Scope ClearColocation() const;
 
-  /// Return a new scope. The op-constructor functions taking the returned scope
-  /// as the scope argument will exit as soon as an error is detected, instead
-  /// of setting the status on the scope.
-  Scope ExitOnError() const;
+    /// Return a new scope. The op-constructor functions taking the returned scope
+    /// as the scope argument will exit as soon as an error is detected, instead
+    /// of setting the status on the scope.
+    Scope ExitOnError() const;
 
-  /// Return a new scope. All ops created with the new scope will have
-  /// kernel_label as the value for their '_kernel' attribute;
-  Scope WithKernelLabel(const string& kernel_label) const;
+    /// Return a new scope. All ops created with the new scope will have
+    /// kernel_label as the value for their '_kernel' attribute;
+    Scope WithKernelLabel(const string& kernel_label) const;
 
-  // The following functions are for scope object consumers.
+    // The following functions are for scope object consumers.
 
-  /// Return a unique name, using default_name if an op name has not been
-  /// specified.
-  string GetUniqueNameForOp(const string& default_name) const;
+    /// Return a unique name, using default_name if an op name has not been
+    /// specified.
+    string GetUniqueNameForOp(const string& default_name) const;
 
-  /// Update the status on this scope.
-  /// Note: The status object is shared between all children of this scope.
-  /// If the resulting status is not Status::OK() and exit_on_error_ is set on
-  /// this scope, this function exits by calling LOG(FATAL).
-  void UpdateStatus(const Status& s) const;
+    /// Update the status on this scope.
+    /// Note: The status object is shared between all children of this scope.
+    /// If the resulting status is not Status::OK() and exit_on_error_ is set on
+    /// this scope, this function exits by calling LOG(FATAL).
+    void UpdateStatus(const Status& s) const;
 
-  // START_SKIP_DOXYGEN
+    // START_SKIP_DOXYGEN
 
-  /// Update the builder with properties accumulated in this scope. Does not set
-  /// status().
-  // TODO(skyewm): NodeBuilder is not part of public API
-  void UpdateBuilder(NodeBuilder* builder) const;
-  // END_SKIP_DOXYGEN
+    /// Update the builder with properties accumulated in this scope. Does not set
+    /// status().
+    // TODO(skyewm): NodeBuilder is not part of public API
+    void UpdateBuilder(NodeBuilder* builder) const;
+    // END_SKIP_DOXYGEN
 
-  CompositeOpScopes GetCompositeOpScopes(const string& composite_op_name) const;
+    CompositeOpScopes GetCompositeOpScopes(const string& composite_op_name) const;
 
-  bool ok() const;
+    bool ok() const;
 
-  // TODO(skyewm): Graph is not part of public API
-  Graph* graph() const;
+    // TODO(skyewm): Graph is not part of public API
+    Graph* graph() const;
 
-  // TODO(skyewm): Graph is not part of public API
-  std::shared_ptr<Graph> graph_as_shared_ptr() const;
+    // TODO(skyewm): Graph is not part of public API
+    std::shared_ptr<Graph> graph_as_shared_ptr() const;
 
-  Status status() const;
+    Status status() const;
 
-  /// If status() is Status::OK(), convert the Graph object stored in this scope
-  /// to a GraphDef proto and return Status::OK(). Otherwise, return the error
-  /// status as is without performing GraphDef conversion.
-  Status ToGraphDef(GraphDef* gdef) const;
+    /// If status() is Status::OK(), convert the Graph object stored in this scope
+    /// to a GraphDef proto and return Status::OK(). Otherwise, return the error
+    /// status as is without performing GraphDef conversion.
+    Status ToGraphDef(GraphDef* gdef) const;
 
-  // START_SKIP_DOXYGEN
+    // START_SKIP_DOXYGEN
 
-  /// If status() is Status::OK(), construct a Graph object using `opts` as the
-  /// GraphConstructorOptions, and return Status::OK if graph construction was
-  /// successful. Otherwise, return the error status.
-  // TODO(josh11b, keveman): Make this faster; right now it converts
-  // Graph->GraphDef->Graph.  This cleans up the graph (e.g. adds
-  // edges from the source and to the sink node, resolves back edges
-  // by name), and makes sure the resulting graph is valid.
-  Status ToGraph(
-      Graph* g, GraphConstructorOptions opts = GraphConstructorOptions{}) const;
+    /// If status() is Status::OK(), construct a Graph object using `opts` as the
+    /// GraphConstructorOptions, and return Status::OK if graph construction was
+    /// successful. Otherwise, return the error status.
+    // TODO(josh11b, keveman): Make this faster; right now it converts
+    // Graph->GraphDef->Graph.  This cleans up the graph (e.g. adds
+    // edges from the source and to the sink node, resolves back edges
+    // by name), and makes sure the resulting graph is valid.
+    Status ToGraph(
+        Graph* g, GraphConstructorOptions opts = GraphConstructorOptions{}) const;
 
-  // Calls AddNode() using this scope's ShapeRefiner. This exists in the public
-  // API to prevent custom op wrappers from needing access to shape_refiner.h or
-  // scope_internal.h.
-  // TODO(skyewm): remove this from public API
-  Status DoShapeInference(Node* node) const;
+    // Calls AddNode() using this scope's ShapeRefiner. This exists in the public
+    // API to prevent custom op wrappers from needing access to shape_refiner.h or
+    // scope_internal.h.
+    // TODO(skyewm): remove this from public API
+    Status DoShapeInference(Node* node) const;
 
-  // Creates a new root scope that causes all DoShapeInference() calls to return
-  // Status::OK() (on the returned scope and any subscopes). Used for testing.
-  // TODO(skyewm): fix tests that still require this and eventually remove, or
-  // at least remove from public API
-  static Scope DisabledShapeInferenceScope();
-  // END_SKIP_DOXYGEN
+    // Creates a new root scope that causes all DoShapeInference() calls to return
+    // Status::OK() (on the returned scope and any subscopes). Used for testing.
+    // TODO(skyewm): fix tests that still require this and eventually remove, or
+    // at least remove from public API
+    static Scope DisabledShapeInferenceScope();
+    // END_SKIP_DOXYGEN
 
-  const std::vector<Operation>& control_deps() const;
+    const std::vector<Operation>& control_deps() const;
 
-  // START_SKIP_DOXYGEN
-  class Impl;
-  Impl* impl() { return impl_.get(); }
-  const Impl* impl() const { return impl_.get(); }
-  // END_SKIP_DOXYGEN
+    // START_SKIP_DOXYGEN
+    class Impl;
+    Impl* impl() {
+        return impl_.get();
+    }
+    const Impl* impl() const {
+        return impl_.get();
+    }
+    // END_SKIP_DOXYGEN
 
- private:
-  Scope WithOpNameImpl(const string& op_name) const;
+private:
+    Scope WithOpNameImpl(const string& op_name) const;
 
-  friend class InternalScope;
-  std::unique_ptr<Impl> impl_;
-  explicit Scope(Impl*);
+    friend class InternalScope;
+    std::unique_ptr<Impl> impl_;
+    explicit Scope(Impl*);
 };
 
 /// A helper struct to hold the scopes that would be used by a function
 /// constructing a composite op.
 struct CompositeOpScopes {
-  /// Scope to be used for creating the local ops (primitive or other composite
-  /// ops).
-  Scope child;
-  /// Scope to be used for creating the last op.
-  Scope last;
+    /// Scope to be used for creating the local ops (primitive or other composite
+    /// ops).
+    Scope child;
+    /// Scope to be used for creating the last op.
+    Scope last;
 };
 
 // Creates a node of the given operation, with the given inputs, and assigns the

@@ -29,27 +29,27 @@ namespace graph_transforms {
 Status RenameOp(const GraphDef& input_graph_def,
                 const TransformFuncContext& context,
                 GraphDef* output_graph_def) {
-  if (!context.params.count("old_op_name") ||
-      (context.params.at("old_op_name").size() != 1) ||
-      !context.params.count("new_op_name") ||
-      (context.params.at("new_op_name").size() != 1)) {
-    return errors::InvalidArgument(
-        "rename_op expects exactly one 'old_op_name' and 'new_op_name' "
-        "argument, e.g. rename_op(old_op_name=Mul, new_op_name=Multiply)");
-  }
-
-  const string old_op_name = context.params.at("old_op_name")[0];
-  const string new_op_name = context.params.at("new_op_name")[0];
-  output_graph_def->Clear();
-  for (const NodeDef& node : input_graph_def.node()) {
-    NodeDef* new_node = output_graph_def->mutable_node()->Add();
-    *new_node = node;
-    if (node.op() == old_op_name) {
-      new_node->set_op(new_op_name);
+    if (!context.params.count("old_op_name") ||
+            (context.params.at("old_op_name").size() != 1) ||
+            !context.params.count("new_op_name") ||
+            (context.params.at("new_op_name").size() != 1)) {
+        return errors::InvalidArgument(
+                   "rename_op expects exactly one 'old_op_name' and 'new_op_name' "
+                   "argument, e.g. rename_op(old_op_name=Mul, new_op_name=Multiply)");
     }
-  }
 
-  return Status::OK();
+    const string old_op_name = context.params.at("old_op_name")[0];
+    const string new_op_name = context.params.at("new_op_name")[0];
+    output_graph_def->Clear();
+    for (const NodeDef& node : input_graph_def.node()) {
+        NodeDef* new_node = output_graph_def->mutable_node()->Add();
+        *new_node = node;
+        if (node.op() == old_op_name) {
+            new_node->set_op(new_op_name);
+        }
+    }
+
+    return Status::OK();
 }
 
 REGISTER_GRAPH_TRANSFORM("rename_op", RenameOp);

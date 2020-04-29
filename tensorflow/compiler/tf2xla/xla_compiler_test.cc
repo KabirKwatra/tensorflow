@@ -58,30 +58,30 @@ limitations under the License.
 namespace tensorflow {
 
 class XlaCompilerTest : public ::testing::Test {
- protected:
-  void SetUp() override {
-    client_ = xla::ClientLibrary::LocalClientOrDie();
+protected:
+    void SetUp() override {
+        client_ = xla::ClientLibrary::LocalClientOrDie();
 
-    XlaOpRegistry::RegisterCompilationKernels();
+        XlaOpRegistry::RegisterCompilationKernels();
 
-    FunctionDefLibrary flib;
-    flib_def_.reset(new FunctionLibraryDefinition(OpRegistry::Global(), flib));
-  }
+        FunctionDefLibrary flib;
+        flib_def_.reset(new FunctionLibraryDefinition(OpRegistry::Global(), flib));
+    }
 
-  XlaCompiler::Options DefaultOptions() {
-    XlaCompiler::Options options;
-    options.device_type = DeviceType(DEVICE_CPU_XLA_JIT);
-    options.client = client_;
-    options.flib_def = flib_def_.get();
-    return options;
-  }
+    XlaCompiler::Options DefaultOptions() {
+        XlaCompiler::Options options;
+        options.device_type = DeviceType(DEVICE_CPU_XLA_JIT);
+        options.client = client_;
+        options.flib_def = flib_def_.get();
+        return options;
+    }
 
-  FunctionLibraryDefinition* LocalFlibDef(XlaCompiler* compiler) {
-    return compiler->local_flib_def_.get();
-  }
+    FunctionLibraryDefinition* LocalFlibDef(XlaCompiler* compiler) {
+        return compiler->local_flib_def_.get();
+    }
 
-  xla::Client* client_;
-  std::unique_ptr<FunctionLibraryDefinition> flib_def_;
+    xla::Client* client_;
+    std::unique_ptr<FunctionLibraryDefinition> flib_def_;
 };
 
 namespace {
@@ -89,60 +89,66 @@ namespace {
 // Helper class to test the ability to pass resources through to XLA
 // compiled kernels.
 class DummyResourceForTest : public ResourceBase {
- public:
-  string DebugString() const override { return "dummy"; }
-  void Increment() { ++value_; }
-  int Get() { return value_; }
+public:
+    string DebugString() const override {
+        return "dummy";
+    }
+    void Increment() {
+        ++value_;
+    }
+    int Get() {
+        return value_;
+    }
 
- private:
-  int value_ = 0;
+private:
+    int value_ = 0;
 };
 
 class DummyReadResourceOp : public XlaOpKernel {
- public:
-  explicit DummyReadResourceOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
-  void Compile(XlaOpKernelContext* ctx) override {
-    ResourceMgr* rm = ctx->op_kernel_context()->resource_manager();
-    OP_REQUIRES(ctx, rm, errors::Internal("No resource manager."));
-    DummyResourceForTest* dummy;
-    OP_REQUIRES_OK(ctx, rm->Lookup<DummyResourceForTest>(
-                            rm->default_container(), "dummy", &dummy));
-    dummy->Increment();
-    dummy->Unref();
+public:
+    explicit DummyReadResourceOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {}
+    void Compile(XlaOpKernelContext* ctx) override {
+        ResourceMgr* rm = ctx->op_kernel_context()->resource_manager();
+        OP_REQUIRES(ctx, rm, errors::Internal("No resource manager."));
+        DummyResourceForTest* dummy;
+        OP_REQUIRES_OK(ctx, rm->Lookup<DummyResourceForTest>(
+                           rm->default_container(), "dummy", &dummy));
+        dummy->Increment();
+        dummy->Unref();
 
-    ctx->SetOutput(0, ctx->Input(0));
-    ctx->SetOutput(1, ctx->Input(0));
-  }
+        ctx->SetOutput(0, ctx->Input(0));
+        ctx->SetOutput(1, ctx->Input(0));
+    }
 };
 
 class DummyReadResourceCC {
- public:
-  DummyReadResourceCC(const Scope& scope, const Input& value) {
-    if (!scope.ok()) return;
-    auto _value = ops::AsNodeOut(scope, value);
-    if (!scope.ok()) return;
-    Node* ret;
-    const auto unique_name = scope.GetUniqueNameForOp("DummyReadResource");
-    auto builder = NodeBuilder(unique_name, "DummyReadResource").Input(_value);
-    scope.UpdateBuilder(&builder);
-    scope.UpdateStatus(builder.Finalize(scope.graph(), &ret));
-    if (!scope.ok()) return;
-    scope.UpdateStatus(scope.DoShapeInference(ret));
-    if (!scope.ok()) return;
-    this->output1_ = Output(ret, 0);
-    this->output2_ = Output(ret, 1);
-  }
+public:
+    DummyReadResourceCC(const Scope& scope, const Input& value) {
+        if (!scope.ok()) return;
+        auto _value = ops::AsNodeOut(scope, value);
+        if (!scope.ok()) return;
+        Node* ret;
+        const auto unique_name = scope.GetUniqueNameForOp("DummyReadResource");
+        auto builder = NodeBuilder(unique_name, "DummyReadResource").Input(_value);
+        scope.UpdateBuilder(&builder);
+        scope.UpdateStatus(builder.Finalize(scope.graph(), &ret));
+        if (!scope.ok()) return;
+        scope.UpdateStatus(scope.DoShapeInference(ret));
+        if (!scope.ok()) return;
+        this->output1_ = Output(ret, 0);
+        this->output2_ = Output(ret, 1);
+    }
 
-  Output output1_;
-  Output output2_;
+    Output output1_;
+    Output output2_;
 };
 
 REGISTER_OP("DummyReadResource")
-    .Input("input: int32")
-    .Output("output1: int32")
-    .Output("output2: int32")
-    .SetShapeFn(shape_inference::UnknownShape)
-    .Doc(R"doc(
+.Input("input: int32")
+.Output("output1: int32")
+.Output("output2: int32")
+.SetShapeFn(shape_inference::UnknownShape)
+.Doc(R"doc(
 A dummy Op.
 
 input: dummy input.

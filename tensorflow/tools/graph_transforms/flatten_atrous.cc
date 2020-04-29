@@ -26,30 +26,30 @@ namespace graph_transforms {
 Status FlattenAtrousConv(const GraphDef& input_graph_def,
                          const TransformFuncContext& context,
                          GraphDef* output_graph_def) {
-  GraphDef replaced_graph_def;
-  TF_RETURN_IF_ERROR(ReplaceMatchingOpTypes(
-      input_graph_def,  // clang-format off
-      {"BatchToSpaceND",
-          {
-              {"Conv2D|DepthwiseConv2dNative",
-                  {
-                      {"SpaceToBatchND",
-                          {
-                              {"*"},          // Input to the flattened op.
-                              {"*"},          // block_shape
-                              {"*"}           // paddings
-                          }
-                      },
-                      {"*"}                   // filter
-                  }
-              },
-              {"*"},                          // block_shape
-              {"*"}                           // crops
-          }
-      },  // clang-format on
-      [](const NodeMatch& match, const std::set<string>& input_nodes,
-         const std::set<string>& output_nodes,
-         std::vector<NodeDef>* new_nodes) {
+    GraphDef replaced_graph_def;
+    TF_RETURN_IF_ERROR(ReplaceMatchingOpTypes(
+                           input_graph_def,  // clang-format off
+    {   "BatchToSpaceND",
+        {
+            {   "Conv2D|DepthwiseConv2dNative",
+                {
+                    {   "SpaceToBatchND",
+                        {
+                            {"*"},          // Input to the flattened op.
+                            {"*"},          // block_shape
+                            {"*"}           // paddings
+                        }
+                    },
+                    {"*"}                   // filter
+                }
+            },
+            {"*"},                          // block_shape
+            {"*"}                           // crops
+        }
+    },  // clang-format on
+    [](const NodeMatch& match, const std::set<string>& input_nodes,
+       const std::set<string>& output_nodes,
+       std::vector<NodeDef>* new_nodes) {
         // Find all the nodes we expect in the subgraph.
         const NodeDef& batch_to_space_node = match.node;
         const NodeDef& conv_node = match.inputs[0].node;
@@ -85,14 +85,14 @@ Status FlattenAtrousConv(const GraphDef& input_graph_def,
 
         upsampled_filter_eigen.setZero();
         for (int h = 0; h < filter_height; ++h) {
-          for (int w = 0; w < filter_width; ++w) {
-            for (int c_in = 0; c_in < in_channels; ++c_in) {
-              for (int c_out = 0; c_out < out_channels; ++c_out) {
-                upsampled_filter_eigen(block_height * h, block_width * w, c_in,
-                                       c_out) = filter_eigen(h, w, c_in, c_out);
-              }
+            for (int w = 0; w < filter_width; ++w) {
+                for (int c_in = 0; c_in < in_channels; ++c_in) {
+                    for (int c_out = 0; c_out < out_channels; ++c_out) {
+                        upsampled_filter_eigen(block_height * h, block_width * w, c_in,
+                                               c_out) = filter_eigen(h, w, c_in, c_out);
+                    }
+                }
             }
-          }
         }
 
         NodeDef upsampled_filter_node;
@@ -119,8 +119,8 @@ Status FlattenAtrousConv(const GraphDef& input_graph_def,
                      &flattened_conv_node);
 
         if (conv_node.op() == "Conv2D") {
-          CopyNodeAttr(conv_node, "use_cudnn_on_gpu", "use_cudnn_on_gpu",
-                       &flattened_conv_node);
+            CopyNodeAttr(conv_node, "use_cudnn_on_gpu", "use_cudnn_on_gpu",
+                         &flattened_conv_node);
         }
 
         new_nodes->push_back(input_node);
@@ -128,10 +128,10 @@ Status FlattenAtrousConv(const GraphDef& input_graph_def,
         new_nodes->push_back(flattened_conv_node);
 
         return Status::OK();
-      },
-      {}, &replaced_graph_def));
-  *output_graph_def = replaced_graph_def;
-  return Status::OK();
+    },
+    {}, &replaced_graph_def));
+    *output_graph_def = replaced_graph_def;
+    return Status::OK();
 }
 
 REGISTER_GRAPH_TRANSFORM("flatten_atrous_conv", FlattenAtrousConv);

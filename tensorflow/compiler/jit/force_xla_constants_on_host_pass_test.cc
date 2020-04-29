@@ -40,68 +40,70 @@ namespace {
 Status ForceXlaConstantsOnHost(const Scope& s,
                                FunctionLibraryDefinition* flib_def,
                                std::unique_ptr<Graph>* result) {
-  auto graph = absl::make_unique<Graph>(OpRegistry::Global());
-  GraphOptimizationPassOptions options;
-  SessionOptions session_options;
-  session_options.env = Env::Default();
-  options.graph = &graph;
-  options.session_options = &session_options;
-  options.flib_def = flib_def;
-  TF_RETURN_IF_ERROR(s.ToGraph(graph.get()));
-  ForceXlaConstantsOnHostPass rewriter;
-  TF_RETURN_IF_ERROR(rewriter.Run(options));
-  *result = std::move(graph);
-  return Status::OK();
+    auto graph = absl::make_unique<Graph>(OpRegistry::Global());
+    GraphOptimizationPassOptions options;
+    SessionOptions session_options;
+    session_options.env = Env::Default();
+    options.graph = &graph;
+    options.session_options = &session_options;
+    options.flib_def = flib_def;
+    TF_RETURN_IF_ERROR(s.ToGraph(graph.get()));
+    ForceXlaConstantsOnHostPass rewriter;
+    TF_RETURN_IF_ERROR(rewriter.Run(options));
+    *result = std::move(graph);
+    return Status::OK();
 }
 
 TEST(ForceXlaConstantsOnHostPassTest, Simple) {
-  GraphDefBuilder b(GraphDefBuilder::kFailImmediately);
-  Scope root = Scope::NewRootScope().ExitOnError();
-  FunctionDefLibrary library;
+    GraphDefBuilder b(GraphDefBuilder::kFailImmediately);
+    Scope root = Scope::NewRootScope().ExitOnError();
+    FunctionDefLibrary library;
 
-  FunctionDef called_func =
-      FunctionDefHelper::Create("TransposeCall",
-                                /*in_def=*/{"a:float", "b:int32"},
-                                /*out_def=*/{"c:float"}, {},
-                                {{{"t0"},
-                                  "Transpose",
-                                  {"a", "b"},
-                                  {
-                                      {"T", DT_FLOAT},
-                                      {"Tperm", DT_INT32},
-                                  }}},
-                                {{"c", "t0:y:0"}});
+    FunctionDef called_func =
+        FunctionDefHelper::Create("TransposeCall",
+                                  /*in_def=*/ {"a:float", "b:int32"},
+    /*out_def=*/ {"c:float"}, {},
+    {   {   {"t0"},
+            "Transpose",
+            {"a", "b"},
+            {
+                {"T", DT_FLOAT},
+                {"Tperm", DT_INT32},
+            }
+        }
+    },
+    {{"c", "t0:y:0"}});
 
-  AttrValue true_attribute;
-  true_attribute.set_b(true);
-  (*called_func.mutable_attr())[kXlaMustCompileAttr] = true_attribute;
-  *library.add_function() = called_func;
-  TF_ASSERT_OK(root.graph()->AddFunctionLibrary(library));
-  FunctionLibraryDefinition flib_def(OpRegistry::Global(), library);
-  Output in = ops::Placeholder(root, DT_FLOAT);
-  Output perm = ops::Const(root, {3, 1, 2, 0});
+    AttrValue true_attribute;
+    true_attribute.set_b(true);
+    (*called_func.mutable_attr())[kXlaMustCompileAttr] = true_attribute;
+    *library.add_function() = called_func;
+    TF_ASSERT_OK(root.graph()->AddFunctionLibrary(library));
+    FunctionLibraryDefinition flib_def(OpRegistry::Global(), library);
+    Output in = ops::Placeholder(root, DT_FLOAT);
+    Output perm = ops::Const(root, {3, 1, 2, 0});
 
-  NameAttrList b_name_attr;
-  b_name_attr.set_name("TransposeCall");
-  ops::PartitionedCall call(root.WithOpName("call"), {in, perm}, {DT_FLOAT},
-                            b_name_attr);
-  call.output.front().node()->AddAttr(kXlaMustCompileAttr, true);
+    NameAttrList b_name_attr;
+    b_name_attr.set_name("TransposeCall");
+    ops::PartitionedCall call(root.WithOpName("call"), {in, perm}, {DT_FLOAT},
+                              b_name_attr);
+    call.output.front().node()->AddAttr(kXlaMustCompileAttr, true);
 
-  std::unique_ptr<Graph> graph;
-  TF_ASSERT_OK(ForceXlaConstantsOnHost(root, &flib_def, &graph));
+    std::unique_ptr<Graph> graph;
+    TF_ASSERT_OK(ForceXlaConstantsOnHost(root, &flib_def, &graph));
 
-  bool found = false;
-  for (Node* node : graph->nodes()) {
-    if (CanCreateXlaKernel(node->def())) {
-      EXPECT_FALSE(found);
-      found = true;
-      std::vector<int32> hostmem_attr;
-      EXPECT_TRUE(TryGetNodeAttr(node->def(), "_input_hostmem", &hostmem_attr));
-      EXPECT_EQ(hostmem_attr.size(), 1);
-      EXPECT_EQ(hostmem_attr[0], 1);
+    bool found = false;
+    for (Node* node : graph->nodes()) {
+        if (CanCreateXlaKernel(node->def())) {
+            EXPECT_FALSE(found);
+            found = true;
+            std::vector<int32> hostmem_attr;
+            EXPECT_TRUE(TryGetNodeAttr(node->def(), "_input_hostmem", &hostmem_attr));
+            EXPECT_EQ(hostmem_attr.size(), 1);
+            EXPECT_EQ(hostmem_attr[0], 1);
+        }
     }
-  }
-  EXPECT_TRUE(found);
+    EXPECT_TRUE(found);
 }
 
 }  // namespace

@@ -24,8 +24,8 @@ namespace graph_transforms {
 // inputs which are referenced with "^tensor_name".
 // See node_def.proto for more details.
 Status RemoveControlDependencies(const GraphDef& input_graph_def,
-                const TransformFuncContext& context,
-                GraphDef* output_graph_def) {
+                                 const TransformFuncContext& context,
+                                 GraphDef* output_graph_def) {
     output_graph_def->Clear();
     for (const NodeDef& node : input_graph_def.node()) {
         NodeDef* new_node = output_graph_def->mutable_node()->Add();

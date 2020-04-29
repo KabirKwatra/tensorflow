@@ -35,33 +35,33 @@ namespace testing {
 // settings can play with pointer placement on the stack (b/140130236).
 inline TfLiteIntArray* IntArrayFromInitializer(
     std::initializer_list<int> int_initializer) {
-  return IntArrayFromInts(int_initializer.begin());
+    return IntArrayFromInts(int_initializer.begin());
 }
 
 // Derives the quantization range max from scaling factor and zero point.
 template <typename T>
 inline float MaxFromZeroPointScale(const int zero_point, const float scale) {
-  return (std::numeric_limits<T>::max() - zero_point) * scale;
+    return (std::numeric_limits<T>::max() - zero_point) * scale;
 }
 
 // Derives the quantization range min from scaling factor and zero point.
 template <typename T>
 inline float MinFromZeroPointScale(const int zero_point, const float scale) {
-  return (std::numeric_limits<T>::min() - zero_point) * scale;
+    return (std::numeric_limits<T>::min() - zero_point) * scale;
 }
 
 // Derives the quantization scaling factor from a min and max range.
 template <typename T>
 inline float ScaleFromMinMax(const float min, const float max) {
-  return (max - min) / ((std::numeric_limits<T>::max() * 1.0) -
-                        std::numeric_limits<T>::min());
+    return (max - min) / ((std::numeric_limits<T>::max() * 1.0) -
+                          std::numeric_limits<T>::min());
 }
 
 // Derives the quantization zero point from a min and max range.
 template <typename T>
 inline int ZeroPointFromMinMax(const float min, const float max) {
-  return static_cast<int>(std::numeric_limits<T>::min()) +
-         static_cast<int>(-min / ScaleFromMinMax<T>(min, max) + 0.5f);
+    return static_cast<int>(std::numeric_limits<T>::min()) +
+           static_cast<int>(-min / ScaleFromMinMax<T>(min, max) + 0.5f);
 }
 
 // Converts a float value into an unsigned eight-bit quantized value.
@@ -129,16 +129,16 @@ template <typename input_type = int32_t,
           TfLiteType tensor_input_type = kTfLiteInt32>
 inline TfLiteTensor CreateTensor(const input_type* data, TfLiteIntArray* dims,
                                  const char* name, bool is_variable = false) {
-  TfLiteTensor result;
-  result.type = tensor_input_type;
-  result.data.raw = reinterpret_cast<char*>(const_cast<input_type*>(data));
-  result.dims = dims;
-  result.allocation_type = kTfLiteMemNone;
-  result.bytes = ElementCount(*dims) * sizeof(input_type);
-  result.allocation = nullptr;
-  result.name = name;
-  result.is_variable = is_variable;
-  return result;
+    TfLiteTensor result;
+    result.type = tensor_input_type;
+    result.data.raw = reinterpret_cast<char*>(const_cast<input_type*>(data));
+    result.dims = dims;
+    result.allocation_type = kTfLiteMemNone;
+    result.bytes = ElementCount(*dims) * sizeof(input_type);
+    result.allocation = nullptr;
+    result.name = name;
+    result.is_variable = is_variable;
+    return result;
 }
 
 template <typename input_type = int32_t,
@@ -146,8 +146,8 @@ template <typename input_type = int32_t,
 inline TfLiteTensor CreateTensor(std::initializer_list<input_type> data,
                                  TfLiteIntArray* dims, const char* name,
                                  bool is_variable = false) {
-  return CreateTensor<input_type, tensor_input_type>(data.begin(), dims, name,
-                                                     is_variable);
+    return CreateTensor<input_type, tensor_input_type>(data.begin(), dims, name,
+            is_variable);
 }
 
 }  // namespace testing
