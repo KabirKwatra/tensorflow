@@ -26,87 +26,85 @@ namespace data {
 
 // Modes for how a tf.data service job should process a dataset.
 enum class ProcessingMode : int64 {
-    // Each tf.data worker processes an entire epoch. If a dataset contains 2
-    // elements and there are 3 workers, the job will produce 6 elements.
-    PARALLEL_EPOCHS = 0,
-    // Processing of a single epoch is distributed across all tf.data workers.
-    ONE_EPOCH = 1,
+  // Each tf.data worker processes an entire epoch. If a dataset contains 2
+  // elements and there are 3 workers, the job will produce 6 elements.
+  PARALLEL_EPOCHS = 0,
+  // Processing of a single epoch is distributed across all tf.data workers.
+  ONE_EPOCH = 1,
 };
 
 // Base class for data service clients. Data service clients are
 // thread-compatible, requiring external synchronization when used from multiple
 // threads.
 class DataServiceClientBase {
-public:
-    DataServiceClientBase(absl::string_view address, absl::string_view protocol)
-        : address_(address), protocol_(protocol) {}
+ public:
+  DataServiceClientBase(absl::string_view address, absl::string_view protocol)
+      : address_(address), protocol_(protocol) {}
 
-    virtual ~DataServiceClientBase() = default;
-    // Not copyable or movable.
-    DataServiceClientBase(const DataServiceClientBase&) = delete;
-    DataServiceClientBase& operator=(const DataServiceClientBase&) = delete;
+  virtual ~DataServiceClientBase() = default;
+  // Not copyable or movable.
+  DataServiceClientBase(const DataServiceClientBase&) = delete;
+  DataServiceClientBase& operator=(const DataServiceClientBase&) = delete;
 
-    // Initializes the client. Calling `Initialize()` is not required since the
-    // first RPC will perform any necessary initialization. However, it can be
-    // useful to call `Initialize()` proactively so that any errors that happen
-    // during initialization can be surfaced earlier.
-    Status Initialize() {
-        return EnsureInitialized();
-    }
+  // Initializes the client. Calling `Initialize()` is not required since the
+  // first RPC will perform any necessary initialization. However, it can be
+  // useful to call `Initialize()` proactively so that any errors that happen
+  // during initialization can be surfaced earlier.
+  Status Initialize() { return EnsureInitialized(); }
 
-protected:
-    // Initializes the client if it isn't already initialized.
-    virtual Status EnsureInitialized() = 0;
+ protected:
+  // Initializes the client if it isn't already initialized.
+  virtual Status EnsureInitialized() = 0;
 
-    const std::string address_;
-    const std::string protocol_;
+  const std::string address_;
+  const std::string protocol_;
 };
 
 // Client for communicating with the tf.data service master.
 class DataServiceMasterClient : public DataServiceClientBase {
-public:
-    DataServiceMasterClient(absl::string_view address, absl::string_view protocol)
-        : DataServiceClientBase(address, protocol) {}
+ public:
+  DataServiceMasterClient(absl::string_view address, absl::string_view protocol)
+      : DataServiceClientBase(address, protocol) {}
 
-    // Registers a dataset with the tf.data service, and stores the generated
-    // dataset id in `*dataset_id`.
-    Status RegisterDataset(GraphDef dataset, int64* dataset_id);
+  // Registers a dataset with the tf.data service, and stores the generated
+  // dataset id in `*dataset_id`.
+  Status RegisterDataset(GraphDef dataset, int64* dataset_id);
 
-    // Creates a new tf.data service job for the specified dataset. The id for the
-    // created job will be stored in `*job_id`.
-    Status CreateJob(int64 dataset_id, ProcessingMode processing_mode,
-                     int64* job_id);
+  // Creates a new tf.data service job for the specified dataset. The id for the
+  // created job will be stored in `*job_id`.
+  Status CreateJob(int64 dataset_id, ProcessingMode processing_mode,
+                   int64* job_id);
 
-    // Queries the master for the tasks associated with the specified job.
-    // The tasks will be stored in *tasks, and whether the job is finished will
-    // be stored in `*job_finished`.
-    Status GetTasks(int64 job_id, std::vector<TaskInfo>* tasks,
-                    bool* job_finished);
+  // Queries the master for the tasks associated with the specified job.
+  // The tasks will be stored in *tasks, and whether the job is finished will
+  // be stored in `*job_finished`.
+  Status GetTasks(int64 job_id, std::vector<TaskInfo>* tasks,
+                  bool* job_finished);
 
-protected:
-    Status EnsureInitialized() override;
+ protected:
+  Status EnsureInitialized() override;
 
-private:
-    std::unique_ptr<MasterService::Stub> stub_;
+ private:
+  std::unique_ptr<MasterService::Stub> stub_;
 };
 
 // Client for communicating with the tf.data service worker.
 class DataServiceWorkerClient : public DataServiceClientBase {
-public:
-    DataServiceWorkerClient(absl::string_view address, absl::string_view protocol)
-        : DataServiceClientBase(address, protocol) {}
+ public:
+  DataServiceWorkerClient(absl::string_view address, absl::string_view protocol)
+      : DataServiceClientBase(address, protocol) {}
 
-    // Fetches the next element for the specified task_id. The element's
-    // compressed tensors will be stored in *element. If no element is available,
-    // `*end_of_sequence` will be `true`, and `element` will be left unchanged.
-    Status GetElement(int64 task_id, CompressedElement* element,
-                      bool* end_of_sequence);
+  // Fetches the next element for the specified task_id. The element's
+  // compressed tensors will be stored in *element. If no element is available,
+  // `*end_of_sequence` will be `true`, and `element` will be left unchanged.
+  Status GetElement(int64 task_id, CompressedElement* element,
+                    bool* end_of_sequence);
 
-protected:
-    Status EnsureInitialized() override;
+ protected:
+  Status EnsureInitialized() override;
 
-private:
-    std::unique_ptr<WorkerService::Stub> stub_;
+ private:
+  std::unique_ptr<WorkerService::Stub> stub_;
 };
 
 // Creates and initializes a new tf.data service master client.
