@@ -224,92 +224,95 @@ from tensorflow.python.platform import test
     })
 class TestEinsumDenseLayer(keras_parameterized.TestCase):
 
-  def test_weight_shapes(self, equation, bias_axes, input_shape, output_shape,
-                         expected_weight_shape, expected_bias_shape,
-                         expected_output_shape):
-    del expected_output_shape  # Not used in this test.
+    def test_weight_shapes(self, equation, bias_axes, input_shape, output_shape,
+                           expected_weight_shape, expected_bias_shape,
+                           expected_output_shape):
+        del expected_output_shape  # Not used in this test.
 
-    weight_shape, bias_shape, _ = einsum_dense._analyze_einsum_string(
-        equation, bias_axes, input_shape, output_shape)
+        weight_shape, bias_shape, _ = einsum_dense._analyze_einsum_string(
+            equation, bias_axes, input_shape, output_shape)
 
-    self.assertAllEqual(expected_weight_shape, weight_shape)
-    self.assertAllEqual(expected_bias_shape, bias_shape)
+        self.assertAllEqual(expected_weight_shape, weight_shape)
+        self.assertAllEqual(expected_bias_shape, bias_shape)
 
-  def test_layer_creation(self, equation, bias_axes, input_shape, output_shape,
-                          expected_weight_shape, expected_bias_shape,
-                          expected_output_shape):
-    # Keras elides the 0-dimension of the input shape when constructing inputs.
-    non_batch_input_shape = list(input_shape)[1:]
+    def test_layer_creation(self, equation, bias_axes, input_shape, output_shape,
+                            expected_weight_shape, expected_bias_shape,
+                            expected_output_shape):
+        # Keras elides the 0-dimension of the input shape when constructing inputs.
+        non_batch_input_shape = list(input_shape)[1:]
 
-    input_tensor = keras.Input(shape=non_batch_input_shape)
-    layer = einsum_dense.EinsumDense(
-        equation=equation, output_shape=output_shape, bias_axes=bias_axes)
-    output_tensor = layer(input_tensor)
+        input_tensor = keras.Input(shape=non_batch_input_shape)
+        layer = einsum_dense.EinsumDense(
+            equation=equation, output_shape=output_shape, bias_axes=bias_axes)
+        output_tensor = layer(input_tensor)
 
-    self.assertAllEqual(expected_weight_shape, layer.kernel.shape.as_list())
-    if expected_bias_shape is None:
-      self.assertIsNone(layer.bias)
-    else:
-      self.assertAllEqual(expected_bias_shape, layer.bias.shape.as_list())
-    self.assertAllEqual(expected_output_shape, output_tensor.shape.as_list())
+        self.assertAllEqual(expected_weight_shape,
+                            layer.kernel.shape.as_list())
+        if expected_bias_shape is None:
+            self.assertIsNone(layer.bias)
+        else:
+            self.assertAllEqual(expected_bias_shape,
+                                layer.bias.shape.as_list())
+        self.assertAllEqual(expected_output_shape,
+                            output_tensor.shape.as_list())
 
 
 @keras_parameterized.run_all_keras_modes
 class TestEinsumLayerAPI(keras_parameterized.TestCase):
 
-  def test_layer_api(self):
-    input_data = np.array([[1.0, 2.0], [3.0, 4.0]])
-    kwargs = {
-        "equation": "...b,bc->...c",
-        "bias_axes": "c",
-        "output_shape": 4,
-        "bias_initializer": keras.initializers.constant(0.03),
-        "kernel_initializer": keras.initializers.constant(0.5),
-        "dtype": input_data.dtype
-    }
-    expected_output = np.array([[1.53, 1.53, 1.53, 1.53],
-                                [3.53, 3.53, 3.53, 3.53]])
+    def test_layer_api(self):
+        input_data = np.array([[1.0, 2.0], [3.0, 4.0]])
+        kwargs = {
+            "equation": "...b,bc->...c",
+            "bias_axes": "c",
+            "output_shape": 4,
+            "bias_initializer": keras.initializers.constant(0.03),
+            "kernel_initializer": keras.initializers.constant(0.5),
+            "dtype": input_data.dtype
+        }
+        expected_output = np.array([[1.53, 1.53, 1.53, 1.53],
+                                    [3.53, 3.53, 3.53, 3.53]])
 
-    output_data = testing_utils.layer_test(
-        einsum_dense.EinsumDense,
-        kwargs=kwargs,
-        input_shape=(None, 2),
-        input_data=input_data)
+        output_data = testing_utils.layer_test(
+            einsum_dense.EinsumDense,
+            kwargs=kwargs,
+            input_shape=(None, 2),
+            input_data=input_data)
 
-    self.assertAllClose(expected_output, output_data)
+        self.assertAllClose(expected_output, output_data)
 
-  def test_unspecified_bias_dim_fails(self):
-    input_tensor = keras.Input(shape=(32,))
-    layer = einsum_dense.EinsumDense(
-        equation="ab,bc->ac", output_shape=64, bias_axes="y")
-    with self.assertRaisesRegexp(
-        ValueError, ".*is not a part of the output specification.*"):
-      _ = layer(input_tensor)
+    def test_unspecified_bias_dim_fails(self):
+        input_tensor = keras.Input(shape=(32,))
+        layer = einsum_dense.EinsumDense(
+            equation="ab,bc->ac", output_shape=64, bias_axes="y")
+        with self.assertRaisesRegexp(
+                ValueError, ".*is not a part of the output specification.*"):
+            _ = layer(input_tensor)
 
-  def test_incompatible_input_output_shape_fails(self):
-    input_tensor = keras.Input(shape=(32, 64))
-    layer = einsum_dense.EinsumDense(
-        equation="abc,cd->abd", output_shape=(10, 96))
-    with self.assertRaisesRegexp(
-        ValueError, ".*Input shape and output shape do not match at shared "
-        "dimension 'b'.*"):
-      _ = layer(input_tensor)
+    def test_incompatible_input_output_shape_fails(self):
+        input_tensor = keras.Input(shape=(32, 64))
+        layer = einsum_dense.EinsumDense(
+            equation="abc,cd->abd", output_shape=(10, 96))
+        with self.assertRaisesRegexp(
+                ValueError, ".*Input shape and output shape do not match at shared "
+                "dimension 'b'.*"):
+            _ = layer(input_tensor)
 
-  def test_unspecified_output_dim_fails(self):
-    input_tensor = keras.Input(shape=(32,))
-    layer = einsum_dense.EinsumDense(equation="ab,bc->cd", output_shape=64)
-    with self.assertRaisesRegexp(
-        ValueError, ".*Dimension 'd' was specified in the output 'cd' but has "
-        "no corresponding dim.*"):
-      _ = layer(input_tensor)
+    def test_unspecified_output_dim_fails(self):
+        input_tensor = keras.Input(shape=(32,))
+        layer = einsum_dense.EinsumDense(equation="ab,bc->cd", output_shape=64)
+        with self.assertRaisesRegexp(
+                ValueError, ".*Dimension 'd' was specified in the output 'cd' but has "
+                "no corresponding dim.*"):
+            _ = layer(input_tensor)
 
-  def test_unspecified_weight_dim_fails(self):
-    input_tensor = keras.Input(shape=(32,))
-    layer = einsum_dense.EinsumDense(equation="ab,zd->ad", output_shape=64)
-    with self.assertRaisesRegexp(
-        ValueError, ".*Weight dimension 'z' did not have a match "):
-      _ = layer(input_tensor)
+    def test_unspecified_weight_dim_fails(self):
+        input_tensor = keras.Input(shape=(32,))
+        layer = einsum_dense.EinsumDense(equation="ab,zd->ad", output_shape=64)
+        with self.assertRaisesRegexp(
+                ValueError, ".*Weight dimension 'z' did not have a match "):
+            _ = layer(input_tensor)
 
 
 if __name__ == "__main__":
-  test.main()
+    test.main()
