@@ -13,29 +13,49 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for control_flow_ops.py."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 
 import numpy as np
-import tensorflow.python.ops.tensor_array_grad  # pylint: disable=unused-import
 from absl.testing import parameterized
-from tensorflow.core.framework import graph_pb2, node_def_pb2
+
+import tensorflow.python.ops.tensor_array_grad  # pylint: disable=unused-import
+from tensorflow.core.framework import graph_pb2
+from tensorflow.core.framework import node_def_pb2
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python import tf2
 from tensorflow.python.client import session
-from tensorflow.python.eager import backprop, context, def_function
-from tensorflow.python.framework import (constant_op, dtypes, errors, ops,
-                                         sparse_tensor, tensor_shape,
-                                         test_util)
-from tensorflow.python.ops import (array_ops, check_ops, control_flow_ops,
-                                   control_flow_v2_toggles, custom_gradient,
-                                   embedding_ops, gradients_impl, init_ops,
-                                   linalg_ops, math_ops, random_ops, state_ops,
-                                   summary_ops_v2, tensor_array_ops,
-                                   variable_scope, variables)
-from tensorflow.python.platform import googletest, test
+from tensorflow.python.eager import backprop
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import test_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import check_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import control_flow_v2_toggles
+from tensorflow.python.ops import custom_gradient
+from tensorflow.python.ops import embedding_ops
+from tensorflow.python.ops import gradients_impl
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import linalg_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import random_ops
+from tensorflow.python.ops import state_ops
+from tensorflow.python.ops import summary_ops_v2
+from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.ops import variable_scope
+from tensorflow.python.ops import variables
+from tensorflow.python.platform import googletest
+from tensorflow.python.platform import test
 from tensorflow.python.training import momentum
 from tensorflow.python.util import nest
 

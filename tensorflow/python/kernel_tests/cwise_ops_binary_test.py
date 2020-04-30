@@ -13,19 +13,28 @@
 # limitations under the License.
 # ==============================================================================
 """Functional tests for binary coefficient-wise operations."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
+
 from tensorflow.python.eager import backprop
 from tensorflow.python.framework import constant_op
 from tensorflow.python.framework import dtypes as dtypes_lib
-from tensorflow.python.framework import (errors, errors_impl, ops,
-                                         sparse_tensor, test_util)
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import errors_impl
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import test_util
+from tensorflow.python.ops import gradient_checker
+from tensorflow.python.ops import gradient_checker_v2
+from tensorflow.python.ops import gradients_impl
+from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn_grad  # pylint: disable=unused-import
-from tensorflow.python.ops import (gradient_checker, gradient_checker_v2,
-                                   gradients_impl, math_ops, variables)
-from tensorflow.python.platform import test, tf_logging
+from tensorflow.python.ops import variables
+from tensorflow.python.platform import test
+from tensorflow.python.platform import tf_logging
 
 
 def _ADD(x, y):

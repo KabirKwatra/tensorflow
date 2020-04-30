@@ -13,25 +13,40 @@
 # limitations under the License.
 # ==============================================================================
 """FuncGraph and related functionality."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections as py_collections
 import itertools
 import weakref
 
 import numpy as np
+
 from tensorflow.core.framework import attr_value_pb2
-from tensorflow.python.eager import context, execute, tape
+from tensorflow.python.eager import context
+from tensorflow.python.eager import execute
+from tensorflow.python.eager import tape
 from tensorflow.python.eager.graph_only_ops import graph_placeholder
-from tensorflow.python.framework import (auto_control_deps, composite_tensor,
-                                         constant_op, dtypes, errors, ops,
-                                         tensor_spec, type_spec)
-from tensorflow.python.ops import (array_ops, custom_gradient,
-                                   resource_variable_ops, tensor_array_ops,
-                                   variable_scope)
-from tensorflow.python.util import (compat, memory, nest, object_identity,
-                                    tf_contextlib, tf_decorator)
+from tensorflow.python.framework import auto_control_deps
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import type_spec
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import custom_gradient
+from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.ops import variable_scope
+from tensorflow.python.util import compat
+from tensorflow.python.util import memory
+from tensorflow.python.util import nest
+from tensorflow.python.util import object_identity
+from tensorflow.python.util import tf_contextlib
+from tensorflow.python.util import tf_decorator
 
 WHITELIST_COLLECTIONS = [
     ops.GraphKeys.GLOBAL_VARIABLES,

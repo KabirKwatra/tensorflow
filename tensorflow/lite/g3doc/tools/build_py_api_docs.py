@@ -22,14 +22,17 @@ python build_docs.py --output_dir=/path/to/output
 ```
 
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import pathlib
 
-import tensorflow as tf
-from absl import app, flags
+from absl import app
+from absl import flags
 from tensorflow_docs.api_generator import generate_lib
+
+import tensorflow as tf
 
 flags.DEFINE_string("output_dir", "/tmp/lite_api/", "The path to output the files to")
 

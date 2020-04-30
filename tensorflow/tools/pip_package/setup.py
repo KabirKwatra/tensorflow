@@ -27,15 +27,18 @@ within Google's AI organization, it comes with strong support for machine
 learning and deep learning and the flexible numerical computation core is used
 across many other scientific domains.
 """
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import fnmatch
 import os
 import re
 import sys
 
-from setuptools import Command, find_packages, setup
+from setuptools import Command
+from setuptools import find_packages
+from setuptools import setup
 from setuptools.command.install import install as InstallCommandBase
 from setuptools.dist import Distribution
 
