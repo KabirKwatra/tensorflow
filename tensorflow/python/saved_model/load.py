@@ -52,13 +52,15 @@ from tensorflow.python.util.tf_export import tf_export
 
 def _unused_handle():
     """Returns a placeholder as a handle that is not supposed to be accessed."""
-    error_message = ("Trying to access a placeholder that is not supposed to be "
-                     "executed. This means you are executing a graph generated "
-                     "from the cross-replica context in an in-replica context.")
+    error_message = (
+        "Trying to access a placeholder that is not supposed to be "
+        "executed. This means you are executing a graph generated "
+        "from the cross-replica context in an in-replica context."
+    )
 
     assert_op = control_flow_ops.Assert(
-        array_ops.placeholder_with_default(False, shape=()),
-        [error_message])
+        array_ops.placeholder_with_default(False, shape=()), [error_message]
+    )
 
     with ops.control_dependencies([assert_op]):
         return array_ops.placeholder(dtype=dtypes.resource)
@@ -85,7 +87,6 @@ class _WrapperFunction(function.ConcreteFunction):
         self.__dict__.update(vars(concrete_function))
 
     def _call_flat(self, args, captured_inputs, cancellation_manager=None):
-
         def get_in_replica_handle(x):
             return x.handle if ds_values.is_distributed_variable(x) else x
 
@@ -95,10 +96,10 @@ class _WrapperFunction(function.ConcreteFunction):
         if ds_context.get_replica_context() is not None:  # in-replica context
             captured_inputs = list(map(get_in_replica_handle, captured_inputs))
         else:  # cross-replica context
-            captured_inputs = list(
-                map(get_cross_replica_handle, captured_inputs))
-        return super(_WrapperFunction, self)._call_flat(args, captured_inputs,
-                                                        cancellation_manager)
+            captured_inputs = list(map(get_cross_replica_handle, captured_inputs))
+        return super(_WrapperFunction, self)._call_flat(
+            args, captured_inputs, cancellation_manager
+        )
 
 
 class Loader(object):
@@ -108,18 +109,18 @@ class Loader(object):
         meta_graph = saved_model_proto.meta_graphs[0]
         self._asset_file_def = meta_graph.asset_file_def
         self._operation_attributes = {
-            node.name: node.attr for node in meta_graph.graph_def.node}
+            node.name: node.attr for node in meta_graph.graph_def.node
+        }
         self._proto = object_graph_proto
         self._export_dir = export_dir
-        self._concrete_functions = (
-            function_deserialization.load_function_def_library(
-                meta_graph.graph_def.library))
+        self._concrete_functions = function_deserialization.load_function_def_library(
+            meta_graph.graph_def.library
+        )
 
         for name, concrete_function in self._concrete_functions.items():
             # Wrap all the concrete function so that they are capable of dealing with
             # both in replica and cross replica cases.
-            self._concrete_functions[name] = _WrapperFunction(
-                concrete_function)
+            self._concrete_functions[name] = _WrapperFunction(concrete_function)
 
         self._load_all()
         self._restore_checkpoint()
@@ -128,8 +129,7 @@ class Loader(object):
             if isinstance(node, tracking.CapturableResource):
                 init_op = node._initialize()  # pylint: disable=protected-access
                 if not context.executing_eagerly():
-                    ops.add_to_collection(
-                        ops.GraphKeys.TABLE_INITIALIZERS, init_op)
+                    ops.add_to_collection(ops.GraphKeys.TABLE_INITIALIZERS, init_op)
 
     def _load_all(self):
         """Loads all nodes and functions from the SavedModel and their edges."""
@@ -177,9 +177,12 @@ class Loader(object):
             # exactly the same. Fortunately the repacking logic cares only about
             # the structure; and the unpacking logic cares only about structure
             # and types.
-            concrete_function._func_graph.structured_outputs = original_outputs  # pylint: disable=protected-access
-            concrete_function._func_graph.structured_input_signature = (  # pylint: disable=protected-access
-                coder.decode_proto(proto.canonicalized_input_signature))
+            concrete_function._func_graph.structured_outputs = (
+                original_outputs  # pylint: disable=protected-access
+            )
+            concrete_function._func_graph.structured_input_signature = coder.decode_proto(  # pylint: disable=protected-access
+                proto.canonicalized_input_signature
+            )
             concrete_function._initialize_function_spec()  # pylint: disable=protected-access
 
     def _setup_functions_captures(self):
@@ -188,8 +191,8 @@ class Loader(object):
         for name, proto in concrete_functions:
             concrete_function = self._concrete_functions[name]
             bound_inputs = [
-                self._get_tensor_from_node(node_id)
-                for node_id in proto.bound_inputs]
+                self._get_tensor_from_node(node_id) for node_id in proto.bound_inputs
+            ]
             bound_variables = [
                 self._nodes[node_id]
                 for node_id in proto.bound_inputs
@@ -198,17 +201,24 @@ class Loader(object):
             # TODO(andresp): This is only injecting the captured inputs into the
             # concrete function, note that we did not modify the FuncGraph
             # itself.
-            concrete_function._captured_inputs = bound_inputs  # pylint: disable=protected-access
-            concrete_function._func_graph.variables = bound_variables  # pylint: disable=protected-access
+            concrete_function._captured_inputs = (
+                bound_inputs  # pylint: disable=protected-access
+            )
+            concrete_function._func_graph.variables = (
+                bound_variables  # pylint: disable=protected-access
+            )
             if bound_inputs:
                 for bound_input, internal_capture in zip(
-                        bound_inputs, concrete_function.inputs[-len(bound_inputs):]):
+                    bound_inputs, concrete_function.inputs[-len(bound_inputs) :]
+                ):
                     if ds_values.is_distributed_variable(bound_input):
                         concrete_function.graph.capture_distributed_variable(
-                            bound_input, internal_capture)
+                            bound_input, internal_capture
+                        )
                     else:
-                        concrete_function.graph.replace_capture(bound_input,
-                                                                internal_capture)
+                        concrete_function.graph.replace_capture(
+                            bound_input, internal_capture
+                        )
                         if internal_capture.dtype == dtypes.resource:
                             if resource_variable_ops.is_resource_variable(bound_input):
                                 try:
@@ -219,10 +229,12 @@ class Loader(object):
                                     pass
                                 else:
                                     custom_gradient.copy_handle_data(
-                                        handle, internal_capture)
+                                        handle, internal_capture
+                                    )
                             else:
                                 custom_gradient.copy_handle_data(
-                                    bound_input, internal_capture)
+                                    bound_input, internal_capture
+                                )
                         # Setting "captures" first means "capture" won't create a new
                         # placeholder for this input.
                         concrete_function.graph.capture(bound_input)
@@ -257,8 +269,7 @@ class Loader(object):
         slot_variable_node_ids = set()
         for proto in self._proto.nodes:
             for slot_variable_proto in proto.slot_variables:
-                slot_variable_node_ids.add(
-                    slot_variable_proto.slot_variable_node_id)
+                slot_variable_node_ids.add(slot_variable_proto.slot_variable_node_id)
 
         # Re-create everything except slot variables.
         for node_id, proto in enumerate(self._proto.nodes):
@@ -276,15 +287,15 @@ class Loader(object):
             optimizer_object = nodes[node_id]
             for slot_variable_proto in proto.slot_variables:
                 optimized_variable = nodes[
-                    slot_variable_proto.original_variable_node_id]
+                    slot_variable_proto.original_variable_node_id
+                ]
                 slot_variable = optimizer_object.add_slot(
-                    var=optimized_variable,
-                    slot_name=slot_variable_proto.slot_name)
+                    var=optimized_variable, slot_name=slot_variable_proto.slot_name
+                )
                 nodes[slot_variable_proto.slot_variable_node_id] = slot_variable
                 node_setters[slot_variable_proto.slot_variable_node_id] = setattr
 
-        self._nodes = [nodes[node_id]
-                       for node_id in range(len(self._proto.nodes))]
+        self._nodes = [nodes[node_id] for node_id in range(len(self._proto.nodes))]
         self._node_setters = node_setters
 
     @property
@@ -309,8 +320,7 @@ class Loader(object):
         # pylint: disable=protected-access
         saver = util.TrackableSaver(graph_view.ObjectGraphView(self.get(0)))
         with ops.device("CPU"):
-            saver._file_prefix_placeholder = constant_op.constant(
-                variables_path)
+            saver._file_prefix_placeholder = constant_op.constant(variables_path)
         if self._expect_partial_checkpoint:
             load_status = saver.restore(variables_path).expect_partial()
         else:
@@ -326,25 +336,27 @@ class Loader(object):
         # they get initialized properly when using common practices (e.g. the ones
         # used by ManagedSession) without further user action.
         for object_id, obj in dict(checkpoint.object_by_proto_id).items():
-            position = base.CheckpointPosition(checkpoint=checkpoint,
-                                               proto_id=object_id)
+            position = base.CheckpointPosition(
+                checkpoint=checkpoint, proto_id=object_id
+            )
             restore_ops = position.restore_ops()
             if restore_ops:
                 if resource_variable_ops.is_resource_variable(obj):
                     if len(restore_ops) == 1:
                         obj._initializer_op = restore_ops[0]
                     else:
-                        obj._initializer_op = control_flow_ops.group(
-                            *restore_ops)
+                        obj._initializer_op = control_flow_ops.group(*restore_ops)
                 elif isinstance(obj, lookup_ops.LookupInterface):
                     # We don't need to check for eager execution here, since this code
                     # path should only be taken if we are restoring in graph mode.
-                    ops.add_to_collection(
-                        ops.GraphKeys.TABLE_INITIALIZERS, restore_ops)
+                    ops.add_to_collection(ops.GraphKeys.TABLE_INITIALIZERS, restore_ops)
                 else:
                     raise NotImplementedError(
-                        ("Missing functionality to restore state of object "
-                         "%r from the checkpoint." % obj))
+                        (
+                            "Missing functionality to restore state of object "
+                            "%r from the checkpoint." % obj
+                        )
+                    )
 
     def adjust_debug_info_func_names(self, debug_info):
         """Rewrite func names in the debug info by using the concrete func names."""
@@ -356,7 +368,8 @@ class Loader(object):
             if func in self._concrete_functions:
                 new_func = self._concrete_functions[func].function_def.signature.name
             output_debug_info.traces[node + "@" + new_func].CopyFrom(
-                debug_info.traces[key])
+                debug_info.traces[key]
+            )
         return output_debug_info
 
     def get(self, node_id):
@@ -366,12 +379,13 @@ class Loader(object):
         """Creates a Python object from a SavedObject protocol buffer."""
         factory = {
             "user_object": (
-                lambda: self._recreate_user_object(proto.user_object, node_id)),
+                lambda: self._recreate_user_object(proto.user_object, node_id)
+            ),
             "asset": lambda: self._recreate_asset(proto.asset),
             "function": lambda: self._recreate_function(proto.function),
             "bare_concrete_function": functools.partial(
-                self._recreate_bare_concrete_function,
-                proto.bare_concrete_function),
+                self._recreate_bare_concrete_function, proto.bare_concrete_function
+            ),
             "variable": lambda: self._recreate_variable(proto.variable),
             "constant": lambda: self._recreate_constant(proto.constant),
             "resource": lambda: self._recreate_resource(proto.resource),
@@ -402,16 +416,23 @@ class Loader(object):
     def _recreate_asset(self, proto):
         filename = os.path.join(
             saved_model_utils.get_assets_dir(self._export_dir),
-            self._asset_file_def[proto.asset_file_def_index].filename)
+            self._asset_file_def[proto.asset_file_def_index].filename,
+        )
         return tracking.Asset(filename), setattr
 
     def _recreate_function(self, proto):
-        return function_deserialization.recreate_function(
-            proto, self._concrete_functions), setattr
+        return (
+            function_deserialization.recreate_function(proto, self._concrete_functions),
+            setattr,
+        )
 
     def _recreate_bare_concrete_function(self, proto):
-        return function_deserialization.setup_bare_concrete_function(
-            proto, self._concrete_functions), setattr
+        return (
+            function_deserialization.setup_bare_concrete_function(
+                proto, self._concrete_functions
+            ),
+            setattr,
+        )
 
     def _recreate_variable(self, proto):
         name = proto.name if proto.name else None
@@ -419,10 +440,13 @@ class Loader(object):
             dbg_name = name
         else:
             dbg_name = "<variable loaded from saved model>"
-        synchronization, aggregation, trainable = (
-            variables.validate_synchronization_aggregation_trainable(
-                proto.synchronization, proto.aggregation, proto.trainable,
-                name=dbg_name))
+        (
+            synchronization,
+            aggregation,
+            trainable,
+        ) = variables.validate_synchronization_aggregation_trainable(
+            proto.synchronization, proto.aggregation, proto.trainable, name=dbg_name
+        )
 
         def uninitialized_variable_creator(next_creator, **kwargs):
             """A variable creator that creates uninitialized variables."""
@@ -433,15 +457,19 @@ class Loader(object):
         # a lower priority such that a potential distributed variable_creator_scope
         # can take precedence.
         with ops.get_default_graph()._variable_creator_scope(  # pylint: disable=protected-access
-                uninitialized_variable_creator,
-                priority=50):
-            return variables.Variable(
-                shape=proto.shape,
-                dtype=proto.dtype,
-                name=name,
-                trainable=trainable,
-                synchronization=synchronization,
-                aggregation=aggregation), setattr
+            uninitialized_variable_creator, priority=50
+        ):
+            return (
+                variables.Variable(
+                    shape=proto.shape,
+                    dtype=proto.dtype,
+                    name=name,
+                    trainable=trainable,
+                    synchronization=synchronization,
+                    aggregation=aggregation,
+                ),
+                setattr,
+            )
 
     def _recreate_constant(self, proto):
         tensor_proto = self._operation_attributes[proto.operation]["value"].tensor
@@ -477,8 +505,7 @@ class _RestoredResource(tracking.TrackableResource):
 
     @_destroy_resource.setter
     def _destroy_resource(self, destroy_resource_fn):
-        self._resource_deleter = tracking.CapturableResourceDeleter(
-            destroy_resource_fn)
+        self._resource_deleter = tracking.CapturableResourceDeleter(destroy_resource_fn)
         self._destroy_resource_fn = destroy_resource_fn
 
     def _list_functions_for_serialization(self, unused_serialization_cache):
@@ -596,31 +623,32 @@ def load_internal(export_dir, tags=None, loader_cls=Loader):
         # Supports e.g. tags=SERVING and tags=[SERVING]. Sets aren't considered
         # sequences for nest.flatten, so we put those through as-is.
         tags = nest.flatten(tags)
-    saved_model_proto, debug_info = (
-        loader_impl.parse_saved_model_with_debug_info(export_dir))
+    saved_model_proto, debug_info = loader_impl.parse_saved_model_with_debug_info(
+        export_dir
+    )
 
-    if (len(saved_model_proto.meta_graphs) == 1 and
-            saved_model_proto.meta_graphs[0].HasField("object_graph_def")):
+    if len(saved_model_proto.meta_graphs) == 1 and saved_model_proto.meta_graphs[
+        0
+    ].HasField("object_graph_def"):
         meta_graph_def = saved_model_proto.meta_graphs[0]
-        if (tags is not None
-                and set(tags) != set(meta_graph_def.meta_info_def.tags)):
+        if tags is not None and set(tags) != set(meta_graph_def.meta_info_def.tags):
             raise ValueError(
-                ("The SavedModel at {} has one MetaGraph with tags {}, but got an "
-                 "incompatible argument tags={} to tf.saved_model.load. You may omit "
-                 "it, pass 'None', or pass matching tags.")
-                .format(export_dir, meta_graph_def.meta_info_def.tags, tags))
+                (
+                    "The SavedModel at {} has one MetaGraph with tags {}, but got an "
+                    "incompatible argument tags={} to tf.saved_model.load. You may omit "
+                    "it, pass 'None', or pass matching tags."
+                ).format(export_dir, meta_graph_def.meta_info_def.tags, tags)
+            )
         object_graph_proto = meta_graph_def.object_graph_def
         with ops.init_scope():
-            loader = loader_cls(object_graph_proto,
-                                saved_model_proto,
-                                export_dir)
+            loader = loader_cls(object_graph_proto, saved_model_proto, export_dir)
             root = loader.get(0)
             if isinstance(loader, Loader):
-                root.graph_debug_info = loader.adjust_debug_info_func_names(
-                    debug_info)
+                root.graph_debug_info = loader.adjust_debug_info_func_names(debug_info)
         root.tensorflow_version = meta_graph_def.meta_info_def.tensorflow_version
         root.tensorflow_git_version = (
-            meta_graph_def.meta_info_def.tensorflow_git_version)
+            meta_graph_def.meta_info_def.tensorflow_git_version
+        )
     else:
         with ops.init_scope():
             root = load_v1_in_v2.load(export_dir, tags)
