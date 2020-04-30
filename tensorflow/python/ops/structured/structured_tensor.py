@@ -14,30 +14,19 @@
 # ==============================================================================
 """Structured Tensors."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import re
 
 import numpy as np
-
-from tensorflow.python.framework import composite_tensor
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.framework import type_spec
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import check_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops.ragged import ragged_factory_ops
-from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.framework import (composite_tensor, constant_op, dtypes,
+                                         ops, tensor_shape, tensor_spec,
+                                         type_spec)
+from tensorflow.python.ops import (array_ops, check_ops, control_flow_ops,
+                                   math_ops)
+from tensorflow.python.ops.ragged import ragged_factory_ops, ragged_tensor
 from tensorflow.python.ops.ragged.row_partition import RowPartition
-from tensorflow.python.util import compat
-from tensorflow.python.util import nest
+from tensorflow.python.util import compat, nest
 
 
 class StructuredTensor(composite_tensor.CompositeTensor):

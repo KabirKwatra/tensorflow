@@ -55,37 +55,22 @@ self.x = self_x    # the result is not properly captured
 ```
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import functools
 import traceback
 
 import numpy as np
-
-from tensorflow.python.autograph.operators import py_builtins
-from tensorflow.python.autograph.operators import special_values
-from tensorflow.python.autograph.utils import ag_logging
-from tensorflow.python.autograph.utils import compat_util
-from tensorflow.python.autograph.utils import misc
-from tensorflow.python.autograph.utils import tensors
-from tensorflow.python.data.experimental.ops import scan_ops
-from tensorflow.python.data.experimental.ops import take_while_ops
-from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.data.ops import iterator_ops
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import func_graph
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_util
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import tensor_array_ops
+from tensorflow.python.autograph.operators import py_builtins, special_values
+from tensorflow.python.autograph.utils import (ag_logging, compat_util, misc,
+                                               tensors)
+from tensorflow.python.data.experimental.ops import scan_ops, take_while_ops
+from tensorflow.python.data.ops import dataset_ops, iterator_ops
+from tensorflow.python.framework import (constant_op, dtypes, func_graph, ops,
+                                         tensor_util)
+from tensorflow.python.ops import control_flow_ops, math_ops, tensor_array_ops
 from tensorflow.python.ops.ragged import ragged_tensor
-from tensorflow.python.util import lazy_loader
-from tensorflow.python.util import nest
-
+from tensorflow.python.util import lazy_loader, nest
 
 # TODO(b/145618471): Remove this dependency.
 # Lazy import to work around circular dependencies

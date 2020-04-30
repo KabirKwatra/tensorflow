@@ -18,33 +18,21 @@
 # Unfortunately pylint has false positives when nonlocal is present.
 # pylint:disable=unused-variable
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import re
 import sys
 
 import numpy as np
 import six
-
-from tensorflow.python.autograph.operators import control_flow
-from tensorflow.python.autograph.operators import special_values
+from tensorflow.python.autograph.operators import control_flow, special_values
 from tensorflow.python.autograph.utils import ag_logging
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import def_function
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import func_graph
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import gen_math_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import random_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.framework import (constant_op, dtypes, func_graph, ops,
+                                         tensor_shape, test_util)
+from tensorflow.python.ops import (array_ops, control_flow_ops, gen_math_ops,
+                                   math_ops, random_ops, variables)
 from tensorflow.python.ops.ragged import ragged_factory_ops
 from tensorflow.python.platform import test
 
