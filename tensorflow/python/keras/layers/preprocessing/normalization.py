@@ -13,16 +13,21 @@
 # limitations under the License.
 # ==============================================================================
 """Keras preprocessing layers."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import json
 
 import numpy as np
+
 from tensorflow.python.framework import dtypes
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.engine.base_preprocessing_layer import (
-    Combiner, CombinerPreprocessingLayer)
-from tensorflow.python.ops import array_ops, init_ops, math_ops
+from tensorflow.python.keras.engine.base_preprocessing_layer import Combiner
+from tensorflow.python.keras.engine.base_preprocessing_layer import CombinerPreprocessingLayer
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import math_ops
 from tensorflow.python.util import compat
 from tensorflow.python.util.tf_export import keras_export
 

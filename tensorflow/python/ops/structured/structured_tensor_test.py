@@ -13,18 +13,26 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for StructuredTensor."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 from absl.testing import parameterized
+
 from tensorflow.python.eager import context
-from tensorflow.python.framework import (constant_op, dtypes, errors, ops,
-                                         sparse_tensor, tensor_shape,
-                                         tensor_spec, test_util)
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import test_util
 from tensorflow.python.ops import array_ops
-from tensorflow.python.ops.ragged import (ragged_factory_ops, ragged_tensor,
-                                          row_partition)
+from tensorflow.python.ops.ragged import ragged_factory_ops
+from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.ops.ragged import row_partition
 from tensorflow.python.ops.structured import structured_tensor
 from tensorflow.python.ops.structured.structured_tensor import StructuredTensor
 from tensorflow.python.platform import googletest
