@@ -34,7 +34,8 @@ from tensorflow_docs.api_generator import generate_lib
 
 import tensorflow as tf
 
-flags.DEFINE_string("output_dir", "/tmp/lite_api/", "The path to output the files to")
+flags.DEFINE_string("output_dir", "/tmp/lite_api/",
+                    "The path to output the files to")
 
 flags.DEFINE_string(
     "code_url_prefix",
@@ -42,11 +43,11 @@ flags.DEFINE_string(
     "The url prefix for links to code.",
 )
 
-flags.DEFINE_bool(
-    "search_hints", True, "Include metadata search hints in the generated files"
-)
+flags.DEFINE_bool("search_hints", True,
+                  "Include metadata search hints in the generated files")
 
-flags.DEFINE_string("site_path", "lite/api_docs/python", "Path prefix in the _toc.yaml")
+flags.DEFINE_string("site_path", "lite/api_docs/python",
+                    "Path prefix in the _toc.yaml")
 
 FLAGS = flags.FLAGS
 

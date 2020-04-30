@@ -109,21 +109,19 @@ class EinsumDense(Layer):
     <tf.Tensor '...' shape=(None, 32, 64) dtype=...>
     """
 
-    def __init__(
-        self,
-        equation,
-        output_shape,
-        activation=None,
-        bias_axes=None,
-        kernel_initializer="glorot_uniform",
-        bias_initializer="zeros",
-        kernel_regularizer=None,
-        bias_regularizer=None,
-        activity_regularizer=None,
-        kernel_constraint=None,
-        bias_constraint=None,
-        **kwargs
-    ):
+    def __init__(self,
+                 equation,
+                 output_shape,
+                 activation=None,
+                 bias_axes=None,
+                 kernel_initializer="glorot_uniform",
+                 bias_initializer="zeros",
+                 kernel_regularizer=None,
+                 bias_regularizer=None,
+                 activity_regularizer=None,
+                 kernel_constraint=None,
+                 bias_constraint=None,
+                 **kwargs):
         super(EinsumDense, self).__init__(**kwargs)
         self.equation = equation
         if isinstance(output_shape, int):
@@ -141,9 +139,9 @@ class EinsumDense(Layer):
 
     def build(self, input_shape):
         input_shape = tensor_shape.TensorShape(input_shape)
-        shape_data = _analyze_einsum_string(
-            self.equation, self.bias_axes, input_shape, self.partial_output_shape
-        )
+        shape_data = _analyze_einsum_string(self.equation, self.bias_axes,
+                                            input_shape,
+                                            self.partial_output_shape)
         kernel_shape, bias_shape, self.full_output_shape = shape_data
         self.kernel = self.add_weight(
             "kernel",
@@ -174,17 +172,28 @@ class EinsumDense(Layer):
 
     def get_config(self):
         config = {
-            "output_shape": self.partial_output_shape,
-            "equation": self.equation,
-            "activation": activations.serialize(self.activation),
-            "bias_axes": self.bias_axes,
-            "kernel_initializer": initializers.serialize(self.kernel_initializer),
-            "bias_initializer": initializers.serialize(self.bias_initializer),
-            "kernel_regularizer": regularizers.serialize(self.kernel_regularizer),
-            "bias_regularizer": regularizers.serialize(self.bias_regularizer),
-            "activity_regularizer": regularizers.serialize(self.activity_regularizer),
-            "kernel_constraint": constraints.serialize(self.kernel_constraint),
-            "bias_constraint": constraints.serialize(self.bias_constraint),
+            "output_shape":
+            self.partial_output_shape,
+            "equation":
+            self.equation,
+            "activation":
+            activations.serialize(self.activation),
+            "bias_axes":
+            self.bias_axes,
+            "kernel_initializer":
+            initializers.serialize(self.kernel_initializer),
+            "bias_initializer":
+            initializers.serialize(self.bias_initializer),
+            "kernel_regularizer":
+            regularizers.serialize(self.kernel_regularizer),
+            "bias_regularizer":
+            regularizers.serialize(self.bias_regularizer),
+            "activity_regularizer":
+            regularizers.serialize(self.activity_regularizer),
+            "kernel_constraint":
+            constraints.serialize(self.kernel_constraint),
+            "bias_constraint":
+            constraints.serialize(self.bias_constraint),
         }
         base_config = super(EinsumDense, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
@@ -204,35 +213,39 @@ def _analyze_einsum_string(equation, bias_axes, input_shape, output_shape):
     dot_replaced_string = re.sub(r"\.\.\.", "0", equation)
 
     # This is the case where no ellipses are present in the string.
-    split_string = re.match("([a-zA-Z]+),([a-zA-Z]+)->([a-zA-Z]+)", dot_replaced_string)
+    split_string = re.match("([a-zA-Z]+),([a-zA-Z]+)->([a-zA-Z]+)",
+                            dot_replaced_string)
     if split_string:
-        return _analyze_split_string(split_string, bias_axes, input_shape, output_shape)
+        return _analyze_split_string(split_string, bias_axes, input_shape,
+                                     output_shape)
 
     # This is the case where ellipses are present on the left.
-    split_string = re.match(
-        "0([a-zA-Z]+),([a-zA-Z]+)->0([a-zA-Z]+)", dot_replaced_string
-    )
+    split_string = re.match("0([a-zA-Z]+),([a-zA-Z]+)->0([a-zA-Z]+)",
+                            dot_replaced_string)
     if split_string:
-        return _analyze_split_string(
-            split_string, bias_axes, input_shape, output_shape, left_elided=True
-        )
+        return _analyze_split_string(split_string,
+                                     bias_axes,
+                                     input_shape,
+                                     output_shape,
+                                     left_elided=True)
 
     # This is the case where ellipses are present on the right.
-    split_string = re.match(
-        "([a-zA-Z]{2,})0,([a-zA-Z]+)->([a-zA-Z]+)0", dot_replaced_string
-    )
+    split_string = re.match("([a-zA-Z]{2,})0,([a-zA-Z]+)->([a-zA-Z]+)0",
+                            dot_replaced_string)
     if split_string:
-        return _analyze_split_string(split_string, bias_axes, input_shape, output_shape)
+        return _analyze_split_string(split_string, bias_axes, input_shape,
+                                     output_shape)
 
     raise ValueError(
         "Invalid einsum equation '%s'. Equations must be in the form "
-        "[X],[Y]->[Z], ...[X],[Y]->...[Z], or [X]...,[Y]->[Z]...." % equation
-    )
+        "[X],[Y]->[Z], ...[X],[Y]->...[Z], or [X]...,[Y]->[Z]...." % equation)
 
 
-def _analyze_split_string(
-    split_string, bias_axes, input_shape, output_shape, left_elided=False
-):
+def _analyze_split_string(split_string,
+                          bias_axes,
+                          input_shape,
+                          output_shape,
+                          left_elided=False):
     """Analyze an pre-split einsum string to find the weight shape."""
     input_spec = split_string.group(1)
     weight_spec = split_string.group(2)
@@ -259,11 +272,15 @@ def _analyze_split_string(
         # If we have beginning dimensions elided, we need to use negative indexing
         # to determine where in the input dimension our values are.
         input_dim_map = {
-            dim: (i + elided) - len(input_shape) for i, dim in enumerate(input_spec)
+            dim: (i + elided) - len(input_shape)
+            for i, dim in enumerate(input_spec)
         }
         # Because we've constructed the full output shape already, we don't need
         # to do negative indexing.
-        output_dim_map = {dim: (i + elided) for i, dim in enumerate(output_spec)}
+        output_dim_map = {
+            dim: (i + elided)
+            for i, dim in enumerate(output_spec)
+        }
     else:
         input_dim_map = {dim: i for i, dim in enumerate(input_spec)}
         output_dim_map = {dim: i for i, dim in enumerate(output_spec)}
@@ -272,24 +289,21 @@ def _analyze_split_string(
         input_shape_at_dim = input_shape[i]
         if dim in output_dim_map:
             output_shape_at_dim = output_shape[output_dim_map[dim]]
-            if (
-                output_shape_at_dim is not None
-                and output_shape_at_dim != input_shape_at_dim
-            ):
+            if (output_shape_at_dim is not None
+                    and output_shape_at_dim != input_shape_at_dim):
                 raise ValueError(
                     "Input shape and output shape do not match at shared "
                     "dimension '%s'. Input shape is %s, and output shape "
-                    "is %s."
-                    % (dim, input_shape_at_dim, output_shape[output_dim_map[dim]])
-                )
+                    "is %s." % (dim, input_shape_at_dim,
+                                output_shape[output_dim_map[dim]]))
 
     for dim in output_spec:
         if dim not in input_spec and dim not in weight_spec:
             raise ValueError(
                 "Dimension '%s' was specified in the output '%s' but "
                 "has no corresponding dim in the input spec '%s' or "
-                "weight spec '%s.'" % (dim, output_spec, input_spec, output_spec)
-            )
+                "weight spec '%s.'" %
+                (dim, output_spec, input_spec, output_spec))
 
     weight_shape = []
     for dim in weight_spec:
@@ -301,9 +315,8 @@ def _analyze_split_string(
             raise ValueError(
                 "Weight dimension '%s' did not have a match in either "
                 "the input spec '%s' or the output spec '%s'. For this "
-                "layer, the weight must be fully specified."
-                % (dim, input_spec, output_spec)
-            )
+                "layer, the weight must be fully specified." %
+                (dim, input_spec, output_spec))
 
     if bias_axes is not None:
         num_left_elided = elided if left_elided else 0
@@ -316,14 +329,15 @@ def _analyze_split_string(
             if char not in output_spec:
                 raise ValueError(
                     "Bias dimension '%s' was requested, but is not a part "
-                    "of the output specification '%s'" % (char, output_spec)
-                )
+                    "of the output specification '%s'" % (char, output_spec))
 
-        first_bias_location = min([output_spec.find(char) for char in bias_axes])
+        first_bias_location = min(
+            [output_spec.find(char) for char in bias_axes])
         bias_output_spec = output_spec[first_bias_location:]
 
         bias_shape = [
-            idx_map[char] if char in bias_axes else 1 for char in bias_output_spec
+            idx_map[char] if char in bias_axes else 1
+            for char in bias_output_spec
         ]
 
         if not left_elided:

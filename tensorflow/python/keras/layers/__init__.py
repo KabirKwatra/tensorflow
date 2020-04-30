@@ -159,33 +159,26 @@ from tensorflow.python.keras.layers.wrappers import Wrapper
 if tf2.enabled():
     from tensorflow.python.keras.layers.preprocessing.normalization import Normalization
     from tensorflow.python.keras.layers.preprocessing.normalization_v1 import (
-        Normalization as NormalizationV1,
-    )
+        Normalization as NormalizationV1, )
 
     NormalizationV2 = Normalization
     from tensorflow.python.keras.layers.preprocessing.text_vectorization import (
-        TextVectorization,
-    )
+        TextVectorization, )
     from tensorflow.python.keras.layers.preprocessing.text_vectorization_v1 import (
-        TextVectorization as TextVectorizationV1,
-    )
+        TextVectorization as TextVectorizationV1, )
 
     TextVectorizationV2 = TextVectorization
 else:
     from tensorflow.python.keras.layers.preprocessing.normalization_v1 import (
-        Normalization,
-    )
+        Normalization, )
     from tensorflow.python.keras.layers.preprocessing.normalization import (
-        Normalization as NormalizationV2,
-    )
+        Normalization as NormalizationV2, )
 
     NormalizationV1 = Normalization
     from tensorflow.python.keras.layers.preprocessing.text_vectorization_v1 import (
-        TextVectorization,
-    )
+        TextVectorization, )
     from tensorflow.python.keras.layers.preprocessing.text_vectorization import (
-        TextVectorization as TextVectorizationV2,
-    )
+        TextVectorization as TextVectorizationV2, )
 
     TextVectorizationV1 = TextVectorization
 
@@ -216,15 +209,13 @@ else:
 if tf2.enabled():
     from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization
     from tensorflow.python.keras.layers.normalization import (
-        BatchNormalization as BatchNormalizationV1,
-    )
+        BatchNormalization as BatchNormalizationV1, )
 
     BatchNormalizationV2 = BatchNormalization
 else:
     from tensorflow.python.keras.layers.normalization import BatchNormalization
     from tensorflow.python.keras.layers.normalization_v2 import (
-        BatchNormalization as BatchNormalizationV2,
-    )
+        BatchNormalization as BatchNormalizationV2, )
 
     BatchNormalizationV1 = BatchNormalization
 

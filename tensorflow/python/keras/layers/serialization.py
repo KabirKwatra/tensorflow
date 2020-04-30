@@ -125,24 +125,25 @@ def populate_deserializable_objects():
         generic_utils.populate_dict_with_module_objects(
             LOCAL.ALL_OBJECTS,
             ALL_V2_MODULES,
-            obj_filter=lambda x: inspect.isclass(x) and issubclass(x, base_cls),
+            obj_filter=lambda x: inspect.isclass(x) and issubclass(
+                x, base_cls),
         )
 
     # These deserialization aliases are added for backward compatibility,
     # as in TF 1.13, "BatchNormalizationV1" and "BatchNormalizationV2"
     # were used as class name for v1 and v2 version of BatchNormalization,
     # respectively. Here we explicitly convert them to their canonical names.
-    LOCAL.ALL_OBJECTS["BatchNormalizationV1"] = normalization.BatchNormalization
-    LOCAL.ALL_OBJECTS["BatchNormalizationV2"] = normalization_v2.BatchNormalization
+    LOCAL.ALL_OBJECTS[
+        "BatchNormalizationV1"] = normalization.BatchNormalization
+    LOCAL.ALL_OBJECTS[
+        "BatchNormalizationV2"] = normalization_v2.BatchNormalization
 
     # Prevent circular dependencies.
     from tensorflow.python.keras import models  # pylint: disable=g-import-not-at-top
     from tensorflow.python.keras.premade.linear import (
-        LinearModel,
-    )  # pylint: disable=g-import-not-at-top
+        LinearModel, )  # pylint: disable=g-import-not-at-top
     from tensorflow.python.keras.premade.wide_deep import (
-        WideDeepModel,
-    )  # pylint: disable=g-import-not-at-top
+        WideDeepModel, )  # pylint: disable=g-import-not-at-top
 
     LOCAL.ALL_OBJECTS["Input"] = input_layer.Input
     LOCAL.ALL_OBJECTS["InputSpec"] = input_spec.InputSpec
