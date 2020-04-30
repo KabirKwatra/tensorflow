@@ -30,14 +30,14 @@ namespace cpu_backend_gemm {
 enum class Order { kColMajor, kRowMajor };
 
 enum class CachePolicy : std::uint8_t {
-  kNeverCache,
-  kCacheIfLargeSpeedup,
-  kAlwaysCache,
+    kNeverCache,
+    kCacheIfLargeSpeedup,
+    kAlwaysCache,
 };
 
 inline CachePolicy DefaultCachePolicy(bool is_constant_data) {
-  return is_constant_data ? CachePolicy::kCacheIfLargeSpeedup
-                          : CachePolicy::kNeverCache;
+    return is_constant_data ? CachePolicy::kCacheIfLargeSpeedup
+           : CachePolicy::kNeverCache;
 }
 
 // MatrixParams encapsulates the parameters that Gemm needs about each
@@ -48,23 +48,23 @@ inline CachePolicy DefaultCachePolicy(bool is_constant_data) {
 // ruy::ConstCheckingPtr.
 template <typename Scalar>
 struct MatrixParams {
-  // Storage layout order. For now we only do plain linear non-strided
-  // layout. It would be easy to support a stride if needed.
-  Order order = Order::kColMajor;
-  // Number of rows of the matrix.
-  int rows = 0;
-  // Number of columns of the matrix.
-  int cols = 0;
-  // The zero_point, i.e. which Scalar value is to be interpreted as zero.
-  // When Scalar is floating-point, this must be 0.
-  Scalar zero_point = 0;
-  // When the data pointed to by this matrix is constant data, so that it is
-  // valid to assume that equality of pointers implies equality of data,
-  // a CachePolicy may be used instead of the default kNeverCache,
-  // which will enable ruy to take advantage of this constancy of the data to
-  // cache the packing work, which can be a large speedup in matrix*vector
-  // and other narrow shapes.
-  CachePolicy cache_policy = CachePolicy::kNeverCache;
+    // Storage layout order. For now we only do plain linear non-strided
+    // layout. It would be easy to support a stride if needed.
+    Order order = Order::kColMajor;
+    // Number of rows of the matrix.
+    int rows = 0;
+    // Number of columns of the matrix.
+    int cols = 0;
+    // The zero_point, i.e. which Scalar value is to be interpreted as zero.
+    // When Scalar is floating-point, this must be 0.
+    Scalar zero_point = 0;
+    // When the data pointed to by this matrix is constant data, so that it is
+    // valid to assume that equality of pointers implies equality of data,
+    // a CachePolicy may be used instead of the default kNeverCache,
+    // which will enable ruy to take advantage of this constancy of the data to
+    // cache the packing work, which can be a large speedup in matrix*vector
+    // and other narrow shapes.
+    CachePolicy cache_policy = CachePolicy::kNeverCache;
 };
 
 // Enumeration of broad categories of Gemm.
@@ -83,18 +83,18 @@ struct MatrixParams {
 // other then-relevant backend library handles quantized paths in a way that
 // requires knowing this at compile-time.
 enum class QuantizationFlavor {
-  // Floating-point Gemm: the accumulators are not multiplied by any
-  // 'multiplier'.
-  kFloatingPoint,
-  // Quantized Gemm using a single multiplier for all accumulators.
-  kIntegerWithUniformMultiplier,
-  // Quantized Gemm using a separate multipliers for accumulators of each
-  // row of the destination matrix. This is what is called 'per-channel'
-  // in GemmParams. Here we use the more specific 'per-row' terminology
-  // to allow for the possibility of 'per-column' in the future, and to
-  // allow for that to be a separate code path in some back-end such as
-  // gemmlowp.
-  kIntegerWithPerRowMultiplier
+    // Floating-point Gemm: the accumulators are not multiplied by any
+    // 'multiplier'.
+    kFloatingPoint,
+    // Quantized Gemm using a single multiplier for all accumulators.
+    kIntegerWithUniformMultiplier,
+    // Quantized Gemm using a separate multipliers for accumulators of each
+    // row of the destination matrix. This is what is called 'per-channel'
+    // in GemmParams. Here we use the more specific 'per-row' terminology
+    // to allow for the possibility of 'per-column' in the future, and to
+    // allow for that to be a separate code path in some back-end such as
+    // gemmlowp.
+    kIntegerWithPerRowMultiplier
 };
 
 // Additional parameters that Gemm needs, beyond what falls into
@@ -112,40 +112,40 @@ enum class QuantizationFlavor {
 // (only those that need perchannel quantization do).
 template <typename AccumScalar, typename DstScalar,
           QuantizationFlavor quantization_flavor =
-              std::is_floating_point<AccumScalar>::value
-                  ? QuantizationFlavor::kFloatingPoint
-                  : QuantizationFlavor::kIntegerWithUniformMultiplier>
+          std::is_floating_point<AccumScalar>::value
+          ? QuantizationFlavor::kFloatingPoint
+          : QuantizationFlavor::kIntegerWithUniformMultiplier>
 struct GemmParams {
-  // Only for non-floating-point cases. The fixed-point part (i.e. the mantissa)
-  // of the multiplier by which accumulators are multiplied before being casted
-  // to the destination type.
-  AccumScalar multiplier_fixedpoint = 0;
-  // Only for non-floating-point cases. The exponent part of the aforementioned
-  // multiplier.
-  int multiplier_exponent = 0;
-  // Per-channel variant of multiplier_fixedpoint. If not nullptr, this must
-  // point to a buffer of as many values as there are rows in the destination
-  // matrix. Each row of the destination matrix will use the corresponding
-  // buffer element instead of multiplier_fixedpoint.
-  const AccumScalar* multiplier_fixedpoint_perchannel = nullptr;
-  // Per-channel variant of multiplier_exponent. If not nullptr, this must
-  // point to a buffer of as many values as there are rows in the destination
-  // matrix. Each row of the destination matrix will use the corresponding
-  // buffer element instead of multiplier_exponent.
-  //
-  // Either none or both of multiplier_exponent_perchannel and
-  // multiplier_fixedpoint_perchannel must be nullptr.
-  const int* multiplier_exponent_perchannel = nullptr;
-  // The bias vector data, if not null.
-  const AccumScalar* bias = nullptr;
-  // min clamp bound of destination values.
-  DstScalar clamp_min = std::is_floating_point<DstScalar>::value
-                            ? -std::numeric_limits<DstScalar>::infinity()
-                            : std::numeric_limits<DstScalar>::lowest();
-  // max clamp bound of destination values.
-  DstScalar clamp_max = std::is_floating_point<DstScalar>::value
-                            ? std::numeric_limits<DstScalar>::infinity()
-                            : std::numeric_limits<DstScalar>::max();
+    // Only for non-floating-point cases. The fixed-point part (i.e. the mantissa)
+    // of the multiplier by which accumulators are multiplied before being casted
+    // to the destination type.
+    AccumScalar multiplier_fixedpoint = 0;
+    // Only for non-floating-point cases. The exponent part of the aforementioned
+    // multiplier.
+    int multiplier_exponent = 0;
+    // Per-channel variant of multiplier_fixedpoint. If not nullptr, this must
+    // point to a buffer of as many values as there are rows in the destination
+    // matrix. Each row of the destination matrix will use the corresponding
+    // buffer element instead of multiplier_fixedpoint.
+    const AccumScalar* multiplier_fixedpoint_perchannel = nullptr;
+    // Per-channel variant of multiplier_exponent. If not nullptr, this must
+    // point to a buffer of as many values as there are rows in the destination
+    // matrix. Each row of the destination matrix will use the corresponding
+    // buffer element instead of multiplier_exponent.
+    //
+    // Either none or both of multiplier_exponent_perchannel and
+    // multiplier_fixedpoint_perchannel must be nullptr.
+    const int* multiplier_exponent_perchannel = nullptr;
+    // The bias vector data, if not null.
+    const AccumScalar* bias = nullptr;
+    // min clamp bound of destination values.
+    DstScalar clamp_min = std::is_floating_point<DstScalar>::value
+                          ? -std::numeric_limits<DstScalar>::infinity()
+                          : std::numeric_limits<DstScalar>::lowest();
+    // max clamp bound of destination values.
+    DstScalar clamp_max = std::is_floating_point<DstScalar>::value
+                          ? std::numeric_limits<DstScalar>::infinity()
+                          : std::numeric_limits<DstScalar>::max();
 };
 
 /* Convenience typedefs */
@@ -168,34 +168,34 @@ template <typename AccumScalar, typename DstScalar,
           QuantizationFlavor quantization_flavor>
 void ValidateGemmParams(
     const GemmParams<AccumScalar, DstScalar, quantization_flavor>& params) {
-  // Guard consistency of the quantized multiplier fields.
-  if (quantization_flavor == QuantizationFlavor::kFloatingPoint) {
-    TFLITE_DCHECK(!params.multiplier_fixedpoint);
-    TFLITE_DCHECK(!params.multiplier_exponent);
-    TFLITE_DCHECK(!params.multiplier_fixedpoint_perchannel);
-    TFLITE_DCHECK(!params.multiplier_exponent_perchannel);
-  } else if (quantization_flavor ==
-                 QuantizationFlavor::kIntegerWithUniformMultiplier &&
-             !std::is_same<DstScalar, int32_t>::value) {
-    TFLITE_DCHECK(params.multiplier_fixedpoint);
-    // Nothing to check about multiplier_exponent
-    TFLITE_DCHECK(!params.multiplier_fixedpoint_perchannel);
-    TFLITE_DCHECK(!params.multiplier_exponent_perchannel);
-  } else if (quantization_flavor ==
-                 QuantizationFlavor::kIntegerWithPerRowMultiplier &&
-             !std::is_same<DstScalar, int32_t>::value) {
-    TFLITE_DCHECK(!params.multiplier_fixedpoint);
-    TFLITE_DCHECK(!params.multiplier_exponent);
-    TFLITE_DCHECK(params.multiplier_fixedpoint_perchannel);
-    TFLITE_DCHECK(params.multiplier_exponent_perchannel);
-  } else {
-    // For the get raw accumulator case, we should make sure none of the
-    // quantization params are set.
-    TFLITE_DCHECK(!params.multiplier_fixedpoint);
-    TFLITE_DCHECK(!params.multiplier_exponent);
-    TFLITE_DCHECK(!params.multiplier_fixedpoint_perchannel);
-    TFLITE_DCHECK(!params.multiplier_exponent_perchannel);
-  }
+    // Guard consistency of the quantized multiplier fields.
+    if (quantization_flavor == QuantizationFlavor::kFloatingPoint) {
+        TFLITE_DCHECK(!params.multiplier_fixedpoint);
+        TFLITE_DCHECK(!params.multiplier_exponent);
+        TFLITE_DCHECK(!params.multiplier_fixedpoint_perchannel);
+        TFLITE_DCHECK(!params.multiplier_exponent_perchannel);
+    } else if (quantization_flavor ==
+               QuantizationFlavor::kIntegerWithUniformMultiplier &&
+               !std::is_same<DstScalar, int32_t>::value) {
+        TFLITE_DCHECK(params.multiplier_fixedpoint);
+        // Nothing to check about multiplier_exponent
+        TFLITE_DCHECK(!params.multiplier_fixedpoint_perchannel);
+        TFLITE_DCHECK(!params.multiplier_exponent_perchannel);
+    } else if (quantization_flavor ==
+               QuantizationFlavor::kIntegerWithPerRowMultiplier &&
+               !std::is_same<DstScalar, int32_t>::value) {
+        TFLITE_DCHECK(!params.multiplier_fixedpoint);
+        TFLITE_DCHECK(!params.multiplier_exponent);
+        TFLITE_DCHECK(params.multiplier_fixedpoint_perchannel);
+        TFLITE_DCHECK(params.multiplier_exponent_perchannel);
+    } else {
+        // For the get raw accumulator case, we should make sure none of the
+        // quantization params are set.
+        TFLITE_DCHECK(!params.multiplier_fixedpoint);
+        TFLITE_DCHECK(!params.multiplier_exponent);
+        TFLITE_DCHECK(!params.multiplier_fixedpoint_perchannel);
+        TFLITE_DCHECK(!params.multiplier_exponent_perchannel);
+    }
 }
 
 namespace detail {
@@ -203,23 +203,23 @@ namespace detail {
 template <typename LhsScalar, typename RhsScalar, typename AccumScalar,
           typename DstScalar, QuantizationFlavor quantization_flavor>
 struct ValidateTypes {
-  // This generic implementation is for quantized flavors.
-  // kFloatingPoint will be a specialization below.
-  static_assert(!std::is_floating_point<LhsScalar>::value, "");
-  static_assert(!std::is_floating_point<RhsScalar>::value, "");
-  static_assert(!std::is_floating_point<AccumScalar>::value, "");
-  // No requirement on DstScalar --- we might in the future allow it
-  // to be floating point even in a quantized Gemm.
+    // This generic implementation is for quantized flavors.
+    // kFloatingPoint will be a specialization below.
+    static_assert(!std::is_floating_point<LhsScalar>::value, "");
+    static_assert(!std::is_floating_point<RhsScalar>::value, "");
+    static_assert(!std::is_floating_point<AccumScalar>::value, "");
+    // No requirement on DstScalar --- we might in the future allow it
+    // to be floating point even in a quantized Gemm.
 };
 
 template <typename LhsScalar, typename RhsScalar, typename AccumScalar,
           typename DstScalar>
 struct ValidateTypes<LhsScalar, RhsScalar, AccumScalar, DstScalar,
-                     QuantizationFlavor::kFloatingPoint> {
-  static_assert(std::is_floating_point<LhsScalar>::value, "");
-  static_assert(std::is_floating_point<RhsScalar>::value, "");
-  static_assert(std::is_floating_point<AccumScalar>::value, "");
-  static_assert(std::is_floating_point<DstScalar>::value, "");
+           QuantizationFlavor::kFloatingPoint> {
+    static_assert(std::is_floating_point<LhsScalar>::value, "");
+    static_assert(std::is_floating_point<RhsScalar>::value, "");
+    static_assert(std::is_floating_point<AccumScalar>::value, "");
+    static_assert(std::is_floating_point<DstScalar>::value, "");
 };
 
 }  // namespace detail
@@ -233,20 +233,20 @@ void ValidateParams(
     const MatrixParams<RhsScalar>& rhs_params,
     const MatrixParams<DstScalar>& dst_params,
     const GemmParams<AccumScalar, DstScalar, quantization_flavor>& params) {
-  (void)detail::ValidateTypes<LhsScalar, RhsScalar, AccumScalar, DstScalar,
-                              quantization_flavor>();
-  ValidateGemmParams(params);
-  // For now, Gemm only supports this particular combination of storage orders.
-  // Actually the generic ruy path already supports all combinations (with
-  // various performance penalties). On the other hand, gemmlowp and Eigen
-  // paths would require more source code and larger binary code to handle
-  // other combinations (because orders are template parameters in gemmlowp
-  // and Eigen). Since this is TFLite's own internal Gemm library, there is
-  // no point in supporting more than what TFlite currently uses, and that
-  // is for now this single combination.
-  TFLITE_DCHECK(lhs_params.order == Order::kRowMajor);
-  TFLITE_DCHECK(rhs_params.order == Order::kColMajor);
-  TFLITE_DCHECK(dst_params.order == Order::kColMajor);
+    (void)detail::ValidateTypes<LhsScalar, RhsScalar, AccumScalar, DstScalar,
+    quantization_flavor>();
+    ValidateGemmParams(params);
+    // For now, Gemm only supports this particular combination of storage orders.
+    // Actually the generic ruy path already supports all combinations (with
+    // various performance penalties). On the other hand, gemmlowp and Eigen
+    // paths would require more source code and larger binary code to handle
+    // other combinations (because orders are template parameters in gemmlowp
+    // and Eigen). Since this is TFLite's own internal Gemm library, there is
+    // no point in supporting more than what TFlite currently uses, and that
+    // is for now this single combination.
+    TFLITE_DCHECK(lhs_params.order == Order::kRowMajor);
+    TFLITE_DCHECK(rhs_params.order == Order::kColMajor);
+    TFLITE_DCHECK(dst_params.order == Order::kColMajor);
 }
 
 }  // namespace cpu_backend_gemm
