@@ -27,114 +27,114 @@ namespace tensorflow {
 namespace data {
 
 Status DataServiceMasterClient::CreateJob(int64 dataset_id,
-                                          ProcessingMode processing_mode,
-                                          int64* job_id) {
-  TF_RETURN_IF_ERROR(EnsureInitialized());
-  CreateJobRequest req;
-  req.set_dataset_id(dataset_id);
-  req.set_processing_mode(ProcessingModeDef(processing_mode));
-  CreateJobResponse resp;
-  grpc::ClientContext client_ctx;
-  grpc::Status status = stub_->CreateJob(&client_ctx, req, &resp);
-  if (!status.ok()) {
-    return grpc_util::WrapError(
-        absl::StrCat("Failed to create job for dataset with id ", dataset_id),
-        status);
-  }
-  *job_id = resp.job_id();
-  return Status::OK();
+        ProcessingMode processing_mode,
+        int64* job_id) {
+    TF_RETURN_IF_ERROR(EnsureInitialized());
+    CreateJobRequest req;
+    req.set_dataset_id(dataset_id);
+    req.set_processing_mode(ProcessingModeDef(processing_mode));
+    CreateJobResponse resp;
+    grpc::ClientContext client_ctx;
+    grpc::Status status = stub_->CreateJob(&client_ctx, req, &resp);
+    if (!status.ok()) {
+        return grpc_util::WrapError(
+                   absl::StrCat("Failed to create job for dataset with id ", dataset_id),
+                   status);
+    }
+    *job_id = resp.job_id();
+    return Status::OK();
 }
 
 Status DataServiceMasterClient::RegisterDataset(GraphDef dataset,
-                                                int64* dataset_id) {
-  TF_RETURN_IF_ERROR(EnsureInitialized());
-  GetOrRegisterDatasetRequest req;
-  *req.mutable_dataset()->mutable_graph() = dataset;
-  GetOrRegisterDatasetResponse resp;
-  grpc::ClientContext client_ctx;
-  grpc::Status status = stub_->GetOrRegisterDataset(&client_ctx, req, &resp);
-  if (!status.ok()) {
-    return grpc_util::WrapError("Failed to register dataset", status);
-  }
-  *dataset_id = resp.dataset_id();
-  return Status::OK();
+        int64* dataset_id) {
+    TF_RETURN_IF_ERROR(EnsureInitialized());
+    GetOrRegisterDatasetRequest req;
+    *req.mutable_dataset()->mutable_graph() = dataset;
+    GetOrRegisterDatasetResponse resp;
+    grpc::ClientContext client_ctx;
+    grpc::Status status = stub_->GetOrRegisterDataset(&client_ctx, req, &resp);
+    if (!status.ok()) {
+        return grpc_util::WrapError("Failed to register dataset", status);
+    }
+    *dataset_id = resp.dataset_id();
+    return Status::OK();
 }
 
 Status DataServiceMasterClient::GetTasks(int64 job_id,
-                                         std::vector<TaskInfo>* tasks,
-                                         bool* job_finished) {
-  TF_RETURN_IF_ERROR(EnsureInitialized());
-  GetTasksRequest req;
-  req.set_job_id(job_id);
-  GetTasksResponse resp;
-  grpc_impl::ClientContext ctx;
-  grpc::Status s = stub_->GetTasks(&ctx, req, &resp);
-  if (!s.ok()) {
-    return grpc_util::WrapError("Failed to get tasks", s);
-  }
-  tasks->clear();
-  for (auto& task : resp.task_info()) {
-    tasks->push_back(task);
-  }
-  *job_finished = resp.job_finished();
-  return Status::OK();
+        std::vector<TaskInfo>* tasks,
+        bool* job_finished) {
+    TF_RETURN_IF_ERROR(EnsureInitialized());
+    GetTasksRequest req;
+    req.set_job_id(job_id);
+    GetTasksResponse resp;
+    grpc_impl::ClientContext ctx;
+    grpc::Status s = stub_->GetTasks(&ctx, req, &resp);
+    if (!s.ok()) {
+        return grpc_util::WrapError("Failed to get tasks", s);
+    }
+    tasks->clear();
+    for (auto& task : resp.task_info()) {
+        tasks->push_back(task);
+    }
+    *job_finished = resp.job_finished();
+    return Status::OK();
 }
 
 Status DataServiceMasterClient::EnsureInitialized() {
-  std::shared_ptr<grpc::ChannelCredentials> credentials;
-  TF_RETURN_IF_ERROR(
-      CredentialsFactory::CreateClientCredentials(protocol_, &credentials));
-  auto channel = grpc::CreateChannel(address_, credentials);
-  stub_ = MasterService::NewStub(channel);
-  return Status::OK();
+    std::shared_ptr<grpc::ChannelCredentials> credentials;
+    TF_RETURN_IF_ERROR(
+        CredentialsFactory::CreateClientCredentials(protocol_, &credentials));
+    auto channel = grpc::CreateChannel(address_, credentials);
+    stub_ = MasterService::NewStub(channel);
+    return Status::OK();
 }
 
 Status DataServiceWorkerClient::GetElement(int64 task_id,
-                                           CompressedElement* element,
-                                           bool* end_of_sequence) {
-  TF_RETURN_IF_ERROR(EnsureInitialized());
-  GetElementRequest req;
-  req.set_task_id(task_id);
-  GetElementResponse resp;
-  grpc_impl::ClientContext ctx;
-  grpc::Status s = stub_->GetElement(&ctx, req, &resp);
-  if (!s.ok()) {
-    return grpc_util::WrapError("Failed to get element", s);
-  }
-  *end_of_sequence = resp.end_of_sequence();
-  if (!*end_of_sequence) {
-    *element = std::move(*resp.mutable_compressed_element());
-  }
-  return Status::OK();
+        CompressedElement* element,
+        bool* end_of_sequence) {
+    TF_RETURN_IF_ERROR(EnsureInitialized());
+    GetElementRequest req;
+    req.set_task_id(task_id);
+    GetElementResponse resp;
+    grpc_impl::ClientContext ctx;
+    grpc::Status s = stub_->GetElement(&ctx, req, &resp);
+    if (!s.ok()) {
+        return grpc_util::WrapError("Failed to get element", s);
+    }
+    *end_of_sequence = resp.end_of_sequence();
+    if (!*end_of_sequence) {
+        *element = std::move(*resp.mutable_compressed_element());
+    }
+    return Status::OK();
 }
 
 Status DataServiceWorkerClient::EnsureInitialized() {
-  std::shared_ptr<grpc::ChannelCredentials> credentials;
-  TF_RETURN_IF_ERROR(
-      CredentialsFactory::CreateClientCredentials(protocol_, &credentials));
-  grpc::ChannelArguments args;
-  args.SetMaxReceiveMessageSize(-1);
-  auto channel = grpc::CreateCustomChannel(address_, credentials, args);
-  stub_ = WorkerService::NewStub(channel);
-  return Status::OK();
+    std::shared_ptr<grpc::ChannelCredentials> credentials;
+    TF_RETURN_IF_ERROR(
+        CredentialsFactory::CreateClientCredentials(protocol_, &credentials));
+    grpc::ChannelArguments args;
+    args.SetMaxReceiveMessageSize(-1);
+    auto channel = grpc::CreateCustomChannel(address_, credentials, args);
+    stub_ = WorkerService::NewStub(channel);
+    return Status::OK();
 }
 
 Status CreateDataServiceMasterClient(
     absl::string_view address, absl::string_view protocol,
     std::unique_ptr<DataServiceMasterClient>* out) {
-  auto client = absl::make_unique<DataServiceMasterClient>(address, protocol);
-  TF_RETURN_IF_ERROR(client->Initialize());
-  *out = std::move(client);
-  return Status::OK();
+    auto client = absl::make_unique<DataServiceMasterClient>(address, protocol);
+    TF_RETURN_IF_ERROR(client->Initialize());
+    *out = std::move(client);
+    return Status::OK();
 }
 
 Status CreateDataServiceWorkerClient(
     absl::string_view address, absl::string_view protocol,
     std::unique_ptr<DataServiceWorkerClient>* out) {
-  auto client = absl::make_unique<DataServiceWorkerClient>(address, protocol);
-  TF_RETURN_IF_ERROR(client->Initialize());
-  *out = std::move(client);
-  return Status::OK();
+    auto client = absl::make_unique<DataServiceWorkerClient>(address, protocol);
+    TF_RETURN_IF_ERROR(client->Initialize());
+    *out = std::move(client);
+    return Status::OK();
 }
 }  // namespace data
 }  // namespace tensorflow
