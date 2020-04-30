@@ -144,16 +144,10 @@ class CategoryCrossing(Layer):
        ]`
     """
 
-    def __init__(self,
-                 depth=None,
-                 num_bins=None,
-                 hash_key=None,
-                 name=None,
-                 **kwargs):
+    def __init__(self, depth=None, num_bins=None, hash_key=None, name=None, **kwargs):
         # TODO(tanzheny): Consider making seperator configurable.
         if num_bins is None and hash_key is not None:
-            raise ValueError(
-                '`hash_key` is only valid when `num_bins` is not None')
+            raise ValueError("`hash_key` is only valid when `num_bins` is not None")
         super(CategoryCrossing, self).__init__(name=name, **kwargs)
         self.depth = depth
         self.num_bins = num_bins
@@ -167,7 +161,8 @@ class CategoryCrossing(Layer):
         """Gets the crossed output from a partial list/tuple of inputs."""
         if self.num_bins is not None:
             partial_output = sparse_ops.sparse_cross_hashed(
-                partial_inputs, num_buckets=self.num_bins, hash_key=self.hash_key)
+                partial_inputs, num_buckets=self.num_bins, hash_key=self.hash_key
+            )
         else:
             partial_output = sparse_ops.sparse_cross(partial_inputs)
 
@@ -191,8 +186,9 @@ class CategoryCrossing(Layer):
         else:
             if any([ragged_tensor.is_ragged(inp) for inp in inputs]):
                 raise ValueError(
-                    'Inputs must be either all `RaggedTensor`, or none of them should '
-                    'be `RaggedTensor`, got {}'.format(inputs))
+                    "Inputs must be either all `RaggedTensor`, or none of them should "
+                    "be `RaggedTensor`, got {}".format(inputs)
+                )
 
             if any([isinstance(inp, sparse_tensor.SparseTensor) for inp in inputs]):
                 sparse_out = True
@@ -201,11 +197,13 @@ class CategoryCrossing(Layer):
         for depth in depth_tuple:
             if len(inputs) < depth:
                 raise ValueError(
-                    'Number of inputs cannot be less than depth, got {} input tensors, '
-                    'and depth {}'.format(len(inputs), depth))
+                    "Number of inputs cannot be less than depth, got {} input tensors, "
+                    "and depth {}".format(len(inputs), depth)
+                )
             for partial_inps in itertools.combinations(inputs, depth):
                 partial_out = self.partial_crossing(
-                    partial_inps, ragged_out, sparse_out)
+                    partial_inps, ragged_out, sparse_out
+                )
                 outputs.append(partial_out)
         if sparse_out:
             return sparse_ops.sparse_concat_v2(axis=1, sp_inputs=outputs)
@@ -213,15 +211,15 @@ class CategoryCrossing(Layer):
 
     def compute_output_shape(self, input_shape):
         if not isinstance(input_shape, (tuple, list)):
-            raise ValueError('A `CategoryCrossing` layer should be called '
-                             'on a list of inputs.')
+            raise ValueError(
+                "A `CategoryCrossing` layer should be called " "on a list of inputs."
+            )
         input_shapes = input_shape
         batch_size = None
         for inp_shape in input_shapes:
             inp_tensor_shape = tensor_shape.TensorShape(inp_shape).as_list()
             if len(inp_tensor_shape) != 2:
-                raise ValueError(
-                    'Inputs must be rank 2, get {}'.format(input_shapes))
+                raise ValueError("Inputs must be rank 2, get {}".format(input_shapes))
             if batch_size is None:
                 batch_size = inp_tensor_shape[0]
         # The second dimension is dynamic based on inputs.
@@ -232,14 +230,13 @@ class CategoryCrossing(Layer):
         input_shapes = [x.shape for x in input_spec]
         output_shape = self.compute_output_shape(input_shapes)
         output_dtype = dtypes.int64 if self.num_bins else dtypes.string
-        return sparse_tensor.SparseTensorSpec(
-            shape=output_shape, dtype=output_dtype)
+        return sparse_tensor.SparseTensorSpec(shape=output_shape, dtype=output_dtype)
 
     def get_config(self):
         config = {
-            'depth': self.depth,
-            'num_bins': self.num_bins,
-            'hash_key': self.hash_key
+            "depth": self.depth,
+            "num_bins": self.num_bins,
+            "hash_key": self.hash_key,
         }
         base_config = super(CategoryCrossing, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))

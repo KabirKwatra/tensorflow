@@ -38,8 +38,9 @@ def get_reduce_op(reduction_str):
     elif reduction_str == "sum":
         return math_ops.reduce_sum
     else:
-        raise ValueError("Reduction %s is not supported for unweighted inputs." %
-                         reduction_str)
+        raise ValueError(
+            "Reduction %s is not supported for unweighted inputs." % reduction_str
+        )
 
 
 class Reduction(Layer):
@@ -67,6 +68,7 @@ class Reduction(Layer):
       weights: An optional tensor or constant of the same shape as inputs that
         will weight the input data before it is reduced.
     """
+
     # TODO(momernick): Add example here.
 
     def __init__(self, reduction, axis=-2, **kwargs):
@@ -104,15 +106,15 @@ class Reduction(Layer):
         # sqrtn is also more complicated: it's like mean but with a normalized
         # divisor.
         if self.reduction == "sqrtn":
-            logging.warning("Reduction `sqrtn` is deprecated and will be removed "
-                            "2021-01-01. Please use the `sum` reduction and divide "
-                            "the output by the normalized weights instead.")
+            logging.warning(
+                "Reduction `sqrtn` is deprecated and will be removed "
+                "2021-01-01. Please use the `sum` reduction and divide "
+                "the output by the normalized weights instead."
+            )
             input_sum = math_ops.reduce_sum(weighted_inputs, axis=self.axis)
             squared_weights = math_ops.pow(weights, 2)
-            squared_weights_sum = math_ops.reduce_sum(
-                squared_weights, axis=self.axis)
+            squared_weights_sum = math_ops.reduce_sum(squared_weights, axis=self.axis)
             sqrt_weights_sum = math_ops.sqrt(squared_weights_sum)
             return math_ops.divide(input_sum, sqrt_weights_sum)
 
-        raise ValueError("%s is not a supported weighted reduction." %
-                         self.reduction)
+        raise ValueError("%s is not a supported weighted reduction." % self.reduction)

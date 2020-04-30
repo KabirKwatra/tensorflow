@@ -72,19 +72,17 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
       sparse: Boolean. If true, returns a `SparseTensor` instead of a dense
         `Tensor`. Defaults to `False`.
     """
+
     # TODO(momernick): Add an examples section to the docstring.
 
-    def __init__(self,
-                 max_tokens=None,
-                 output_mode=COUNT,
-                 sparse=False,
-                 **kwargs):
+    def __init__(self, max_tokens=None, output_mode=COUNT, sparse=False, **kwargs):
         # 'output_mode' must be one of (COUNT, BINARY, TFIDF)
         layer_utils.validate_string_arg(
             output_mode,
             allowable_strings=(COUNT, BINARY, TFIDF),
             layer_name="CategoricalEncoding",
-            arg_name="output_mode")
+            arg_name="output_mode",
+        )
 
         # If max_tokens is set, the value must be greater than 1 - otherwise we
         # are creating a 0-element vocab, which doesn't make sense.
@@ -93,8 +91,8 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
 
         # We need to call super() before we call _add_state_variable().
         combiner = _CategoricalEncodingCombiner(
-            compute_max_element=max_tokens is None,
-            compute_idf=output_mode == TFIDF)
+            compute_max_element=max_tokens is None, compute_idf=output_mode == TFIDF
+        )
         super(CategoricalEncoding, self).__init__(combiner=combiner, **kwargs)
 
         self._max_tokens = max_tokens
@@ -109,7 +107,8 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
                 name=_NUM_ELEMENTS_NAME,
                 shape=(),
                 dtype=dtypes.int32,
-                initializer=init_ops.zeros_initializer)
+                initializer=init_ops.zeros_initializer,
+            )
 
         if self._output_mode == TFIDF:
             # The TF-IDF weight may have a (None,) tensorshape. This creates
@@ -119,7 +118,10 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
             # does not depend on the shape of the weight (as all other initializers
             # do) since the weight is not known. Hence the lambda shape, dtype: [0].
             if max_tokens is None:
-                def initializer(shape, dtype): return [0]
+
+                def initializer(shape, dtype):
+                    return [0]
+
             else:
                 initializer = init_ops.zeros_initializer
 
@@ -127,7 +129,8 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
                 name=_IDF_NAME,
                 shape=tensor_shape.TensorShape((max_tokens,)),
                 dtype=K.floatx(),
-                initializer=initializer)
+                initializer=initializer,
+            )
 
     def compute_output_shape(self, input_shape):
         return tensor_shape.TensorShape([input_shape[0], self._max_tokens])
@@ -137,7 +140,8 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
         output_dtype = K.floatx() if self._output_mode == TFIDF else dtypes.int64
         if self._sparse:
             return sparse_tensor.SparseTensorSpec(
-                shape=output_shape, dtype=output_dtype)
+                shape=output_shape, dtype=output_dtype
+            )
         else:
             return tensor_spec.TensorSpec(shape=output_shape, dtype=output_dtype)
 
@@ -158,19 +162,18 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
           RuntimeError: if the layer cannot be adapted at this time.
         """
         if not reset_state:
-            raise ValueError(
-                "CategoricalEncoding does not support streaming adapts.")
+            raise ValueError("CategoricalEncoding does not support streaming adapts.")
 
         if self._called and self._max_tokens is None:
             raise RuntimeError(
                 "CategoricalEncoding can't be adapted after being called "
-                "if max_tokens is None.")
+                "if max_tokens is None."
+            )
         super(CategoricalEncoding, self).adapt(data, reset_state)
 
     def _set_state_variables(self, updates):
         if not self.built:
-            raise RuntimeError(
-                "_set_state_variables() must be called after build().")
+            raise RuntimeError("_set_state_variables() must be called after build().")
         if self._max_tokens is None:
             self.set_num_elements(updates[_NUM_ELEMENTS_NAME])
         if self._output_mode == TFIDF:
@@ -198,7 +201,8 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
             return inputs.to_sparse()
         else:
             indices = array_ops.where_v2(
-                math_ops.greater_equal(inputs, array_ops.constant(0, inputs.dtype)))
+                math_ops.greater_equal(inputs, array_ops.constant(0, inputs.dtype))
+            )
             values = array_ops.gather_nd(inputs, indices)
             shape = array_ops.shape(inputs, out_type=dtypes.int64)
             return sparse_tensor.SparseTensor(indices, values, shape)
@@ -207,27 +211,32 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
         if self._max_tokens is not None:
             raise RuntimeError(
                 "In order to dynamically set the number of elements, the "
-                "layer's 'max_tokens' arg must be set to None.")
+                "layer's 'max_tokens' arg must be set to None."
+            )
         if not isinstance(num_elements, numbers.Integral):
             raise ValueError("num_elements must be a scalar integer.")
         if self._called:
-            raise RuntimeError("num_elements cannot be changed after the layer is "
-                               "called.")
+            raise RuntimeError(
+                "num_elements cannot be changed after the layer is " "called."
+            )
         K.set_value(self.num_elements, num_elements)
 
     def set_tfidf_data(self, tfidf_data):
         tfidf_data = self._convert_to_ndarray(tfidf_data)
         if self._output_mode != TFIDF:
             raise RuntimeError(
-                "In order to set TF-IDF data, the output mode must be 'tf-idf'.")
+                "In order to set TF-IDF data, the output mode must be 'tf-idf'."
+            )
         if tfidf_data.ndim != 1:
             raise ValueError("TF-IDF data must be a 1-index array.")
         if self._max_tokens is not None:
             input_data_length = tfidf_data.shape[0]
             if input_data_length > self._max_tokens:
-                raise ValueError("The array provided has %d elements. This layer is "
-                                 "configured to only allow %d elements." %
-                                 (input_data_length, self._max_tokens))
+                raise ValueError(
+                    "The array provided has %d elements. This layer is "
+                    "configured to only allow %d elements."
+                    % (input_data_length, self._max_tokens)
+                )
             if input_data_length < self._max_tokens:
                 tfidf_data = np.resize(tfidf_data, (self._max_tokens,))
         K.set_value(self.tf_idf_weights, tfidf_data)
@@ -241,37 +250,42 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
 
         if self._sparse:
             if self._output_mode != COUNT:
-                raise ValueError("Only supports `sparse=True` when `output_mode` "
-                                 ' is \"count\", got {}'.format(self._output_mode))
+                raise ValueError(
+                    "Only supports `sparse=True` when `output_mode` "
+                    ' is "count", got {}'.format(self._output_mode)
+                )
             inputs = self._convert_to_sparse_inputs(inputs)
 
             # Consider having sparse.one_hot
             # Append values to indices, and reduce sum to get the counts.
             tokens = array_ops.expand_dims(
-                math_ops.cast(inputs.values, dtypes.int64), axis=1)
+                math_ops.cast(inputs.values, dtypes.int64), axis=1
+            )
             count_tokens = array_ops.concat([inputs.indices, tokens], axis=1)
-            count_values = array_ops.ones_like(
-                inputs.values, dtype=dtypes.int64)
+            count_values = array_ops.ones_like(inputs.values, dtype=dtypes.int64)
             unreduced_count_shape = array_ops.concat(
-                [inputs.dense_shape, [out_depth]], axis=0)
+                [inputs.dense_shape, [out_depth]], axis=0
+            )
             counts = sparse_tensor.SparseTensor(
                 indices=count_tokens,
                 values=count_values,
-                dense_shape=unreduced_count_shape)
+                dense_shape=unreduced_count_shape,
+            )
             count_data = sparse_ops.sparse_reduce_sum_v2(
-                counts, axis=1, output_is_sparse=True)
+                counts, axis=1, output_is_sparse=True
+            )
             return count_data
 
         # If the input is a sparse tensor, we densify it with the default value of
         # -1. Because -1 is ignored by one_hot, this effectively drops the non-set
         # positions from the output encoding.
         if isinstance(inputs, sparse_tensor.SparseTensor):
-            inputs = sparse_ops.sparse_tensor_to_dense(
-                inputs, default_value=-1)
+            inputs = sparse_ops.sparse_tensor_to_dense(inputs, default_value=-1)
 
         if self._output_mode == BINARY:
             bool_one_hot_data = array_ops.one_hot(
-                inputs, depth=out_depth, on_value=True, off_value=False)
+                inputs, depth=out_depth, on_value=True, off_value=False
+            )
             reduced_bool_data = math_ops.reduce_any(bool_one_hot_data, axis=1)
             binary_data = math_ops.cast(reduced_bool_data, dtypes.int64)
             binary_data.set_shape(tensor_shape.TensorShape((None, out_depth)))
@@ -294,7 +308,8 @@ class CategoricalEncoding(base_preprocessing_layer.CombinerPreprocessingLayer):
 
 
 class _CategoricalEncodingAccumulator(
-        collections.namedtuple("Accumulator", ["data", "per_doc_count_dict"])):
+    collections.namedtuple("Accumulator", ["data", "per_doc_count_dict"])
+):
     pass
 
 
@@ -310,6 +325,7 @@ class _CategoricalEncodingCombiner(base_preprocessing_layer.Combiner):
       compute_idf: (Optional) If set, the inverse document frequency will be
         computed for each value.
     """
+
     # These are indices into the accumulator's `data` array.
     MAX_VALUE_IDX = 0
     DOC_ID_IDX = 1
@@ -349,18 +365,20 @@ class _CategoricalEncodingCombiner(base_preprocessing_layer.Combiner):
         base_accumulator = accumulators[0]
 
         for accumulator in accumulators[1:]:
-            base_accumulator.data[self.DOC_ID_IDX] += accumulator.data[
-                self.DOC_ID_IDX]
+            base_accumulator.data[self.DOC_ID_IDX] += accumulator.data[self.DOC_ID_IDX]
             base_accumulator.data[self.MAX_VALUE_IDX] = max(
                 base_accumulator.data[self.MAX_VALUE_IDX],
-                accumulator.data[self.MAX_VALUE_IDX])
+                accumulator.data[self.MAX_VALUE_IDX],
+            )
             if self._compute_idf:
                 for token, value in accumulator.per_doc_count_dict.items():
                     # Any newly created token counts in 'base_accumulator''s
                     # per_doc_count_dict will have a last_doc_id of -1. This is always
                     # less than the next doc id (which are strictly positive), so any
                     # future occurrences are guaranteed to be counted.
-                    base_accumulator.per_doc_count_dict[token]["count"] += value["count"]
+                    base_accumulator.per_doc_count_dict[token]["count"] += value[
+                        "count"
+                    ]
 
         return base_accumulator
 
@@ -406,8 +424,7 @@ class _CategoricalEncodingCombiner(base_preprocessing_layer.Combiner):
             # the dict directly for those values gives us meaningful counts (of 0).
             # However, this also means we can't just extract the values in
             # document_counts - we need to do a deliberate indexing using range().
-            doc_counts = [document_counts[i]["count"]
-                          for i in range(max_element + 1)]
+            doc_counts = [document_counts[i]["count"] for i in range(max_element + 1)]
             idf = self._inverse_document_frequency(doc_counts, num_documents)
             output_dict[_IDF_NAME] = idf
 
@@ -416,18 +433,17 @@ class _CategoricalEncodingCombiner(base_preprocessing_layer.Combiner):
     def restore(self, output):
         """Creates an accumulator based on 'output'."""
         raise NotImplementedError(
-            "CategoricalEncoding does not restore or support streaming updates.")
+            "CategoricalEncoding does not restore or support streaming updates."
+        )
 
     def serialize(self, accumulator):
         """Serializes an accumulator for a remote call."""
         output_dict = {}
         output_dict["data"] = accumulator.data
         if self._compute_idf:
-            output_dict["idf_vocab"] = list(
-                accumulator.per_doc_count_dict.keys())
+            output_dict["idf_vocab"] = list(accumulator.per_doc_count_dict.keys())
             output_dict["idf_counts"] = [
-                counter["count"]
-                for counter in accumulator.per_doc_count_dict.values()
+                counter["count"] for counter in accumulator.per_doc_count_dict.values()
             ]
         return compat.as_bytes(json.dumps(output_dict))
 
@@ -440,12 +456,14 @@ class _CategoricalEncodingCombiner(base_preprocessing_layer.Combiner):
             accumulator.data[i] = value
 
         if self._compute_idf:
-            def create_dict(x): return {"count": x, "last_doc_id": -1}
+
+            def create_dict(x):
+                return {"count": x, "last_doc_id": -1}
+
             idf_count_dicts = [
                 create_dict(count) for count in accumulator_dict["idf_counts"]
             ]
-            idf_dict = dict(
-                zip(accumulator_dict["idf_vocab"], idf_count_dicts))
+            idf_dict = dict(zip(accumulator_dict["idf_vocab"], idf_count_dicts))
             accumulator.per_doc_count_dict.update(idf_dict)
 
         return accumulator
@@ -454,7 +472,10 @@ class _CategoricalEncodingCombiner(base_preprocessing_layer.Combiner):
         """Accumulates a sorted array of vocab tokens and corresponding counts."""
 
         if self._compute_idf:
-            def create_default_dict(): return {"count": 0, "last_doc_id": -1}
+
+            def create_default_dict():
+                return {"count": 0, "last_doc_id": -1}
+
             per_doc_count_dict = collections.defaultdict(create_default_dict)
         else:
             per_doc_count_dict = None

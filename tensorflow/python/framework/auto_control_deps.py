@@ -97,15 +97,21 @@ LEGACY_RANDOM_OPS = [
 ]
 
 _ORDER_INSENSITIVE_STATEFUL_OPS = [
-    "CudnnRNNV2", "CudnnRNNV3", "CudnnRNNBackpropV2", "CudnnRNNBackpropV3",
-    "EnqueueTPUEmbeddingSparseBatch", "EnqueueTPUEmbeddingIntegerBatch",
-    "EnqueueTPUEmbeddingSparseTensorBatch"
+    "CudnnRNNV2",
+    "CudnnRNNV3",
+    "CudnnRNNBackpropV2",
+    "CudnnRNNBackpropV3",
+    "EnqueueTPUEmbeddingSparseBatch",
+    "EnqueueTPUEmbeddingIntegerBatch",
+    "EnqueueTPUEmbeddingSparseTensorBatch",
 ]
 # LINT.ThenChange(//tensorflow/core/grappler/optimizers/function_optimizer.cc)
 
 _ALL_BLACKLISTED_OPS = (
-    set(ASYNC_STATEFUL_OPS) | set(LEGACY_RANDOM_OPS)
-    | set(_ORDER_INSENSITIVE_STATEFUL_OPS))
+    set(ASYNC_STATEFUL_OPS)
+    | set(LEGACY_RANDOM_OPS)
+    | set(_ORDER_INSENSITIVE_STATEFUL_OPS)
+)
 
 # Op types that are marked as stateless, but should be whitelisted to add auto
 # control dependencies.
@@ -124,7 +130,8 @@ _WHITELIST_STATELESS_OPS = [
 def op_is_stateful(op):
     # pylint: disable=protected-access
     return (op._is_stateful and op.type not in _ALL_BLACKLISTED_OPS) or (
-        op.type in _WHITELIST_STATELESS_OPS)
+        op.type in _WHITELIST_STATELESS_OPS
+    )
 
 
 class ResourceType(enum.Enum):
@@ -208,7 +215,8 @@ class AutomaticControlDependencies(object):
             self._returned_tensors.add(indices)
             self._returned_tensors.add(values)
             return sparse_tensor.SparseTensor(
-                indices, values, dense_shape=tensor.dense_shape)
+                indices, values, dense_shape=tensor.dense_shape
+            )
         elif isinstance(tensor, tensor_array_ops.TensorArray):
             flow = array_ops.identity(tensor.flow)
             self._returned_tensors.add(flow)
@@ -234,8 +242,9 @@ class AutomaticControlDependencies(object):
         self._n_operations = len(self._graph.get_operations())
         return self
 
-    def _process_switch(self, switch_op, ops_which_must_run,
-                        last_write_to_resource, merge_for_resource):
+    def _process_switch(
+        self, switch_op, ops_which_must_run, last_write_to_resource, merge_for_resource
+    ):
         """Processes a switch node for a resource input.
 
         When tensorflow creates a cond, it creates a control flow context for each
@@ -274,16 +283,17 @@ class AutomaticControlDependencies(object):
         inp = switch_op.inputs[0]
         input_id = ops.tensor_id(inp)
         if inp.dtype == dtypes_module.resource and inp.op.type == "Switch":
-            self._process_switch(inp.op, ops_which_must_run, last_write_to_resource,
-                                 merge_for_resource)
+            self._process_switch(
+                inp.op, ops_which_must_run, last_write_to_resource, merge_for_resource
+            )
         output = switch_op.outputs[0]
         output_id = ops.tensor_id(output)
         if output_id in merge_for_resource:
             return
-        new_merge = control_flow_ops.merge(
-            switch_op.outputs, name="artificial_merge")
-        new_merge[0].op._control_flow_context = (
-            switch_op._control_flow_context.outer_context)
+        new_merge = control_flow_ops.merge(switch_op.outputs, name="artificial_merge")
+        new_merge[
+            0
+        ].op._control_flow_context = switch_op._control_flow_context.outer_context
         # Ensures the merge always runs
         ops_which_must_run.add(new_merge[0].op)
         if input_id in last_write_to_resource:
@@ -304,7 +314,8 @@ class AutomaticControlDependencies(object):
 
         if self._graph is not ops.get_default_graph():
             raise RuntimeError(
-                "Graph changed while trying to add control dependencies.")
+                "Graph changed while trying to add control dependencies."
+            )
 
         if hasattr(self._graph, "outer_graph"):
             outer_val = self._graph.outer_graph._add_control_dependencies
@@ -329,7 +340,7 @@ class AutomaticControlDependencies(object):
         # merge which must depend on ops which use this resource
         merge_for_resource = {}
 
-        new_operations = self._graph.get_operations()[self._n_operations:]
+        new_operations = self._graph.get_operations()[self._n_operations :]
 
         # Ensures that uses of resource tensors get serialized properly and all
         # execute. This is done by keeping a map from resource tensor to the last op
@@ -365,16 +376,18 @@ class AutomaticControlDependencies(object):
                 continue
             control_inputs = set()
             # Ensure stateful ops run
-            if (op_def_registry.get(op.type) is None or
-                    (op_is_stateful(op) and op.type not in utils.RESOURCE_READ_OPS)):
+            if op_def_registry.get(op.type) is None or (
+                op_is_stateful(op) and op.type not in utils.RESOURCE_READ_OPS
+            ):
                 # TODO(srbs): Do not add functional ops to `ops_which_must_run` if
                 # they only have variable reads and are otherwise stateless.
                 ops_which_must_run.add(op)
             # Make a note of all opened manager_ids.
             if op.type == "NoOp":
                 try:
-                    collective_manager_scopes_opened[op.get_attr(
-                        "_collective_manager_id")] = op
+                    collective_manager_scopes_opened[
+                        op.get_attr("_collective_manager_id")
+                    ] = op
                 except ValueError:
                     pass
             # Ignore switches (they're handled separately)
@@ -406,14 +419,19 @@ class AutomaticControlDependencies(object):
                 resource_inputs.add(input_id)
                 # Deal with switches, finally.
                 if inp.op.type == "Switch":
-                    self._process_switch(inp.op, ops_which_must_run,
-                                         last_write_to_resource, merge_for_resource)
+                    self._process_switch(
+                        inp.op,
+                        ops_which_must_run,
+                        last_write_to_resource,
+                        merge_for_resource,
+                    )
                 is_building_function = op.graph.building_function
                 # Ensure uses of resources are serialized
                 if input_id in last_write_to_resource:
                     if is_building_function or (
-                            last_write_to_resource[input_id]._control_flow_context
-                            is op._control_flow_context):
+                        last_write_to_resource[input_id]._control_flow_context
+                        is op._control_flow_context
+                    ):
                         control_inputs.add(last_write_to_resource[input_id])
                 # Ensure merges happen after the closing of a cond block
                 if input_id in merge_for_resource:
@@ -421,13 +439,15 @@ class AutomaticControlDependencies(object):
                 if is_read:
                     reads_since_last_write_to_resource[input_id].append(op)
                 else:
-                    control_inputs.update(
-                        reads_since_last_write_to_resource[input_id])
+                    control_inputs.update(reads_since_last_write_to_resource[input_id])
                     reads_since_last_write_to_resource[input_id] = []
                     last_write_to_resource[input_id] = op
 
-            if (op_is_stateful(op) and not resource_inputs
-                    and op._control_flow_context is None):
+            if (
+                op_is_stateful(op)
+                and not resource_inputs
+                and op._control_flow_context is None
+            ):
                 if None in last_write_to_resource:
                     op._add_control_input(last_write_to_resource[None])
                 last_write_to_resource[None] = op
@@ -437,20 +457,21 @@ class AutomaticControlDependencies(object):
             for manager_id in manager_ids:
                 if manager_id in collective_manager_scopes_opened:
                     # Chain this function call if the scope was opened.
-                    op._add_control_input(
-                        collective_manager_scopes_opened[manager_id])
+                    op._add_control_input(collective_manager_scopes_opened[manager_id])
                     collective_manager_scopes_opened[manager_id] = op
                 else:
                     # If this op is in a scope not created here, create a chain starting
                     # at this op.
                     if manager_id in collective_manager_scopes_used:
                         op._add_control_input(
-                            collective_manager_scopes_used[manager_id])
+                            collective_manager_scopes_used[manager_id]
+                        )
                     collective_manager_scopes_used[manager_id] = op
 
             if control_inputs and not is_building_function:
                 control_inputs = [
-                    c for c in control_inputs
+                    c
+                    for c in control_inputs
                     if c._control_flow_context is op._control_flow_context
                 ]
 
@@ -465,7 +486,8 @@ class AutomaticControlDependencies(object):
                     updated_ops_which_must_run = self.ops_which_must_run
                 else:
                     updated_ops_which_must_run = [
-                        o for o in self.ops_which_must_run
+                        o
+                        for o in self.ops_which_must_run
                         if o._control_flow_context is r.op._control_flow_context
                     ]
                 r.op._add_control_inputs(updated_ops_which_must_run)
@@ -529,8 +551,7 @@ def _get_resource_inputs(op):
             # resource_inputs.
             # TODO(srbs): An alternate would be to just compare the old and new set
             # but that may not be as fast.
-            updated = _acd_resource_resolvers_registry.lookup(
-                key)(op, reads, writes)
+            updated = _acd_resource_resolvers_registry.lookup(key)(op, reads, writes)
             if updated:
                 # Conservatively remove any resources from `reads` that are also writes.
                 reads = reads.difference(writes)
@@ -538,8 +559,9 @@ def _get_resource_inputs(op):
 
     # Note: A resource handle that is not written to is treated as read-only. We
     # don't have a special way of denoting an unused resource.
-    return ([(t, ResourceType.READ_ONLY) for t in reads] +
-            [(t, ResourceType.READ_WRITE) for t in writes])
+    return [(t, ResourceType.READ_ONLY) for t in reads] + [
+        (t, ResourceType.READ_WRITE) for t in writes
+    ]
 
 
 def automatic_control_dependencies(f):
