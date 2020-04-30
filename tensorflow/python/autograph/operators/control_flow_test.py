@@ -56,19 +56,19 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
         control_flow.for_stmt(
             constant_op.constant([1, 2, 3, 4]),
             extra_test=lambda: True,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={},
         )
-        self.assertEqual(self.evaluate(s), (1234,))
+        self.assertEqual(self.evaluate(s), (1234, ))
 
     def test_range_tensor(self):
         def body(i):
@@ -77,19 +77,19 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
         control_flow.for_stmt(
             math_ops.range(5),
             extra_test=lambda: True,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={"iterate_names": "i"},
         )
-        self.assertEqual(self.evaluate(s), (1234,))
+        self.assertEqual(self.evaluate(s), (1234, ))
 
     def test_range_tensor_explicit_limit_delta(self):
         def body(i):
@@ -98,19 +98,19 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
         control_flow.for_stmt(
             math_ops.range(-17, -3, 5),
             extra_test=lambda: True,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={"iterate_names": "i"},
         )
-        self.assertEqual(self.evaluate(s), (-171207,))
+        self.assertEqual(self.evaluate(s), (-171207, ))
 
     def test_range_tensor_explicit_limit_negative_delta(self):
         def body(i):
@@ -119,19 +119,19 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
         control_flow.for_stmt(
             math_ops.range(17, 3, -5),
             extra_test=lambda: True,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={"iterate_names": "i"},
         )
-        self.assertEqual(self.evaluate(s), (171207,))
+        self.assertEqual(self.evaluate(s), (171207, ))
 
     def test_range_tensor_random_delta(self):
         def body(i):
@@ -140,7 +140,7 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
         random_one = random_ops.random_uniform((), 1, 2, dtype=dtypes.int32)
@@ -148,12 +148,12 @@ class ForLoopTest(test.TestCase):
             math_ops.range(0, 5, random_one),
             extra_test=lambda: True,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={"iterate_names": "i"},
         )
-        self.assertEqual(self.evaluate(s), (1234,))
+        self.assertEqual(self.evaluate(s), (1234, ))
 
     def test_range_tensor_random_negative_delta(self):
         def body(i):
@@ -162,20 +162,23 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
-        random_neg_five = random_ops.random_uniform((), -5, -4, dtype=dtypes.int32)
+        random_neg_five = random_ops.random_uniform((),
+                                                    -5,
+                                                    -4,
+                                                    dtype=dtypes.int32)
         control_flow.for_stmt(
             math_ops.range(17, 3, random_neg_five),
             extra_test=lambda: True,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={"iterate_names": "i"},
         )
-        self.assertEqual(self.evaluate(s), (171207,))
+        self.assertEqual(self.evaluate(s), (171207, ))
 
     def test_tensor_with_extra_test_object_vars(self):
         class MutableObject(object):
@@ -212,16 +215,16 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
         control_flow.for_stmt(
             range(5),
             extra_test=lambda: True,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={},
         )
         self.assertEqual(s, 1234)
@@ -279,7 +282,7 @@ class ForLoopTest(test.TestCase):
                 body=body,
                 get_state=None,
                 set_state=None,
-                symbol_names=("s",),
+                symbol_names=("s", ),
                 opts={},
             )
             return s
@@ -296,19 +299,19 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = constant_op.constant(0, dtype=dtypes.int64)
         control_flow.for_stmt(
             dataset_ops.Dataset.range(5),
             extra_test=None,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={},
         )
-        self.assertEqual(self.evaluate(s), (1234,))
+        self.assertEqual(self.evaluate(s), (1234, ))
 
     def test_dataset_with_extra_test(self):
         def body(i):
@@ -317,19 +320,19 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = constant_op.constant(0, dtype=dtypes.int64)
         control_flow.for_stmt(
             dataset_ops.Dataset.range(5),
             extra_test=lambda: s < 3,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={},
         )
-        self.assertEqual(self.evaluate(s), (12,))
+        self.assertEqual(self.evaluate(s), (12, ))
 
     def test_dataset_with_extra_test_collection_vars(self):
         def body(i):
@@ -357,24 +360,25 @@ class ForLoopTest(test.TestCase):
     def test_dataset_with_extra_test_iteration_limiting(self):
         def body(it):
             nonlocal i
-            with ops.control_dependencies((control_flow_ops.Assert(i < 3, (i,)),)):
+            with ops.control_dependencies(
+                (control_flow_ops.Assert(i < 3, (i, )), )):
                 i = it
 
         def set_state(loop_vars):
             nonlocal i
-            (i,) = loop_vars
+            (i, ) = loop_vars
 
         i = constant_op.constant(0, dtype=dtypes.int64)
         control_flow.for_stmt(
             dataset_ops.Dataset.range(5),
             extra_test=lambda: i < 3,
             body=body,
-            get_state=lambda: (i,),
+            get_state=lambda: (i, ),
             set_state=set_state,
-            symbol_names=("i",),
+            symbol_names=("i", ),
             opts={},
         )
-        self.assertEqual(self.evaluate(i), (3,))
+        self.assertEqual(self.evaluate(i), (3, ))
 
     def test_tf_dataset_no_loop_vars(self):
         def body(i):
@@ -410,16 +414,16 @@ class ForLoopTest(test.TestCase):
 
             def set_state(loop_vars):
                 nonlocal s
-                (s,) = loop_vars
+                (s, ) = loop_vars
 
             s = constant_op.constant(0, dtype=dtypes.int64)
             control_flow.for_stmt(
                 iter(dataset_ops.Dataset.range(5)),
                 extra_test=None,
                 body=body,
-                get_state=lambda: (s,),
+                get_state=lambda: (s, ),
                 set_state=set_state,
-                symbol_names=("s",),
+                symbol_names=("s", ),
                 opts={},
             )
             return s
@@ -436,17 +440,19 @@ class ForLoopTest(test.TestCase):
 
             def set_state(loop_vars):
                 nonlocal s
-                (s,) = loop_vars
+                (s, ) = loop_vars
 
             s = constant_op.constant([], dtype=dtypes.int64)
             control_flow.for_stmt(
                 iter(dataset_ops.Dataset.range(5)),
                 extra_test=None,
                 body=body,
-                get_state=lambda: (s,),
+                get_state=lambda: (s, ),
                 set_state=set_state,
-                symbol_names=("s",),
-                opts={"shape_invariants": [(s, tensor_shape.TensorShape([None]))]},
+                symbol_names=("s", ),
+                opts={
+                    "shape_invariants": [(s, tensor_shape.TensorShape([None]))]
+                },
             )
             return s
 
@@ -482,19 +488,19 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
         control_flow.for_stmt(
             ragged_factory_ops.constant([[1], [2, 4], [3]]),
             extra_test=None,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={},
         )
-        self.assertEqual(self.evaluate(s), (123,))
+        self.assertEqual(self.evaluate(s), (123, ))
 
     def test_tf_ragged_tensor_higher_dimensional(self):
         def body(i):
@@ -503,7 +509,7 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = 0
         ragged_3d = [
@@ -514,12 +520,12 @@ class ForLoopTest(test.TestCase):
             ragged_factory_ops.constant(ragged_3d),
             extra_test=None,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={},
         )
-        self.assertEqual(self.evaluate(s), (12,))
+        self.assertEqual(self.evaluate(s), (12, ))
 
     def test_tf_ragged_tensor_no_loop_vars(self):
         v = variables.Variable(0, dtype=dtypes.int32)
@@ -552,16 +558,16 @@ class ForLoopTest(test.TestCase):
 
         def set_state(loop_vars):
             nonlocal s
-            (s,) = loop_vars
+            (s, ) = loop_vars
 
         s = init_value
         control_flow.for_stmt(
             constant_op.constant([1, 2, 3, 4]),
             extra_test=lambda: True,
             body=body,
-            get_state=lambda: (s,),
+            get_state=lambda: (s, ),
             set_state=set_state,
-            symbol_names=("s",),
+            symbol_names=("s", ),
             opts={},
         )
         return s
@@ -626,23 +632,23 @@ class WhileLoopTest(test.TestCase):
 
             def set_state(loop_vars):
                 nonlocal i
-                (i,) = loop_vars
+                (i, ) = loop_vars
 
             i = 0
             n = constant_op.constant(5)
             control_flow.while_stmt(
                 test=cond,
                 body=body,
-                get_state=lambda: (i,),
+                get_state=lambda: (i, ),
                 set_state=set_state,
-                symbol_names=("i",),
+                symbol_names=("i", ),
                 opts={},
             )
             return i
 
         self.evaluate(v.initializer)
-        self.assertEqual(self.evaluate(test_fn()), (5,))
-        self.assertEqual(self.evaluate(v), (12345,))
+        self.assertEqual(self.evaluate(test_fn()), (5, ))
+        self.assertEqual(self.evaluate(v), (12345, ))
 
     def test_tensor_with_python_state(self):
         class MutableObject(object):
@@ -713,7 +719,8 @@ class WhileLoopTest(test.TestCase):
     def test_python_while_infinite(self):
         if not __debug__:
             self.skipTest("Feature disabled in optimized mode.")
-        with test.mock.patch.object(control_flow, "PYTHON_MAX_ITERATIONS", 100):
+        with test.mock.patch.object(control_flow, "PYTHON_MAX_ITERATIONS",
+                                    100):
             with self.assertRaisesRegexp(ValueError, "iteration limit"):
                 control_flow.while_stmt(
                     test=lambda: True,
@@ -727,7 +734,8 @@ class WhileLoopTest(test.TestCase):
     def test_python_for_infinite(self):
         if not __debug__:
             self.skipTest("Feature disabled in optimized mode.")
-        with test.mock.patch.object(control_flow, "PYTHON_MAX_ITERATIONS", 100):
+        with test.mock.patch.object(control_flow, "PYTHON_MAX_ITERATIONS",
+                                    100):
             with self.assertRaisesRegexp(ValueError, "iteration limit"):
                 control_flow.for_stmt(
                     iter_=range(101),
@@ -742,13 +750,13 @@ class WhileLoopTest(test.TestCase):
     def test_python_while_large_unroll_warning(self):
         if not __debug__:
             self.skipTest("Feature disabled in optimized mode.")
-        with test.mock.patch.object(
-            control_flow, "INEFFICIENT_UNROLL_MIN_ITERATIONS", 10
-        ):
+        with test.mock.patch.object(control_flow,
+                                    "INEFFICIENT_UNROLL_MIN_ITERATIONS", 10):
             with ops.Graph().as_default():
                 out_capturer = six.StringIO()
                 with test.mock.patch.object(sys, "stdout", out_capturer):
-                    with test.mock.patch.object(ag_logging, "echo_log_to_stdout", True):
+                    with test.mock.patch.object(ag_logging,
+                                                "echo_log_to_stdout", True):
 
                         def custom_iterator():
                             for i in range(11):
@@ -766,21 +774,19 @@ class WhileLoopTest(test.TestCase):
                             opts={},
                         )
                 self.assertTrue(
-                    re.match(
-                        r".* Large unrolled loop.*Const.*", out_capturer.getvalue()
-                    )
-                )
+                    re.match(r".* Large unrolled loop.*Const.*",
+                             out_capturer.getvalue()))
 
     def test_python_for_large_unroll_warning(self):
         if not __debug__:
             self.skipTest("Feature disabled in optimized mode.")
-        with test.mock.patch.object(
-            control_flow, "INEFFICIENT_UNROLL_MIN_ITERATIONS", 10
-        ):
+        with test.mock.patch.object(control_flow,
+                                    "INEFFICIENT_UNROLL_MIN_ITERATIONS", 10):
             with ops.Graph().as_default():
                 out_capturer = six.StringIO()
                 with test.mock.patch.object(sys, "stdout", out_capturer):
-                    with test.mock.patch.object(ag_logging, "echo_log_to_stdout", True):
+                    with test.mock.patch.object(ag_logging,
+                                                "echo_log_to_stdout", True):
 
                         def body():
                             nonlocal i
@@ -793,12 +799,12 @@ class WhileLoopTest(test.TestCase):
                             body=body,
                             get_state=None,
                             set_state=None,
-                            symbol_names=("i",),
+                            symbol_names=("i", ),
                             opts={},
                         )
                 self.assertTrue(
-                    re.match(r".* Large unrolled loop.*Add.*", out_capturer.getvalue())
-                )
+                    re.match(r".* Large unrolled loop.*Add.*",
+                             out_capturer.getvalue()))
 
     def _basic_loop(self, init_value, body_fn):
         def body():
@@ -852,27 +858,32 @@ class IfStmtTest(test.TestCase):
                 orelse=lambda: constant_op.constant(-1),
                 get_state=lambda: (),
                 set_state=lambda _: None,
-                basic_symbol_names=("_",),
+                basic_symbol_names=("_", ),
                 composite_symbol_names=(),
             )
 
         self.assertEqual(1, self.evaluate(test_fn(constant_op.constant(True))))
-        self.assertEqual(-1, self.evaluate(test_fn(constant_op.constant(False))))
+        self.assertEqual(-1,
+                         self.evaluate(test_fn(constant_op.constant(False))))
 
     def test_tensor_multiple_returns(self):
         def test_fn(cond):
             return control_flow.if_stmt(
                 cond=cond,
-                body=lambda: (constant_op.constant(1), constant_op.constant(2)),
-                orelse=lambda: (constant_op.constant(-1), constant_op.constant(-2)),
+                body=lambda: (constant_op.constant(1), constant_op.constant(2)
+                              ),
+                orelse=lambda: (constant_op.constant(-1),
+                                constant_op.constant(-2)),
                 get_state=lambda: (),
                 set_state=lambda _: None,
-                basic_symbol_names=("_",),
+                basic_symbol_names=("_", ),
                 composite_symbol_names=(),
             )
 
-        self.assertEqual((1, 2), self.evaluate(test_fn(constant_op.constant(True))))
-        self.assertEqual((-1, -2), self.evaluate(test_fn(constant_op.constant(False))))
+        self.assertEqual((1, 2),
+                         self.evaluate(test_fn(constant_op.constant(True))))
+        self.assertEqual((-1, -2),
+                         self.evaluate(test_fn(constant_op.constant(False))))
 
     def test_python(self):
         def test_fn(cond):
@@ -882,7 +893,7 @@ class IfStmtTest(test.TestCase):
                 orelse=lambda: -1,
                 get_state=lambda: (),
                 set_state=lambda _: None,
-                basic_symbol_names=("_",),
+                basic_symbol_names=("_", ),
                 composite_symbol_names=(),
             )
 
@@ -897,7 +908,7 @@ class IfStmtTest(test.TestCase):
                 orelse=lambda: (-1, -2),
                 get_state=lambda: (),
                 set_state=lambda _: None,
-                basic_symbol_names=("_",),
+                basic_symbol_names=("_", ),
                 composite_symbol_names=(),
             )
 
@@ -913,32 +924,29 @@ class IfStmtTest(test.TestCase):
                 orelse=false_value,
                 get_state=lambda: (),
                 set_state=lambda _: None,
-                basic_symbol_names=("s",),
+                basic_symbol_names=("s", ),
                 composite_symbol_names=(),
             )
 
     def test_tensor_none_output(self):
         with self.assertRaisesRegex(
-            ValueError, '"s" is None at the end of the TRUE branch'
-        ):
+                ValueError, '"s" is None at the end of the TRUE branch'):
             self._basic_cond(lambda: None, lambda: 1)
         with self.assertRaisesRegex(
-            ValueError, '"s" is None at the end of the FALSE branch'
-        ):
+                ValueError, '"s" is None at the end of the FALSE branch'):
             self._basic_cond(lambda: 1, lambda: None)
 
     def test_tensor_undefined_output(self):
-        with self.assertRaisesRegex(
-            ValueError, "must also be initialized in the if.*'s'"
-        ):
+        with self.assertRaisesRegex(ValueError,
+                                    "must also be initialized in the if.*'s'"):
             self._basic_cond(lambda: special_values.Undefined("s"), lambda: 1)
         with self.assertRaisesRegex(
-            ValueError, "must also be initialized in the else.*'s'"
-        ):
+                ValueError, "must also be initialized in the else.*'s'"):
             self._basic_cond(lambda: 1, lambda: special_values.Undefined("s"))
 
     def test_tensor_dtype_change(self):
-        with self.assertRaisesRegex(TypeError, '"s" has dtype int32.*but.*float32'):
+        with self.assertRaisesRegex(TypeError,
+                                    '"s" has dtype int32.*but.*float32'):
             self._basic_cond(lambda: 1, lambda: 1.0)
 
 
