@@ -13,23 +13,31 @@
 # limitations under the License.
 # ==============================================================================
 """Contains private utilities used mainly by the base Layer class."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import threading
 
 from tensorflow.python import tf2
 from tensorflow.python.distribute import distribution_strategy_context
 from tensorflow.python.eager import context
-from tensorflow.python.framework import dtypes, ops, tensor_shape, tensor_util
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_util
 from tensorflow.python.keras import backend
-from tensorflow.python.ops import (array_ops, control_flow_util,
-                                   control_flow_util_v2,
-                                   control_flow_v2_func_graphs, init_ops,
-                                   init_ops_v2)
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_util
+from tensorflow.python.ops import control_flow_util_v2
+from tensorflow.python.ops import control_flow_v2_func_graphs
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import init_ops_v2
 from tensorflow.python.ops import variables as tf_variables
 from tensorflow.python.ops.ragged import ragged_tensor
 from tensorflow.python.training.tracking import base as tracking
-from tensorflow.python.util import nest, tf_contextlib
+from tensorflow.python.util import nest
+from tensorflow.python.util import tf_contextlib
 from tensorflow.python.util.tf_export import keras_export
 
 _call_context = threading.local()

@@ -15,7 +15,9 @@
 # pylint: disable=protected-access
 """Input layer code (`Input` and `InputLayer`).
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from tensorflow.python.distribute import distribution_strategy_context
 from tensorflow.python.framework import tensor_shape

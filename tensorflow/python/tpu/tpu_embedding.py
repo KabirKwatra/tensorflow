@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """TPU embedding APIs."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import copy
@@ -22,13 +23,19 @@ import math
 import re
 
 import six
+
 from tensorflow.core.protobuf.tpu import optimization_parameters_pb2
 from tensorflow.core.protobuf.tpu import tpu_embedding_configuration_pb2 as elc
 from tensorflow.python.eager import context
-from tensorflow.python.framework import dtypes, ops
-from tensorflow.python.ops import (array_ops, control_flow_ops, init_ops,
-                                   math_ops, partitioned_variables, state_ops,
-                                   variable_scope)
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import partitioned_variables
+from tensorflow.python.ops import state_ops
+from tensorflow.python.ops import variable_scope
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.tpu import \
     tpu_system_metadata as tpu_system_metadata_lib

@@ -13,13 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 """Keras preprocessing layers."""
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-from tensorflow.python.framework import (dtypes, sparse_tensor, tensor_shape,
-                                         tensor_spec)
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
 from tensorflow.python.keras.engine.base_layer import Layer
-from tensorflow.python.ops import array_ops, math_ops
-from tensorflow.python.ops.ragged import ragged_functional_ops, ragged_tensor
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops.ragged import ragged_functional_ops
+from tensorflow.python.ops.ragged import ragged_tensor
 
 INTEGER = "int"
 BINARY = "binary"

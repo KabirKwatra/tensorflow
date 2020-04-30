@@ -14,7 +14,9 @@
 # ==============================================================================
 """Pooling layers.
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import functools
 
@@ -23,7 +25,9 @@ from tensorflow.python.keras import backend
 from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow.python.keras.engine.input_spec import InputSpec
 from tensorflow.python.keras.utils import conv_utils
-from tensorflow.python.ops import array_ops, math_ops, nn
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import nn
 from tensorflow.python.util.tf_export import keras_export
 
 

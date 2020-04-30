@@ -13,21 +13,33 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for Keras composite tensor support."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 import scipy.sparse
 from absl.testing import parameterized
+
 from tensorflow.python import keras
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.eager import context
-from tensorflow.python.framework import dtypes, ops, sparse_tensor, test_util
-from tensorflow.python.keras import keras_parameterized, testing_utils
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import sparse_tensor
+from tensorflow.python.framework import test_util
+from tensorflow.python.keras import keras_parameterized
+from tensorflow.python.keras import testing_utils
 from tensorflow.python.keras.engine import input_layer
-from tensorflow.python.keras.layers import Dense, Embedding, Layer, core
-from tensorflow.python.ops import array_ops, math_ops, sparse_ops
-from tensorflow.python.ops.ragged import ragged_factory_ops, ragged_tensor
+from tensorflow.python.keras.layers import core
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.layers import Embedding
+from tensorflow.python.keras.layers import Layer
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import sparse_ops
+from tensorflow.python.ops.ragged import ragged_factory_ops
+from tensorflow.python.ops.ragged import ragged_tensor
 from tensorflow.python.platform import test
 from tensorflow.python.util import nest
 

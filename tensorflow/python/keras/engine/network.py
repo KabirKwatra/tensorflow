@@ -15,7 +15,9 @@
 # pylint: disable=protected-access
 """A `Network` is way to compose layers: the topological form of a `Model`.
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import copy
@@ -25,30 +27,42 @@ import os
 
 import six
 from six.moves import zip  # pylint: disable=redefined-builtin
+
 from tensorflow.python.eager import context
-from tensorflow.python.framework import (composite_tensor, errors, errors_impl,
-                                         func_graph, ops, tensor_shape)
+from tensorflow.python.framework import composite_tensor
+from tensorflow.python.framework import errors
+from tensorflow.python.framework import errors_impl
+from tensorflow.python.framework import func_graph
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
 from tensorflow.python.keras import backend
-from tensorflow.python.keras.engine import (base_layer, base_layer_utils,
-                                            compile_utils)
+from tensorflow.python.keras.engine import base_layer
+from tensorflow.python.keras.engine import base_layer_utils
+from tensorflow.python.keras.engine import compile_utils
 from tensorflow.python.keras.engine import input_layer as input_layer_module
 from tensorflow.python.keras.engine import training_utils
-from tensorflow.python.keras.saving import hdf5_format, save
+from tensorflow.python.keras.saving import hdf5_format
+from tensorflow.python.keras.saving import save
 from tensorflow.python.keras.saving.saved_model import network_serialization
-from tensorflow.python.keras.utils import generic_utils, layer_utils, tf_utils
-from tensorflow.python.keras.utils.io_utils import (
-    ask_to_proceed_with_overwrite, path_to_string)
-from tensorflow.python.ops import array_ops, math_ops
+from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.keras.utils import layer_utils
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.keras.utils.io_utils import ask_to_proceed_with_overwrite
+from tensorflow.python.keras.utils.io_utils import path_to_string
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
 from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.training import (checkpoint_management,
-                                        py_checkpoint_reader)
+from tensorflow.python.training import checkpoint_management
+from tensorflow.python.training import py_checkpoint_reader
 from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.training.tracking import data_structures
 from tensorflow.python.training.tracking import \
     layer_utils as trackable_layer_utils
 from tensorflow.python.training.tracking import tracking
 from tensorflow.python.training.tracking import util as trackable_utils
-from tensorflow.python.util import nest, serialization, tf_inspect
+from tensorflow.python.util import nest
+from tensorflow.python.util import serialization
+from tensorflow.python.util import tf_inspect
 
 # pylint: disable=g-import-not-at-top
 try:

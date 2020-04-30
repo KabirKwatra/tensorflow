@@ -15,24 +15,34 @@
 # pylint: disable=protected-access
 """Recurrent layers and their base classes.
 """
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 
 import numpy as np
+
 from tensorflow.python.distribute import \
     distribution_strategy_context as ds_context
 from tensorflow.python.eager import context
-from tensorflow.python.framework import ops, tensor_shape
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import constraints, initializers, regularizers
+from tensorflow.python.keras import constraints
+from tensorflow.python.keras import initializers
+from tensorflow.python.keras import regularizers
 from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow.python.keras.engine.input_spec import InputSpec
 from tensorflow.python.keras.saving.saved_model import layer_serialization
-from tensorflow.python.keras.utils import generic_utils, tf_utils
-from tensorflow.python.ops import (array_ops, control_flow_ops,
-                                   control_flow_util, math_ops, state_ops)
+from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import control_flow_util
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import state_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.training.tracking import base as trackable
 from tensorflow.python.training.tracking import data_structures

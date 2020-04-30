@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """TPU Strategy."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import atexit
 import collections
@@ -23,22 +24,37 @@ import copy
 import weakref
 
 import numpy as np
+
 from tensorflow.compiler.xla.experimental.xla_sharding import xla_sharding
 from tensorflow.python.autograph.core import ag_ctx as autograph_ctx
 from tensorflow.python.autograph.impl import api as autograph
 from tensorflow.python.distribute import \
     cross_device_ops as cross_device_ops_lib
-from tensorflow.python.distribute import (device_util, distribute_lib,
-                                          input_lib, numpy_dataset,
-                                          reduce_util, tpu_values, values)
+from tensorflow.python.distribute import device_util
+from tensorflow.python.distribute import distribute_lib
+from tensorflow.python.distribute import input_lib
+from tensorflow.python.distribute import numpy_dataset
+from tensorflow.python.distribute import reduce_util
+from tensorflow.python.distribute import tpu_values
+from tensorflow.python.distribute import values
 from tensorflow.python.distribute.cluster_resolver import TPUClusterResolver
-from tensorflow.python.eager import context, def_function, function
-from tensorflow.python.framework import (constant_op, device_spec, dtypes, ops,
-                                         tensor_shape, tensor_util)
-from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
-                                   resource_variable_ops)
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.eager import function
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import device_spec
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_util
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.tpu import device_assignment as device_assignment_lib  # pylint: disable=unused-import
-from tensorflow.python.tpu import tpu, tpu_strategy_util, training_loop
+from tensorflow.python.tpu import tpu
+from tensorflow.python.tpu import tpu_strategy_util
+from tensorflow.python.tpu import training_loop
 from tensorflow.python.tpu.ops import tpu_ops
 from tensorflow.python.util import nest
 from tensorflow.python.util.tf_export import tf_export
