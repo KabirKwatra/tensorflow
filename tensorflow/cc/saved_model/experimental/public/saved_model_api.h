@@ -37,121 +37,123 @@ namespace cc {
 // (https://github.com/tensorflow/community/blob/master/rfcs/20200218-tf-c-saved-model.md)
 // TODO(bmzhao): Add an e2e example here, once ConcreteFunction::Run is added.
 class SavedModelAPI {
- public:
-  // Load a SavedModel from `dirname`.
-  //
-  // Params:
-  //  saved_model_path - A directory filepath that the SavedModel is at.
-  //  runtime - A runtime used to load SavedModelAPI. `runtime` must outlive the
-  //            returned TF_SavedModel pointer.
-  //  tags - Optional set of tags. If tags = nullptr, we expect the SavedModel
-  //         to contain a single Metagraph (as for those exported from TF2's
-  //         `tf.saved_model.save`). If tags != nullptr, we load the metagraph
-  //         matching the tags:
-  //         https://github.com/tensorflow/tensorflow/blob/428cdeda09aef81e958eeb274b83d27ad635b57b/tensorflow/core/protobuf/meta_graph.proto#L50-L56
-  //  status - Set to OK on success and an appropriate error on failure.
-  // Returns:
-  //  If status is not OK, returns nullptr.
-  static std::unique_ptr<SavedModelAPI> Load(
-      const std::string& saved_model_path, const Runtime& runtime,
-      Status* status, const std::unordered_set<std::string>* tags = nullptr);
+public:
+    // Load a SavedModel from `dirname`.
+    //
+    // Params:
+    //  saved_model_path - A directory filepath that the SavedModel is at.
+    //  runtime - A runtime used to load SavedModelAPI. `runtime` must outlive the
+    //            returned TF_SavedModel pointer.
+    //  tags - Optional set of tags. If tags = nullptr, we expect the SavedModel
+    //         to contain a single Metagraph (as for those exported from TF2's
+    //         `tf.saved_model.save`). If tags != nullptr, we load the metagraph
+    //         matching the tags:
+    //         https://github.com/tensorflow/tensorflow/blob/428cdeda09aef81e958eeb274b83d27ad635b57b/tensorflow/core/protobuf/meta_graph.proto#L50-L56
+    //  status - Set to OK on success and an appropriate error on failure.
+    // Returns:
+    //  If status is not OK, returns nullptr.
+    static std::unique_ptr<SavedModelAPI> Load(
+        const std::string& saved_model_path, const Runtime& runtime,
+        Status* status, const std::unordered_set<std::string>* tags = nullptr);
 
-  // Retrieve a function from the TF2 SavedModel via function path.
-  //
-  // Params:
-  //  function_path - A string containing the path from the root saved python
-  //                  object to a tf.function method.
-  //  status - Set to OK on success and an appropriate error on failure.
-  // Returns:
-  //  If status is not OK, returns nullptr. Otherwise, returns a
-  //  tensorflow::cc::ConcreteFunction pointer. The lifetime of this pointer
-  //  is bound to SavedModelAPI it was loaded from.
-  ConcreteFunction* GetConcreteFunction(const std::string& function_path,
-                                        Status* status);
+    // Retrieve a function from the TF2 SavedModel via function path.
+    //
+    // Params:
+    //  function_path - A string containing the path from the root saved python
+    //                  object to a tf.function method.
+    //  status - Set to OK on success and an appropriate error on failure.
+    // Returns:
+    //  If status is not OK, returns nullptr. Otherwise, returns a
+    //  tensorflow::cc::ConcreteFunction pointer. The lifetime of this pointer
+    //  is bound to SavedModelAPI it was loaded from.
+    ConcreteFunction* GetConcreteFunction(const std::string& function_path,
+                                          Status* status);
 
-  // Retrieve a function from the TF SavedModel via a SignatureDef key.
-  //
-  // Params:
-  //  signature_def_key - String key of SignatureDef map of a SavedModel:
-  //                      https://github.com/tensorflow/tensorflow/blob/69b08900b1e991d84bce31f3b404f5ed768f339f/tensorflow/core/protobuf/meta_graph.proto#L89
-  //  status - Set to OK on success and an appropriate error on failure.
-  // Returns:
-  //  If status is not OK, returns nullptr. Otherwise, returns a
-  //  tensorflow::cc::ConcreteFunction pointer. The lifetime of this pointer
-  //  is bound to SavedModelAPI it was loaded from.
-  ConcreteFunction* GetSignatureDefFunction(const std::string& function_path,
-                                            Status* status);
+    // Retrieve a function from the TF SavedModel via a SignatureDef key.
+    //
+    // Params:
+    //  signature_def_key - String key of SignatureDef map of a SavedModel:
+    //                      https://github.com/tensorflow/tensorflow/blob/69b08900b1e991d84bce31f3b404f5ed768f339f/tensorflow/core/protobuf/meta_graph.proto#L89
+    //  status - Set to OK on success and an appropriate error on failure.
+    // Returns:
+    //  If status is not OK, returns nullptr. Otherwise, returns a
+    //  tensorflow::cc::ConcreteFunction pointer. The lifetime of this pointer
+    //  is bound to SavedModelAPI it was loaded from.
+    ConcreteFunction* GetSignatureDefFunction(const std::string& function_path,
+            Status* status);
 
-  // Lists all Conrete Functions available from the SavedModel.
-  std::vector<ConcreteFunction*> ListFunctions();
+    // Lists all Conrete Functions available from the SavedModel.
+    std::vector<ConcreteFunction*> ListFunctions();
 
-  // SavedModelAPI is movable, but not copyable.
-  SavedModelAPI(SavedModelAPI&&) = default;
-  SavedModelAPI& operator=(SavedModelAPI&&) = default;
+    // SavedModelAPI is movable, but not copyable.
+    SavedModelAPI(SavedModelAPI&&) = default;
+    SavedModelAPI& operator=(SavedModelAPI&&) = default;
 
- private:
-  SavedModelAPI(const SavedModelAPI&) = delete;
-  SavedModelAPI& operator=(const SavedModelAPI&) = delete;
+private:
+    SavedModelAPI(const SavedModelAPI&) = delete;
+    SavedModelAPI& operator=(const SavedModelAPI&) = delete;
 
-  explicit SavedModelAPI(TF_SavedModel* model) : saved_model_(model) {}
-  struct TFSavedModelDeleter {
-    void operator()(TF_SavedModel* p) const { TF_DeleteSavedModel(p); }
-  };
-  std::unique_ptr<TF_SavedModel, TFSavedModelDeleter> saved_model_;
+    explicit SavedModelAPI(TF_SavedModel* model) : saved_model_(model) {}
+    struct TFSavedModelDeleter {
+        void operator()(TF_SavedModel* p) const {
+            TF_DeleteSavedModel(p);
+        }
+    };
+    std::unique_ptr<TF_SavedModel, TFSavedModelDeleter> saved_model_;
 };
 
 inline std::unique_ptr<SavedModelAPI> SavedModelAPI::Load(
     const std::string& saved_model_path, const Runtime& runtime, Status* status,
     const std::unordered_set<std::string>* tags) {
-  TF_SavedModel* saved_model = nullptr;
+    TF_SavedModel* saved_model = nullptr;
 
-  if (tags == nullptr) {
-    saved_model =
-        TF_LoadSavedModel(saved_model_path.c_str(), runtime.GetTFEContext(),
-                          status->GetTFStatus());
-  } else {
-    std::vector<const char*> tags_vector;
-    tags_vector.reserve(tags->size());
-    for (const std::string& tag : *tags) {
-      tags_vector.push_back(tag.c_str());
+    if (tags == nullptr) {
+        saved_model =
+            TF_LoadSavedModel(saved_model_path.c_str(), runtime.GetTFEContext(),
+                              status->GetTFStatus());
+    } else {
+        std::vector<const char*> tags_vector;
+        tags_vector.reserve(tags->size());
+        for (const std::string& tag : *tags) {
+            tags_vector.push_back(tag.c_str());
+        }
+        saved_model = TF_LoadSavedModelWithTags(
+                          saved_model_path.c_str(), runtime.GetTFEContext(), tags_vector.data(),
+                          tags_vector.size(), status->GetTFStatus());
     }
-    saved_model = TF_LoadSavedModelWithTags(
-        saved_model_path.c_str(), runtime.GetTFEContext(), tags_vector.data(),
-        tags_vector.size(), status->GetTFStatus());
-  }
 
-  if (!status->ok()) {
-    return nullptr;
-  }
+    if (!status->ok()) {
+        return nullptr;
+    }
 
-  // We can't use std::make_unique here because of its interaction with a
-  // private constructor: https://abseil.io/tips/134
-  return std::unique_ptr<SavedModelAPI>(new SavedModelAPI(saved_model));
+    // We can't use std::make_unique here because of its interaction with a
+    // private constructor: https://abseil.io/tips/134
+    return std::unique_ptr<SavedModelAPI>(new SavedModelAPI(saved_model));
 }
 
 inline ConcreteFunction* SavedModelAPI::GetConcreteFunction(
     const std::string& function_path, Status* status) {
-  TF_ConcreteFunction* function = TF_GetSavedModelConcreteFunction(
-      saved_model_.get(), function_path.c_str(), status->GetTFStatus());
-  if (!status->ok()) {
-    return nullptr;
-  }
-  return ConcreteFunction::wrap(function);
+    TF_ConcreteFunction* function = TF_GetSavedModelConcreteFunction(
+                                        saved_model_.get(), function_path.c_str(), status->GetTFStatus());
+    if (!status->ok()) {
+        return nullptr;
+    }
+    return ConcreteFunction::wrap(function);
 }
 
 inline ConcreteFunction* SavedModelAPI::GetSignatureDefFunction(
     const std::string& function_path, Status* status) {
-  TF_ConcreteFunction* function = TF_GetSavedModelSignatureDefFunction(
-      saved_model_.get(), function_path.c_str(), status->GetTFStatus());
-  if (!status->ok()) {
-    return nullptr;
-  }
-  return ConcreteFunction::wrap(function);
+    TF_ConcreteFunction* function = TF_GetSavedModelSignatureDefFunction(
+                                        saved_model_.get(), function_path.c_str(), status->GetTFStatus());
+    if (!status->ok()) {
+        return nullptr;
+    }
+    return ConcreteFunction::wrap(function);
 }
 
 inline std::vector<ConcreteFunction*> SavedModelAPI::ListFunctions() {
-  ConcreteFunctionList list(TF_ListSavedModelFunctions(saved_model_.get()));
-  return list.ToVector();
+    ConcreteFunctionList list(TF_ListSavedModelFunctions(saved_model_.get()));
+    return list.ToVector();
 }
 
 }  // namespace cc

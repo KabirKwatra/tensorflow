@@ -28,29 +28,29 @@ namespace cc {
 
 // ConcreteFunction is an executable "function" loaded from a SavedModelAPI.
 class ConcreteFunction final {
- public:
-  // TODO(bmzhao): Adding ConcreteFunction::Run in subsequent CL, since
-  // it depends on tensorflow::cc::Tensor and tensorflow::cc::TensorHandle
+public:
+    // TODO(bmzhao): Adding ConcreteFunction::Run in subsequent CL, since
+    // it depends on tensorflow::cc::Tensor and tensorflow::cc::TensorHandle
 
-  // Returns FunctionMetadata associated with this ConcreteFunction.
-  const FunctionMetadata* GetFunctionMetadata();
+    // Returns FunctionMetadata associated with this ConcreteFunction.
+    const FunctionMetadata* GetFunctionMetadata();
 
- private:
-  friend class SavedModelAPI;
-  friend class ConcreteFunctionList;
+private:
+    friend class SavedModelAPI;
+    friend class ConcreteFunctionList;
 
-  // TODO(bmzhao): Consider adding a macro for wrapping/unwrapping
-  // when moving out of experimental.
-  static ConcreteFunction* wrap(TF_ConcreteFunction* p) {
-    return reinterpret_cast<ConcreteFunction*>(p);
-  }
-  static TF_ConcreteFunction* unwrap(ConcreteFunction* p) {
-    return reinterpret_cast<TF_ConcreteFunction*>(p);
-  }
+    // TODO(bmzhao): Consider adding a macro for wrapping/unwrapping
+    // when moving out of experimental.
+    static ConcreteFunction* wrap(TF_ConcreteFunction* p) {
+        return reinterpret_cast<ConcreteFunction*>(p);
+    }
+    static TF_ConcreteFunction* unwrap(ConcreteFunction* p) {
+        return reinterpret_cast<TF_ConcreteFunction*>(p);
+    }
 };
 
 inline const FunctionMetadata* ConcreteFunction::GetFunctionMetadata() {
-  return FunctionMetadata::wrap(TF_ConcreteFunctionGetMetadata(unwrap(this)));
+    return FunctionMetadata::wrap(TF_ConcreteFunctionGetMetadata(unwrap(this)));
 }
 
 }  // namespace cc

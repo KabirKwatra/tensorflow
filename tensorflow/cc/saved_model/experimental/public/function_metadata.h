@@ -28,15 +28,15 @@ namespace cc {
 // a valid function path (for TF2-based ConcreteFunctions), and
 // the types + number of inputs and outputs.
 class FunctionMetadata final {
-  // TODO(bmzhao): Add getters here as necessary.
- private:
-  friend class ConcreteFunction;
-  static FunctionMetadata* wrap(TF_FunctionMetadata* p) {
-    return reinterpret_cast<FunctionMetadata*>(p);
-  }
-  static TF_FunctionMetadata* unwrap(FunctionMetadata* p) {
-    return reinterpret_cast<TF_FunctionMetadata*>(p);
-  }
+    // TODO(bmzhao): Add getters here as necessary.
+private:
+    friend class ConcreteFunction;
+    static FunctionMetadata* wrap(TF_FunctionMetadata* p) {
+        return reinterpret_cast<FunctionMetadata*>(p);
+    }
+    static TF_FunctionMetadata* unwrap(FunctionMetadata* p) {
+        return reinterpret_cast<TF_FunctionMetadata*>(p);
+    }
 };
 
 }  // namespace cc
