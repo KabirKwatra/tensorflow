@@ -13,9 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include <array>
-
 #include "tensorflow/python/lib/core/bfloat16.h"
+
+#include <array>
 
 #include "tensorflow/core/framework/numeric_types.h"
 #include "tensorflow/core/lib/strings/strcat.h"
@@ -30,44 +30,42 @@ namespace {
 #if PY_MAJOR_VERSION < 3
 
 PyObject* MakePyString(const string& s) {
-    return PyString_FromString(s.c_str());
+  return PyString_FromString(s.c_str());
 }
 
 typedef long HashType;  // NOLINT
 
-bool TfPyInt_Check(PyObject* object) {
-    return PyInt_Check(object);
-}
+bool TfPyInt_Check(PyObject* object) { return PyInt_Check(object); }
 
 PyObject* TfPyInt_FromLong(long x) {  // NOLINT
-    return PyInt_FromLong(x);
+  return PyInt_FromLong(x);
 }
 
 long TfPyInt_AsLong(PyObject* x) {  // NOLINT
-    return PyInt_AsLong(x);
+  return PyInt_AsLong(x);
 }
 
 #else  // PY_MAJOR_VERSION < 3
 
 PyObject* MakePyString(const string& s) {
-    return PyUnicode_FromString(s.c_str());
+  return PyUnicode_FromString(s.c_str());
 }
 
 bool TfPyInt_Check(PyObject* object) {
-    if (!PyLong_Check(object)) {
-        return 0;
-    }
-    int overflow = 0;
-    PyLong_AsLongAndOverflow(object, &overflow);
-    return (overflow == 0);
+  if (!PyLong_Check(object)) {
+    return 0;
+  }
+  int overflow = 0;
+  PyLong_AsLongAndOverflow(object, &overflow);
+  return (overflow == 0);
 }
 
 PyObject* TfPyInt_FromLong(long x) {  // NOLINT
-    return PyLong_FromLong(x);
+  return PyLong_FromLong(x);
 }
 
 long TfPyInt_AsLong(PyObject* x) {  // NOLINT
-    return PyLong_AsLong(x);
+  return PyLong_AsLong(x);
 }
 
 typedef Py_hash_t HashType;
@@ -79,85 +77,85 @@ extern PyTypeObject PyBfloat16_Type;
 
 // Representation of a Python bfloat16 object.
 struct PyBfloat16 {
-    PyObject_HEAD;  // Python object header
-    bfloat16 value;
+  PyObject_HEAD;  // Python object header
+  bfloat16 value;
 };
 
 // Returns true if 'object' is a PyBfloat16.
 bool PyBfloat16_Check(PyObject* object) {
-    return PyObject_IsInstance(object,
-                               reinterpret_cast<PyObject*>(&PyBfloat16_Type));
+  return PyObject_IsInstance(object,
+                             reinterpret_cast<PyObject*>(&PyBfloat16_Type));
 }
 
 // Extracts the value of a PyBfloat16 object.
 bfloat16 PyBfloat16_Bfloat16(PyObject* object) {
-    return reinterpret_cast<PyBfloat16*>(object)->value;
+  return reinterpret_cast<PyBfloat16*>(object)->value;
 }
 
 // Constructs a PyBfloat16 object from a bfloat16.
 Safe_PyObjectPtr PyBfloat16_FromBfloat16(bfloat16 x) {
-    Safe_PyObjectPtr ref =
-        make_safe(PyBfloat16_Type.tp_alloc(&PyBfloat16_Type, 0));
-    PyBfloat16* p = reinterpret_cast<PyBfloat16*>(ref.get());
-    if (p) {
-        p->value = x;
-    }
-    return ref;
+  Safe_PyObjectPtr ref =
+      make_safe(PyBfloat16_Type.tp_alloc(&PyBfloat16_Type, 0));
+  PyBfloat16* p = reinterpret_cast<PyBfloat16*>(ref.get());
+  if (p) {
+    p->value = x;
+  }
+  return ref;
 }
 
 // Converts a Python object to a bfloat16 value. Returns true on success,
 // returns false and reports a Python error on failure.
 bool AsBfloat16(PyObject* arg, bfloat16* output) {
-    if (PyBfloat16_Check(arg)) {
-        *output = PyBfloat16_Bfloat16(arg);
-        return true;
+  if (PyBfloat16_Check(arg)) {
+    *output = PyBfloat16_Bfloat16(arg);
+    return true;
+  }
+  if (PyFloat_Check(arg)) {
+    double d = PyFloat_AsDouble(arg);
+    if (PyErr_Occurred()) {
+      return false;
     }
-    if (PyFloat_Check(arg)) {
-        double d = PyFloat_AsDouble(arg);
-        if (PyErr_Occurred()) {
-            return false;
-        }
-        // TODO(phawkins): check for overflow
-        *output = bfloat16(d);
-        return true;
+    // TODO(phawkins): check for overflow
+    *output = bfloat16(d);
+    return true;
+  }
+  if (TfPyInt_Check(arg)) {
+    long l = TfPyInt_AsLong(arg);  // NOLINT
+    if (PyErr_Occurred()) {
+      return false;
     }
-    if (TfPyInt_Check(arg)) {
-        long l = TfPyInt_AsLong(arg);  // NOLINT
-        if (PyErr_Occurred()) {
-            return false;
-        }
-        // TODO(phawkins): check for overflow
-        *output = bfloat16(static_cast<float>(l));
-        return true;
-    }
-    if (PyArray_IsScalar(arg, Float)) {
-        float f;
-        PyArray_ScalarAsCtype(arg, &f);
-        *output = bfloat16(f);
-        return true;
-    }
-    PyErr_Format(PyExc_TypeError, "expected number, got %s",
-                 arg->ob_type->tp_name);
-    return false;
+    // TODO(phawkins): check for overflow
+    *output = bfloat16(static_cast<float>(l));
+    return true;
+  }
+  if (PyArray_IsScalar(arg, Float)) {
+    float f;
+    PyArray_ScalarAsCtype(arg, &f);
+    *output = bfloat16(f);
+    return true;
+  }
+  PyErr_Format(PyExc_TypeError, "expected number, got %s",
+               arg->ob_type->tp_name);
+  return false;
 }
 
 // Converts a PyBfloat16 into a PyFloat.
 PyObject* PyBfloat16_Float(PyObject* self) {
-    bfloat16 x = PyBfloat16_Bfloat16(self);
-    return PyFloat_FromDouble(static_cast<double>(x));
+  bfloat16 x = PyBfloat16_Bfloat16(self);
+  return PyFloat_FromDouble(static_cast<double>(x));
 }
 
 // Converts a PyBfloat16 into a PyInt.
 PyObject* PyBfloat16_Int(PyObject* self) {
-    bfloat16 x = PyBfloat16_Bfloat16(self);
-    long y = static_cast<long>(x);  // NOLINT
-    return TfPyInt_FromLong(y);
+  bfloat16 x = PyBfloat16_Bfloat16(self);
+  long y = static_cast<long>(x);  // NOLINT
+  return TfPyInt_FromLong(y);
 }
 
 // Negates a PyBfloat16.
 PyObject* PyBfloat16_Negative(PyObject* self) {
-    bfloat16 x = PyBfloat16_Bfloat16(self);
-    return PyBfloat16_FromBfloat16(-x).release();
+  bfloat16 x = PyBfloat16_Bfloat16(self);
+  return PyBfloat16_FromBfloat16(-x).release();
 }
 
 // Binary arithmetic operators on PyBfloat16 values.
@@ -233,79 +231,79 @@ PyNumberMethods PyBfloat16_AsNumber = {
 
 // Constructs a new PyBfloat16.
 PyObject* PyBfloat16_New(PyTypeObject* type, PyObject* args, PyObject* kwds) {
-    if (kwds && PyDict_Size(kwds)) {
-        PyErr_SetString(PyExc_TypeError, "constructor takes no keyword arguments");
-        return nullptr;
-    }
-    Py_ssize_t size = PyTuple_Size(args);
-    if (size != 1) {
-        PyErr_SetString(PyExc_TypeError,
-                        "expected number as argument to bfloat16 constructor");
-        return nullptr;
-    }
-    PyObject* arg = PyTuple_GetItem(args, 0);
+  if (kwds && PyDict_Size(kwds)) {
+    PyErr_SetString(PyExc_TypeError, "constructor takes no keyword arguments");
+    return nullptr;
+  }
+  Py_ssize_t size = PyTuple_Size(args);
+  if (size != 1) {
+    PyErr_SetString(PyExc_TypeError,
+                    "expected number as argument to bfloat16 constructor");
+    return nullptr;
+  }
+  PyObject* arg = PyTuple_GetItem(args, 0);
 
-    if (PyBfloat16_Check(arg)) {
-        Py_INCREF(arg);
-        return arg;
-    } else {
-        bfloat16 value;
-        if (!AsBfloat16(arg, &value)) {
-            return nullptr;
-        }
-        return PyBfloat16_FromBfloat16(value).release();
+  if (PyBfloat16_Check(arg)) {
+    Py_INCREF(arg);
+    return arg;
+  } else {
+    bfloat16 value;
+    if (!AsBfloat16(arg, &value)) {
+      return nullptr;
     }
+    return PyBfloat16_FromBfloat16(value).release();
+  }
 }
 
 // Comparisons on PyBfloat16s.
 PyObject* PyBfloat16_RichCompare(PyObject* a, PyObject* b, int op) {
-    bfloat16 x, y;
-    if (!AsBfloat16(a, &x) || !AsBfloat16(b, &y)) return nullptr;
-    bool result;
-    switch (op) {
+  bfloat16 x, y;
+  if (!AsBfloat16(a, &x) || !AsBfloat16(b, &y)) return nullptr;
+  bool result;
+  switch (op) {
     case Py_LT:
-        result = x < y;
-        break;
+      result = x < y;
+      break;
     case Py_LE:
-        result = x <= y;
-        break;
+      result = x <= y;
+      break;
     case Py_EQ:
-        result = x == y;
-        break;
+      result = x == y;
+      break;
     case Py_NE:
-        result = x != y;
-        break;
+      result = x != y;
+      break;
     case Py_GT:
-        result = x > y;
-        break;
+      result = x > y;
+      break;
     case Py_GE:
-        result = x >= y;
-        break;
+      result = x >= y;
+      break;
     default:
-        LOG(FATAL) << "Invalid op type " << op;
-    }
-    return PyBool_FromLong(result);
+      LOG(FATAL) << "Invalid op type " << op;
+  }
+  return PyBool_FromLong(result);
 }
 
 // Implementation of repr() for PyBfloat16.
 PyObject* PyBfloat16_Repr(PyObject* self) {
-    bfloat16 x = reinterpret_cast<PyBfloat16*>(self)->value;
-    string v = strings::StrCat("bfloat16(", static_cast<float>(x), ")");
-    return MakePyString(v);
+  bfloat16 x = reinterpret_cast<PyBfloat16*>(self)->value;
+  string v = strings::StrCat("bfloat16(", static_cast<float>(x), ")");
+  return MakePyString(v);
 }
 
 // Implementation of str() for PyBfloat16.
 PyObject* PyBfloat16_Str(PyObject* self) {
-    bfloat16 x = reinterpret_cast<PyBfloat16*>(self)->value;
-    string v = strings::StrCat(static_cast<float>(x));
-    return MakePyString(v);
+  bfloat16 x = reinterpret_cast<PyBfloat16*>(self)->value;
+  string v = strings::StrCat(static_cast<float>(x));
+  return MakePyString(v);
 }
 
 // Hash function for PyBfloat16. We use the identity function, which is a weak
 // hash function.
 HashType PyBfloat16_Hash(PyObject* self) {
-    bfloat16 x = reinterpret_cast<PyBfloat16*>(self)->value;
-    return x.value;
+  bfloat16 x = reinterpret_cast<PyBfloat16*>(self)->value;
+  return x.value;
 }
 
 // Python type for PyBfloat16 objects.
@@ -397,69 +395,69 @@ int npy_bfloat16_ = -1;
 // Implementations of NumPy array methods.
 
 PyObject* NPyBfloat16_GetItem(void* data, void* arr) {
-    bfloat16 x;
-    memcpy(&x, data, sizeof(bfloat16));
-    return PyBfloat16_FromBfloat16(x).release();
+  bfloat16 x;
+  memcpy(&x, data, sizeof(bfloat16));
+  return PyBfloat16_FromBfloat16(x).release();
 }
 
 int NPyBfloat16_SetItem(PyObject* item, void* data, void* arr) {
-    bfloat16 x;
-    if (!AsBfloat16(item, &x)) return -1;
-    memcpy(data, &x, sizeof(bfloat16));
-    return 0;
+  bfloat16 x;
+  if (!AsBfloat16(item, &x)) return -1;
+  memcpy(data, &x, sizeof(bfloat16));
+  return 0;
 }
 
 void ByteSwap16(void* value) {
-    char* p = reinterpret_cast<char*>(value);
-    std::swap(p[0], p[1]);
+  char* p = reinterpret_cast<char*>(value);
+  std::swap(p[0], p[1]);
 }
 
 void NPyBfloat16_CopySwapN(void* dstv, npy_intp dstride, void* srcv,
                            npy_intp sstride, npy_intp n, int swap, void* arr) {
-    char* dst = reinterpret_cast<char*>(dstv);
-    char* src = reinterpret_cast<char*>(srcv);
-    if (!src) {
-        return;
+  char* dst = reinterpret_cast<char*>(dstv);
+  char* src = reinterpret_cast<char*>(srcv);
+  if (!src) {
+    return;
+  }
+  if (swap) {
+    for (npy_intp i = 0; i < n; i++) {
+      char* r = dst + dstride * i;
+      memcpy(r, src + sstride * i, sizeof(uint16_t));
+      ByteSwap16(r);
     }
-    if (swap) {
-        for (npy_intp i = 0; i < n; i++) {
-            char* r = dst + dstride * i;
-            memcpy(r, src + sstride * i, sizeof(uint16_t));
-            ByteSwap16(r);
-        }
-    } else if (dstride == sizeof(uint16_t) && sstride == sizeof(uint16_t)) {
-        memcpy(dst, src, n * sizeof(uint16_t));
-    } else {
-        for (npy_intp i = 0; i < n; i++) {
-            memcpy(dst + dstride * i, src + sstride * i, sizeof(uint16_t));
-        }
+  } else if (dstride == sizeof(uint16_t) && sstride == sizeof(uint16_t)) {
+    memcpy(dst, src, n * sizeof(uint16_t));
+  } else {
+    for (npy_intp i = 0; i < n; i++) {
+      memcpy(dst + dstride * i, src + sstride * i, sizeof(uint16_t));
     }
+  }
 }
 
 void NPyBfloat16_CopySwap(void* dst, void* src, int swap, void* arr) {
-    if (!src) {
-        return;
-    }
-    memcpy(dst, src, sizeof(uint16_t));
-    if (swap) {
-        ByteSwap16(dst);
-    }
+  if (!src) {
+    return;
+  }
+  memcpy(dst, src, sizeof(uint16_t));
+  if (swap) {
+    ByteSwap16(dst);
+  }
 }
 
 npy_bool NPyBfloat16_NonZero(void* data, void* arr) {
-    bfloat16 x;
-    memcpy(&x, data, sizeof(x));
-    return x != static_cast<bfloat16>(0);
+  bfloat16 x;
+  memcpy(&x, data, sizeof(x));
+  return x != static_cast<bfloat16>(0);
 }
 
 int NPyBfloat16_Fill(void* buffer_raw, npy_intp length, void* ignored) {
-    bfloat16* const buffer = reinterpret_cast<bfloat16*>(buffer_raw);
-    const float start(buffer[0]);
-    const float delta = static_cast<float>(buffer[1]) - start;
-    for (npy_intp i = 2; i < length; ++i) {
-        buffer[i] = static_cast<bfloat16>(start + i * delta);
-    }
-    return 0;
+  bfloat16* const buffer = reinterpret_cast<bfloat16*>(buffer_raw);
+  const float start(buffer[0]);
+  const float delta = static_cast<float>(buffer[1]) - start;
+  for (npy_intp i = 2; i < length; ++i) {
+    buffer[i] = static_cast<bfloat16>(start + i * delta);
+  }
+  return 0;
 }
 
 // NumPy casts
@@ -468,11 +466,11 @@ int NPyBfloat16_Fill(void* buffer_raw, npy_intp length, void* ignored) {
 template <typename From, typename To>
 void NPyCast(void* from_void, void* to_void, npy_intp n, void* fromarr,
              void* toarr) {
-    const From* from = reinterpret_cast<From*>(from_void);
-    To* to = reinterpret_cast<To*>(to_void);
-    for (npy_intp i = 0; i < n; ++i) {
-        to[i] = static_cast<To>(from[i]);
-    }
+  const From* from = reinterpret_cast<From*>(from_void);
+  To* to = reinterpret_cast<To*>(to_void);
+  for (npy_intp i = 0; i < n; ++i) {
+    to[i] = static_cast<To>(from[i]);
+  }
 }
 
 // Registers a cast between bfloat16 and type 'T'. 'numpy_type' is the NumPy
@@ -480,227 +478,214 @@ void NPyCast(void* from_void, void* to_void, npy_intp n, void* fromarr,
 // safely coerced to T.
 template <typename T>
 bool RegisterBfloat16Cast(int numpy_type, bool cast_is_safe) {
-    if (PyArray_RegisterCastFunc(PyArray_DescrFromType(numpy_type), npy_bfloat16_,
-                                 NPyCast<T, bfloat16>) < 0) {
-        return false;
-    }
-    if (PyArray_RegisterCastFunc(&NPyBfloat16_Descr, numpy_type,
-                                 NPyCast<bfloat16, T>) < 0) {
-        return false;
-    }
-    if (cast_is_safe && PyArray_RegisterCanCast(&NPyBfloat16_Descr, numpy_type,
-            NPY_NOSCALAR) < 0) {
-        return false;
-    }
-    return true;
+  if (PyArray_RegisterCastFunc(PyArray_DescrFromType(numpy_type), npy_bfloat16_,
+                               NPyCast<T, bfloat16>) < 0) {
+    return false;
+  }
+  if (PyArray_RegisterCastFunc(&NPyBfloat16_Descr, numpy_type,
+                               NPyCast<bfloat16, T>) < 0) {
+    return false;
+  }
+  if (cast_is_safe && PyArray_RegisterCanCast(&NPyBfloat16_Descr, numpy_type,
+                                              NPY_NOSCALAR) < 0) {
+    return false;
+  }
+  return true;
 }
 
 template <typename InType, typename OutType, typename Functor>
 void BinaryUFunc(char** args, npy_intp* dimensions, npy_intp* steps,
                  void* data) {
-    const char* i0 = args[0];
-    const char* i1 = args[1];
-    char* o = args[2];
-    for (npy_intp k = 0; k < *dimensions; k++) {
-        InType x = *reinterpret_cast<const InType*>(i0);
-        InType y = *reinterpret_cast<const InType*>(i1);
-        *reinterpret_cast<OutType*>(o) = Functor()(x, y);
-        i0 += steps[0];
-        i1 += steps[1];
-        o += steps[2];
-    }
+  const char* i0 = args[0];
+  const char* i1 = args[1];
+  char* o = args[2];
+  for (npy_intp k = 0; k < *dimensions; k++) {
+    InType x = *reinterpret_cast<const InType*>(i0);
+    InType y = *reinterpret_cast<const InType*>(i1);
+    *reinterpret_cast<OutType*>(o) = Functor()(x, y);
+    i0 += steps[0];
+    i1 += steps[1];
+    o += steps[2];
+  }
 }
 
 template <typename Functor>
 void CompareUFunc(char** args, npy_intp* dimensions, npy_intp* steps,
                   void* data) {
-    BinaryUFunc<bfloat16, npy_bool, Functor>(args, dimensions, steps, data);
+  BinaryUFunc<bfloat16, npy_bool, Functor>(args, dimensions, steps, data);
 }
 
 struct Bfloat16EqFunctor {
-    npy_bool operator()(bfloat16 a, bfloat16 b) {
-        return a == b;
-    }
+  npy_bool operator()(bfloat16 a, bfloat16 b) { return a == b; }
 };
 struct Bfloat16NeFunctor {
-    npy_bool operator()(bfloat16 a, bfloat16 b) {
-        return a != b;
-    }
+  npy_bool operator()(bfloat16 a, bfloat16 b) { return a != b; }
 };
 struct Bfloat16LtFunctor {
-    npy_bool operator()(bfloat16 a, bfloat16 b) {
-        return a < b;
-    }
+  npy_bool operator()(bfloat16 a, bfloat16 b) { return a < b; }
 };
 struct Bfloat16GtFunctor {
-    npy_bool operator()(bfloat16 a, bfloat16 b) {
-        return a > b;
-    }
+  npy_bool operator()(bfloat16 a, bfloat16 b) { return a > b; }
 };
 struct Bfloat16LeFunctor {
-    npy_bool operator()(bfloat16 a, bfloat16 b) {
-        return a <= b;
-    }
+  npy_bool operator()(bfloat16 a, bfloat16 b) { return a <= b; }
 };
 struct Bfloat16GeFunctor {
-    npy_bool operator()(bfloat16 a, bfloat16 b) {
-        return a >= b;
-    }
+  npy_bool operator()(bfloat16 a, bfloat16 b) { return a >= b; }
 };
 
 // Initializes the module.
 bool Initialize() {
-    // It's critical to ImportNumpy and import umath
-    // to avoid crash in open source build.
-    ImportNumpy();
-    import_umath1(false);
+  // It's critical to ImportNumpy and import umath
+  // to avoid crash in open source build.
+  ImportNumpy();
+  import_umath1(false);
 
-    Safe_PyObjectPtr numpy_str = make_safe(MakePyString("numpy"));
-    if (!numpy_str) {
-        return false;
-    }
-    Safe_PyObjectPtr numpy = make_safe(PyImport_Import(numpy_str.get()));
-    if (!numpy) {
-        return false;
-    }
+  Safe_PyObjectPtr numpy_str = make_safe(MakePyString("numpy"));
+  if (!numpy_str) {
+    return false;
+  }
+  Safe_PyObjectPtr numpy = make_safe(PyImport_Import(numpy_str.get()));
+  if (!numpy) {
+    return false;
+  }
 
-    // We hit a mysterious crash if we haven't initialized numpy before this:
-    PyBfloat16_Type.tp_base = &PyGenericArrType_Type;
+  // We hit a mysterious crash if we haven't initialized numpy before this:
+  PyBfloat16_Type.tp_base = &PyGenericArrType_Type;
 
-    if (PyType_Ready(&PyBfloat16_Type) < 0) {
-        return false;
-    }
+  if (PyType_Ready(&PyBfloat16_Type) < 0) {
+    return false;
+  }
 
-    // Initializes the NumPy descriptor.
-    PyArray_InitArrFuncs(&NPyBfloat16_ArrFuncs);
-    NPyBfloat16_ArrFuncs.getitem = NPyBfloat16_GetItem;
-    NPyBfloat16_ArrFuncs.setitem = NPyBfloat16_SetItem;
-    NPyBfloat16_ArrFuncs.copyswapn = NPyBfloat16_CopySwapN;
-    NPyBfloat16_ArrFuncs.copyswap = NPyBfloat16_CopySwap;
-    NPyBfloat16_ArrFuncs.nonzero = NPyBfloat16_NonZero;
-    NPyBfloat16_ArrFuncs.fill = NPyBfloat16_Fill;
+  // Initializes the NumPy descriptor.
+  PyArray_InitArrFuncs(&NPyBfloat16_ArrFuncs);
+  NPyBfloat16_ArrFuncs.getitem = NPyBfloat16_GetItem;
+  NPyBfloat16_ArrFuncs.setitem = NPyBfloat16_SetItem;
+  NPyBfloat16_ArrFuncs.copyswapn = NPyBfloat16_CopySwapN;
+  NPyBfloat16_ArrFuncs.copyswap = NPyBfloat16_CopySwap;
+  NPyBfloat16_ArrFuncs.nonzero = NPyBfloat16_NonZero;
+  NPyBfloat16_ArrFuncs.fill = NPyBfloat16_Fill;
 
-    Py_TYPE(&NPyBfloat16_Descr) = &PyArrayDescr_Type;
-    npy_bfloat16_ = PyArray_RegisterDataType(&NPyBfloat16_Descr);
-    if (npy_bfloat16_ < 0) return false;
+  Py_TYPE(&NPyBfloat16_Descr) = &PyArrayDescr_Type;
+  npy_bfloat16_ = PyArray_RegisterDataType(&NPyBfloat16_Descr);
+  if (npy_bfloat16_ < 0) return false;
 
-    // Support dtype(bfloat16)
-    if (PyDict_SetItemString(PyBfloat16_Type.tp_dict, "dtype",
-                             reinterpret_cast<PyObject*>(&NPyBfloat16_Descr)) <
-            0) {
-        return false;
-    }
+  // Support dtype(bfloat16)
+  if (PyDict_SetItemString(PyBfloat16_Type.tp_dict, "dtype",
+                           reinterpret_cast<PyObject*>(&NPyBfloat16_Descr)) <
+      0) {
+    return false;
+  }
 
-    // Register casts
+  // Register casts
 
-    // We lie shamelessly and say that a cast from half to bfloat16 is safe.
-    // Numpy frequently uses the smallest legal representation type for small
-    // float constants (e.g., 1.0), which is often float16. Things break if these
-    // cannot be converted transparently to bfloat16.
-    if (!RegisterBfloat16Cast<Eigen::half>(NPY_HALF, /*cast_is_safe=*/true)) {
-        return false;
-    }
+  // We lie shamelessly and say that a cast from half to bfloat16 is safe.
+  // Numpy frequently uses the smallest legal representation type for small
+  // float constants (e.g., 1.0), which is often float16. Things break if these
+  // cannot be converted transparently to bfloat16.
+  if (!RegisterBfloat16Cast<Eigen::half>(NPY_HALF, /*cast_is_safe=*/true)) {
+    return false;
+  }
 
-    if (!RegisterBfloat16Cast<float>(NPY_FLOAT, /*cast_is_safe=*/true)) {
-        return false;
-    }
-    if (!RegisterBfloat16Cast<double>(NPY_DOUBLE, /*cast_is_safe=*/true)) {
-        return false;
-    }
-    if (!RegisterBfloat16Cast<int32>(NPY_INT32, /*cast_is_safe=*/false)) {
-        return false;
-    }
-    if (!RegisterBfloat16Cast<int64>(NPY_INT64, /*cast_is_safe=*/false)) {
-        return false;
-    }
-    // Following the numpy convention. imag part is dropped when converting to
-    // float.
-    if (!RegisterBfloat16Cast<complex64>(NPY_COMPLEX64, /*cast_is_safe=*/true)) {
-        return false;
-    }
-    if (!RegisterBfloat16Cast<complex128>(NPY_COMPLEX128,
-                                          /*cast_is_safe=*/true)) {
-        return false;
-    }
+  if (!RegisterBfloat16Cast<float>(NPY_FLOAT, /*cast_is_safe=*/true)) {
+    return false;
+  }
+  if (!RegisterBfloat16Cast<double>(NPY_DOUBLE, /*cast_is_safe=*/true)) {
+    return false;
+  }
+  if (!RegisterBfloat16Cast<int32>(NPY_INT32, /*cast_is_safe=*/false)) {
+    return false;
+  }
+  if (!RegisterBfloat16Cast<int64>(NPY_INT64, /*cast_is_safe=*/false)) {
+    return false;
+  }
+  // Following the numpy convention. imag part is dropped when converting to
+  // float.
+  if (!RegisterBfloat16Cast<complex64>(NPY_COMPLEX64, /*cast_is_safe=*/true)) {
+    return false;
+  }
+  if (!RegisterBfloat16Cast<complex128>(NPY_COMPLEX128,
+                                        /*cast_is_safe=*/true)) {
+    return false;
+  }
 
-    // Register ufuncs
-    auto register_ufunc = [&](const char* name, PyUFuncGenericFunction fn,
-    const std::array<int, 3>& types) {
-        Safe_PyObjectPtr ufunc_obj =
-            make_safe(PyObject_GetAttrString(numpy.get(), name));
-        if (!ufunc_obj) {
-            return false;
-        }
-        PyUFuncObject* ufunc = reinterpret_cast<PyUFuncObject*>(ufunc_obj.get());
-        if (types.size() != ufunc->nargs) {
-            PyErr_Format(PyExc_AssertionError,
-                         "ufunc %s takes %d arguments, loop takes %lu", name,
-                         ufunc->nargs, types.size());
-            return false;
-        }
-        if (PyUFunc_RegisterLoopForType(ufunc, npy_bfloat16_, fn,
-                                        const_cast<int*>(types.data()),
-                                        nullptr) < 0) {
-            return false;
-        }
-        return true;
-    };
-
-    // Comparisons
-    const std::array<int, 3> compare_types = {
-        {npy_bfloat16_, npy_bfloat16_, NPY_BOOL}
-    };
-
-    if (!register_ufunc("equal", CompareUFunc<Bfloat16EqFunctor>,
-                        compare_types)) {
-        return false;
+  // Register ufuncs
+  auto register_ufunc = [&](const char* name, PyUFuncGenericFunction fn,
+                            const std::array<int, 3>& types) {
+    Safe_PyObjectPtr ufunc_obj =
+        make_safe(PyObject_GetAttrString(numpy.get(), name));
+    if (!ufunc_obj) {
+      return false;
     }
-    if (!register_ufunc("not_equal", CompareUFunc<Bfloat16NeFunctor>,
-                        compare_types)) {
-        return false;
+    PyUFuncObject* ufunc = reinterpret_cast<PyUFuncObject*>(ufunc_obj.get());
+    if (types.size() != ufunc->nargs) {
+      PyErr_Format(PyExc_AssertionError,
+                   "ufunc %s takes %d arguments, loop takes %lu", name,
+                   ufunc->nargs, types.size());
+      return false;
     }
-    if (!register_ufunc("less", CompareUFunc<Bfloat16LtFunctor>, compare_types)) {
-        return false;
-    }
-    if (!register_ufunc("greater", CompareUFunc<Bfloat16GtFunctor>,
-                        compare_types)) {
-        return false;
-    }
-    if (!register_ufunc("less_equal", CompareUFunc<Bfloat16LeFunctor>,
-                        compare_types)) {
-        return false;
-    }
-    if (!register_ufunc("greater_equal", CompareUFunc<Bfloat16GeFunctor>,
-                        compare_types)) {
-        return false;
+    if (PyUFunc_RegisterLoopForType(ufunc, npy_bfloat16_, fn,
+                                    const_cast<int*>(types.data()),
+                                    nullptr) < 0) {
+      return false;
     }
     return true;
+  };
+
+  // Comparisons
+  const std::array<int, 3> compare_types = {
+      {npy_bfloat16_, npy_bfloat16_, NPY_BOOL}};
+
+  if (!register_ufunc("equal", CompareUFunc<Bfloat16EqFunctor>,
+                      compare_types)) {
+    return false;
+  }
+  if (!register_ufunc("not_equal", CompareUFunc<Bfloat16NeFunctor>,
+                      compare_types)) {
+    return false;
+  }
+  if (!register_ufunc("less", CompareUFunc<Bfloat16LtFunctor>, compare_types)) {
+    return false;
+  }
+  if (!register_ufunc("greater", CompareUFunc<Bfloat16GtFunctor>,
+                      compare_types)) {
+    return false;
+  }
+  if (!register_ufunc("less_equal", CompareUFunc<Bfloat16LeFunctor>,
+                      compare_types)) {
+    return false;
+  }
+  if (!register_ufunc("greater_equal", CompareUFunc<Bfloat16GeFunctor>,
+                      compare_types)) {
+    return false;
+  }
+  return true;
 }
 
 }  // namespace
 
 void RegisterNumpyBfloat16() {
-    if (npy_bfloat16_ >= 0) {
-        // Already initialized.
-        return;
+  if (npy_bfloat16_ >= 0) {
+    // Already initialized.
+    return;
+  }
+  if (!Initialize()) {
+    if (!PyErr_Occurred()) {
+      PyErr_SetString(PyExc_RuntimeError, "cannot load bfloat16 module.");
     }
-    if (!Initialize()) {
-        if (!PyErr_Occurred()) {
-            PyErr_SetString(PyExc_RuntimeError, "cannot load bfloat16 module.");
-        }
-        PyErr_Print();
-    }
+    PyErr_Print();
+  }
 }
 
 PyObject* Bfloat16PyType() {
-    CHECK(PyBfloat16_Type.tp_base != nullptr);
-    Py_INCREF(&PyBfloat16_Type);
-    return reinterpret_cast<PyObject*>(&PyBfloat16_Type);
+  CHECK(PyBfloat16_Type.tp_base != nullptr);
+  Py_INCREF(&PyBfloat16_Type);
+  return reinterpret_cast<PyObject*>(&PyBfloat16_Type);
 }
 
 int Bfloat16NumpyType() {
-    CHECK_GE(npy_bfloat16_, 0);
-    return npy_bfloat16_;
+  CHECK_GE(npy_bfloat16_, 0);
+  return npy_bfloat16_;
 }
 
 }  // namespace tensorflow
