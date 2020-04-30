@@ -14,20 +14,13 @@
 # ==============================================================================
 """Tests for Keras-based einsum dense layer."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-from absl.testing import parameterized
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
-
+from absl.testing import parameterized
 from tensorflow.python import keras
-
-from tensorflow.python.keras import (
-    keras_parameterized,
-)  # pylint: disable=g-direct-tensorflow-import
-from tensorflow.python.keras import testing_utils
+from tensorflow.python.keras import (  # pylint: disable=g-direct-tensorflow-import
+    keras_parameterized, testing_utils)
 from tensorflow.python.keras.layers import einsum_dense
 from tensorflow.python.platform import test
 

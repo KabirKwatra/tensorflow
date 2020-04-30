@@ -14,17 +14,13 @@
 # ==============================================================================
 """Keras-based einsum dense layer."""
 # pylint: disable=g-classes-have-attributes
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import re
 
 from tensorflow.python.framework import tensor_shape
-from tensorflow.python.keras import activations
-from tensorflow.python.keras import constraints
-from tensorflow.python.keras import initializers
-from tensorflow.python.keras import regularizers
+from tensorflow.python.keras import (activations, constraints, initializers,
+                                     regularizers)
 from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow.python.ops import special_math_ops
 from tensorflow.python.util.tf_export import keras_export

@@ -17,45 +17,29 @@
 # pylint: disable=wildcard-import
 # pylint: disable=unused-import
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import threading
 
 from tensorflow.python import tf2
-from tensorflow.python.keras.engine import base_layer
-from tensorflow.python.keras.engine import input_layer
-from tensorflow.python.keras.engine import input_spec
-from tensorflow.python.keras.layers import advanced_activations
-from tensorflow.python.keras.layers import convolutional
-from tensorflow.python.keras.layers import convolutional_recurrent
-from tensorflow.python.keras.layers import core
-from tensorflow.python.keras.layers import cudnn_recurrent
-from tensorflow.python.keras.layers import dense_attention
-from tensorflow.python.keras.layers import einsum_dense
-from tensorflow.python.keras.layers import embeddings
-from tensorflow.python.keras.layers import local
-from tensorflow.python.keras.layers import merge
-from tensorflow.python.keras.layers import noise
-from tensorflow.python.keras.layers import normalization
-from tensorflow.python.keras.layers import normalization_v2
-from tensorflow.python.keras.layers import pooling
-from tensorflow.python.keras.layers import recurrent
-from tensorflow.python.keras.layers import recurrent_v2
-from tensorflow.python.keras.layers import rnn_cell_wrapper_v2
-from tensorflow.python.keras.layers import wrappers
+from tensorflow.python.keras.engine import base_layer, input_layer, input_spec
+from tensorflow.python.keras.layers import (advanced_activations,
+                                            convolutional,
+                                            convolutional_recurrent, core,
+                                            cudnn_recurrent, dense_attention,
+                                            einsum_dense, embeddings, local,
+                                            merge, noise, normalization,
+                                            normalization_v2, pooling,
+                                            recurrent, recurrent_v2,
+                                            rnn_cell_wrapper_v2, wrappers)
 from tensorflow.python.keras.layers.preprocessing import image_preprocessing
-from tensorflow.python.keras.layers.preprocessing import (
-    normalization as preprocessing_normalization,
-)
-from tensorflow.python.keras.layers.preprocessing import (
-    normalization_v1 as preprocessing_normalization_v1,
-)
+from tensorflow.python.keras.layers.preprocessing import \
+    normalization as preprocessing_normalization
+from tensorflow.python.keras.layers.preprocessing import \
+    normalization_v1 as preprocessing_normalization_v1
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.util import tf_inspect as inspect
 from tensorflow.python.util.tf_export import keras_export
-
 
 ALL_MODULES = (
     base_layer,
