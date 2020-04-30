@@ -33,8 +33,8 @@ namespace {
 constexpr char kTestData[] = "cc/saved_model/testdata";
 
 std::string SavedModelPath(tensorflow::StringPiece saved_model_dir) {
-    return tensorflow::io::JoinPath(tensorflow::testing::TensorFlowSrcRoot(),
-                                    kTestData, saved_model_dir);
+  return tensorflow::io::JoinPath(tensorflow::testing::TensorFlowSrcRoot(),
+                                  kTestData, saved_model_dir);
 }
 
 // This value parameterized test allows us to test both TFRT
@@ -43,50 +43,50 @@ std::string SavedModelPath(tensorflow::StringPiece saved_model_dir) {
 class CPPSavedModelAPITest : public ::testing::TestWithParam<bool> {};
 
 TEST_P(CPPSavedModelAPITest, LoadsSavedModelWithTags) {
-    cc::Status status;
-    cc::RuntimeBuilder builder;
-    bool use_tfrt = GetParam();
-    if (use_tfrt) {
-        GTEST_SKIP();  // TODO(chky) : Enable this once TFRT is open sourced.
-    }
+  cc::Status status;
+  cc::RuntimeBuilder builder;
+  bool use_tfrt = GetParam();
+  if (use_tfrt) {
+    GTEST_SKIP();  // TODO(chky) : Enable this once TFRT is open sourced.
+  }
 
-    builder.SetUseTFRT(use_tfrt);
-    std::unique_ptr<cc::Runtime> runtime = builder.Build(&status);
-    ASSERT_TRUE(status.ok()) << status.message();
+  builder.SetUseTFRT(use_tfrt);
+  std::unique_ptr<cc::Runtime> runtime = builder.Build(&status);
+  ASSERT_TRUE(status.ok()) << status.message();
 
-    std::string model_dir = SavedModelPath("VarsAndArithmeticObjectGraph");
-    std::unordered_set<std::string> tags = {"serve"};
-    std::unique_ptr<cc::SavedModelAPI> model =
-        cc::SavedModelAPI::Load(model_dir, *runtime, &status, &tags);
+  std::string model_dir = SavedModelPath("VarsAndArithmeticObjectGraph");
+  std::unordered_set<std::string> tags = {"serve"};
+  std::unique_ptr<cc::SavedModelAPI> model =
+      cc::SavedModelAPI::Load(model_dir, *runtime, &status, &tags);
 
-    // TODO(bmzhao): Change this to expect TF_OK when loading is implemented.
-    // That unblocks writing other tests that require a TF_SavedModel*,
-    // like loading a ConcreteFunction. This test at least checks that the
-    // C API builds and can be minimally run.
-    EXPECT_EQ(status.code(), TF_UNIMPLEMENTED);
+  // TODO(bmzhao): Change this to expect TF_OK when loading is implemented.
+  // That unblocks writing other tests that require a TF_SavedModel*,
+  // like loading a ConcreteFunction. This test at least checks that the
+  // C API builds and can be minimally run.
+  EXPECT_EQ(status.code(), TF_UNIMPLEMENTED);
 }
 
 TEST_P(CPPSavedModelAPITest, LoadsSavedModel) {
-    cc::Status status;
-    cc::RuntimeBuilder builder;
-    bool use_tfrt = GetParam();
-    if (use_tfrt) {
-        GTEST_SKIP();  // TODO(chky) : Enable this once TFRT is open sourced.
-    }
+  cc::Status status;
+  cc::RuntimeBuilder builder;
+  bool use_tfrt = GetParam();
+  if (use_tfrt) {
+    GTEST_SKIP();  // TODO(chky) : Enable this once TFRT is open sourced.
+  }
 
-    builder.SetUseTFRT(use_tfrt);
-    std::unique_ptr<cc::Runtime> runtime = builder.Build(&status);
-    ASSERT_TRUE(status.ok()) << status.message();
+  builder.SetUseTFRT(use_tfrt);
+  std::unique_ptr<cc::Runtime> runtime = builder.Build(&status);
+  ASSERT_TRUE(status.ok()) << status.message();
 
-    std::string model_dir = SavedModelPath("VarsAndArithmeticObjectGraph");
-    std::unique_ptr<cc::SavedModelAPI> model =
-        cc::SavedModelAPI::Load(model_dir, *runtime, &status);
+  std::string model_dir = SavedModelPath("VarsAndArithmeticObjectGraph");
+  std::unique_ptr<cc::SavedModelAPI> model =
+      cc::SavedModelAPI::Load(model_dir, *runtime, &status);
 
-    // TODO(bmzhao): Change this to expect TF_OK when loading is implemented.
-    // That unblocks writing other tests that require a TF_SavedModel*,
-    // like loading a ConcreteFunction. This test at least checks that the
-    // C API builds and can be minimally run.
-    EXPECT_EQ(status.code(), TF_UNIMPLEMENTED);
+  // TODO(bmzhao): Change this to expect TF_OK when loading is implemented.
+  // That unblocks writing other tests that require a TF_SavedModel*,
+  // like loading a ConcreteFunction. This test at least checks that the
+  // C API builds and can be minimally run.
+  EXPECT_EQ(status.code(), TF_UNIMPLEMENTED);
 }
 
 INSTANTIATE_TEST_SUITE_P(RuntimeAgnosticCPPSavedModelTests,

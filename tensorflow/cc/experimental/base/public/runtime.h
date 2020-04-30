@@ -32,40 +32,34 @@ namespace cc {
 // these Runtime-attached objects (such as tensorflow::cc::TensorHandle), the
 // Runtime must outlive these objects.
 class Runtime {
-public:
-    // Runtime is movable, but not copyable.
-    Runtime(Runtime&&) = default;
-    Runtime& operator=(Runtime&&) = default;
+ public:
+  // Runtime is movable, but not copyable.
+  Runtime(Runtime&&) = default;
+  Runtime& operator=(Runtime&&) = default;
 
-private:
-    friend class RuntimeBuilder;
-    friend class SavedModelAPI;
+ private:
+  friend class RuntimeBuilder;
+  friend class SavedModelAPI;
 
-    // Wraps a TFE_Context. Takes ownership of ctx.
-    explicit Runtime(TFE_Context* ctx) : ctx_(ctx) {}
+  // Wraps a TFE_Context. Takes ownership of ctx.
+  explicit Runtime(TFE_Context* ctx) : ctx_(ctx) {}
 
-    // Deletes the currently wrapped TFE_Context, swaps it with ctx,
-    // and takes ownership of ctx.
-    void Reset(TFE_Context* ctx) {
-        ctx_.reset(ctx);
-    }
+  // Deletes the currently wrapped TFE_Context, swaps it with ctx,
+  // and takes ownership of ctx.
+  void Reset(TFE_Context* ctx) { ctx_.reset(ctx); }
 
-    // Returns the TFE_Context that this object wraps. This object
-    // retains ownership of the pointer.
-    TFE_Context* GetTFEContext() const {
-        return ctx_.get();
-    }
+  // Returns the TFE_Context that this object wraps. This object
+  // retains ownership of the pointer.
+  TFE_Context* GetTFEContext() const { return ctx_.get(); }
 
-    // Runtime is not copyable
-    Runtime(const Runtime&) = delete;
-    Runtime& operator=(const Runtime&) = delete;
+  // Runtime is not copyable
+  Runtime(const Runtime&) = delete;
+  Runtime& operator=(const Runtime&) = delete;
 
-    struct TFEContextDeleter {
-        void operator()(TFE_Context* p) const {
-            TFE_DeleteContext(p);
-        }
-    };
-    std::unique_ptr<TFE_Context, TFEContextDeleter> ctx_;
+  struct TFEContextDeleter {
+    void operator()(TFE_Context* p) const { TFE_DeleteContext(p); }
+  };
+  std::unique_ptr<TFE_Context, TFEContextDeleter> ctx_;
 };
 
 }  // namespace cc

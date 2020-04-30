@@ -29,53 +29,53 @@ namespace cc {
 // RuntimeBuilder is a builder used to construct a tensorflow::cc::Runtime.
 // Use this to set configuration options, like threadpool size, etc.
 class RuntimeBuilder {
-public:
-    RuntimeBuilder() : options_(TFE_NewContextOptions()) {}
+ public:
+  RuntimeBuilder() : options_(TFE_NewContextOptions()) {}
 
-    // If `use_tfrt` is true, we will use the new Tensorflow Runtime
-    // (https://blog.tensorflow.org/2020/04/tfrt-new-tensorflow-runtime.html) as
-    // our runtime implementation.
-    RuntimeBuilder& SetUseTFRT(bool use_tfrt);
+  // If `use_tfrt` is true, we will use the new Tensorflow Runtime
+  // (https://blog.tensorflow.org/2020/04/tfrt-new-tensorflow-runtime.html) as
+  // our runtime implementation.
+  RuntimeBuilder& SetUseTFRT(bool use_tfrt);
 
-    // Build a Tensorflow Runtime.
-    //
-    // Params:
-    //  status - Set to OK on success and an appropriate error on failure.
-    // Returns:
-    //  If status is not OK, returns nullptr. Otherwise, returns a
-    //  unique_ptr<tensorflow::cc::Runtime>.
-    std::unique_ptr<Runtime> Build(Status* status);
+  // Build a Tensorflow Runtime.
+  //
+  // Params:
+  //  status - Set to OK on success and an appropriate error on failure.
+  // Returns:
+  //  If status is not OK, returns nullptr. Otherwise, returns a
+  //  unique_ptr<tensorflow::cc::Runtime>.
+  std::unique_ptr<Runtime> Build(Status* status);
 
-    // RuntimeBuilder is movable, but not copyable.
-    RuntimeBuilder(RuntimeBuilder&&) = default;
-    RuntimeBuilder& operator=(RuntimeBuilder&&) = default;
+  // RuntimeBuilder is movable, but not copyable.
+  RuntimeBuilder(RuntimeBuilder&&) = default;
+  RuntimeBuilder& operator=(RuntimeBuilder&&) = default;
 
-private:
-    // RuntimeBuilder is not copyable
-    RuntimeBuilder(const RuntimeBuilder&) = delete;
-    RuntimeBuilder& operator=(const RuntimeBuilder&) = delete;
+ private:
+  // RuntimeBuilder is not copyable
+  RuntimeBuilder(const RuntimeBuilder&) = delete;
+  RuntimeBuilder& operator=(const RuntimeBuilder&) = delete;
 
-    struct TFEContextOptionsDeleter {
-        void operator()(TFE_ContextOptions* p) const {
-            TFE_DeleteContextOptions(p);
-        }
-    };
-    std::unique_ptr<TFE_ContextOptions, TFEContextOptionsDeleter> options_;
+  struct TFEContextOptionsDeleter {
+    void operator()(TFE_ContextOptions* p) const {
+      TFE_DeleteContextOptions(p);
+    }
+  };
+  std::unique_ptr<TFE_ContextOptions, TFEContextOptionsDeleter> options_;
 };
 
 inline RuntimeBuilder& RuntimeBuilder::SetUseTFRT(bool use_tfrt) {
-    TFE_ContextOptionsSetTfrt(options_.get(), use_tfrt);
-    return *this;
+  TFE_ContextOptionsSetTfrt(options_.get(), use_tfrt);
+  return *this;
 }
 
 inline std::unique_ptr<Runtime> RuntimeBuilder::Build(Status* status) {
-    TFE_Context* result = TFE_NewContext(options_.get(), status->GetTFStatus());
-    if (!status->ok()) {
-        return nullptr;
-    }
-    // We can't use std::make_unique here because of its interaction with a
-    // private constructor: https://abseil.io/tips/134
-    return std::unique_ptr<Runtime>(new Runtime(result));
+  TFE_Context* result = TFE_NewContext(options_.get(), status->GetTFStatus());
+  if (!status->ok()) {
+    return nullptr;
+  }
+  // We can't use std::make_unique here because of its interaction with a
+  // private constructor: https://abseil.io/tips/134
+  return std::unique_ptr<Runtime>(new Runtime(result));
 }
 
 }  // namespace cc

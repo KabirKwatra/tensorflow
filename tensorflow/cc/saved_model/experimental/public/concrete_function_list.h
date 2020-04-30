@@ -27,32 +27,32 @@ namespace cc {
 // ConcreteFunctionList helps convert an opaque pointer to an array of
 // ConcreteFunction pointers to a std::vector.
 class ConcreteFunctionList {
-public:
-    // Converts this object to a std::vector<ConcreteFunction*>
-    std::vector<ConcreteFunction*> ToVector();
+ public:
+  // Converts this object to a std::vector<ConcreteFunction*>
+  std::vector<ConcreteFunction*> ToVector();
 
-private:
-    friend class SavedModelAPI;
-    // Wraps a TF_ConcreteFunctionList. Takes ownership of list.
-    explicit ConcreteFunctionList(TF_ConcreteFunctionList* list) : list_(list) {}
+ private:
+  friend class SavedModelAPI;
+  // Wraps a TF_ConcreteFunctionList. Takes ownership of list.
+  explicit ConcreteFunctionList(TF_ConcreteFunctionList* list) : list_(list) {}
 
-    struct TFConcreteFunctionListDeleter {
-        void operator()(TF_ConcreteFunctionList* p) const {
-            TF_DeleteConcreteFunctionList(p);
-        }
-    };
-    std::unique_ptr<TF_ConcreteFunctionList, TFConcreteFunctionListDeleter> list_;
+  struct TFConcreteFunctionListDeleter {
+    void operator()(TF_ConcreteFunctionList* p) const {
+      TF_DeleteConcreteFunctionList(p);
+    }
+  };
+  std::unique_ptr<TF_ConcreteFunctionList, TFConcreteFunctionListDeleter> list_;
 };
 
 inline std::vector<ConcreteFunction*> ConcreteFunctionList::ToVector() {
-    int size = TF_ConcreteFunctionListSize(list_.get());
-    std::vector<ConcreteFunction*> result;
-    result.reserve(size);
-    for (int i = 0; i < size; ++i) {
-        result.push_back(
-            ConcreteFunction::wrap(TF_ConcreteFunctionListGet(list_.get(), i)));
-    }
-    return result;
+  int size = TF_ConcreteFunctionListSize(list_.get());
+  std::vector<ConcreteFunction*> result;
+  result.reserve(size);
+  for (int i = 0; i < size; ++i) {
+    result.push_back(
+        ConcreteFunction::wrap(TF_ConcreteFunctionListGet(list_.get(), i)));
+  }
+  return result;
 }
 
 }  // namespace cc

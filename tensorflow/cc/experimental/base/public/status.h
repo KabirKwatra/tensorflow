@@ -32,67 +32,59 @@ namespace cc {
 // handle or propagate the error appropriately.
 // TODO(bmzhao): Add a detailed code example before moving out of experimental.
 class Status {
-public:
-    // Create a success status
-    Status() : status_(TF_NewStatus()) {}
+ public:
+  // Create a success status
+  Status() : status_(TF_NewStatus()) {}
 
-    // Return the status code
-    TF_Code code() const;
+  // Return the status code
+  TF_Code code() const;
 
-    // Returns the error message in Status.
-    std::string message() const;
+  // Returns the error message in Status.
+  std::string message() const;
 
-    // Returns the error message in Status.
-    bool ok() const;
+  // Returns the error message in Status.
+  bool ok() const;
 
-    // Record <code, msg> in Status. Any previous information is lost.
-    // A common use is to clear a status: SetStatus(TF_OK, "");
-    void SetStatus(TF_Code code, const std::string& msg);
+  // Record <code, msg> in Status. Any previous information is lost.
+  // A common use is to clear a status: SetStatus(TF_OK, "");
+  void SetStatus(TF_Code code, const std::string& msg);
 
-    // Status is movable, but not copyable.
-    Status(Status&&) = default;
-    Status& operator=(Status&&) = default;
+  // Status is movable, but not copyable.
+  Status(Status&&) = default;
+  Status& operator=(Status&&) = default;
 
-private:
-    friend class RuntimeBuilder;
-    friend class Runtime;
-    friend class SavedModelAPI;
+ private:
+  friend class RuntimeBuilder;
+  friend class Runtime;
+  friend class SavedModelAPI;
 
-    // Wraps a TF_Status*, and takes ownership of it.
-    explicit Status(TF_Status* status) : status_(status) {}
+  // Wraps a TF_Status*, and takes ownership of it.
+  explicit Status(TF_Status* status) : status_(status) {}
 
-    // Status is not copyable
-    Status(const Status&) = delete;
-    Status& operator=(const Status&) = delete;
+  // Status is not copyable
+  Status(const Status&) = delete;
+  Status& operator=(const Status&) = delete;
 
-    // Returns the TF_Status that this object wraps. This object
-    // retains ownership of the pointer.
-    TF_Status* GetTFStatus() const {
-        return status_.get();
-    }
+  // Returns the TF_Status that this object wraps. This object
+  // retains ownership of the pointer.
+  TF_Status* GetTFStatus() const { return status_.get(); }
 
-    struct TFStatusDeleter {
-        void operator()(TF_Status* p) const {
-            TF_DeleteStatus(p);
-        }
-    };
-    std::unique_ptr<TF_Status, TFStatusDeleter> status_;
+  struct TFStatusDeleter {
+    void operator()(TF_Status* p) const { TF_DeleteStatus(p); }
+  };
+  std::unique_ptr<TF_Status, TFStatusDeleter> status_;
 };
 
-inline TF_Code Status::code() const {
-    return TF_GetCode(status_.get());
-}
+inline TF_Code Status::code() const { return TF_GetCode(status_.get()); }
 
 inline std::string Status::message() const {
-    return std::string(TF_Message(status_.get()));
+  return std::string(TF_Message(status_.get()));
 }
 
-inline bool Status::ok() const {
-    return code() == TF_OK;
-}
+inline bool Status::ok() const { return code() == TF_OK; }
 
 inline void Status::SetStatus(TF_Code code, const std::string& msg) {
-    TF_SetStatus(status_.get(), code, msg.c_str());
+  TF_SetStatus(status_.get(), code, msg.c_str());
 }
 
 }  // namespace cc
