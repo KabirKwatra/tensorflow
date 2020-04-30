@@ -28,26 +28,26 @@ namespace gpu {
 namespace cl {
 
 class ConverterToConvWeights : public GPUOperation {
-public:
-    explicit ConverterToConvWeights(const OperationDef& definition)
-        : GPUOperation(definition), work_group_size_(8, 4, 1) {}
-    absl::Status AddToQueue(CLCommandQueue* queue) override;
-    absl::Status Tune(const TuningParameters& params) override;
+ public:
+  explicit ConverterToConvWeights(const OperationDef& definition)
+      : GPUOperation(definition), work_group_size_(8, 4, 1) {}
+  absl::Status AddToQueue(CLCommandQueue* queue) override;
+  absl::Status Tune(const TuningParameters& params) override;
 
-    absl::Status Compile(const CreationContext& creation_context) override;
+  absl::Status Compile(const CreationContext& creation_context) override;
 
-    // Move only
-    ConverterToConvWeights(ConverterToConvWeights&& operation);
-    ConverterToConvWeights& operator=(ConverterToConvWeights&& operation);
-    ConverterToConvWeights(const ConverterToConvWeights&) = delete;
-    ConverterToConvWeights& operator=(const ConverterToConvWeights&) = delete;
+  // Move only
+  ConverterToConvWeights(ConverterToConvWeights&& operation);
+  ConverterToConvWeights& operator=(ConverterToConvWeights&& operation);
+  ConverterToConvWeights(const ConverterToConvWeights&) = delete;
+  ConverterToConvWeights& operator=(const ConverterToConvWeights&) = delete;
 
-private:
-    absl::Status BindArguments();
-    int3 GetGridSize() const;
+ private:
+  absl::Status BindArguments();
+  int3 GetGridSize() const;
 
-    CLKernel kernel_;
-    int3 work_group_size_;
+  CLKernel kernel_;
+  int3 work_group_size_;
 };
 
 // We expect src BHWC tensor and we assume that B is O, H = 1, W = 1, C is I
