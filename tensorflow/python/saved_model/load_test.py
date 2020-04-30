@@ -13,8 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for trackable object SavedModel loading."""
-
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import collections
 import functools
@@ -24,29 +25,50 @@ import tempfile
 import weakref
 
 from absl.testing import parameterized
+
 from tensorflow.python.client import session as session_lib
 from tensorflow.python.data.ops import dataset_ops
-from tensorflow.python.eager import (backprop, context, def_function, test,
-                                     wrap_function)
+from tensorflow.python.eager import backprop
+from tensorflow.python.eager import context
+from tensorflow.python.eager import def_function
+from tensorflow.python.eager import test
+from tensorflow.python.eager import wrap_function
 from tensorflow.python.feature_column import feature_column_lib
-from tensorflow.python.framework import constant_op, dtypes, errors
+from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import errors
 from tensorflow.python.framework import function as framework_function
-from tensorflow.python.framework import (ops, tensor_shape, tensor_spec,
-                                         test_util, versions)
+from tensorflow.python.framework import ops
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import tensor_spec
+from tensorflow.python.framework import test_util
+from tensorflow.python.framework import versions
 from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras.engine import base_layer, input_layer, sequential
+from tensorflow.python.keras.engine import base_layer
+from tensorflow.python.keras.engine import input_layer
+from tensorflow.python.keras.engine import sequential
 from tensorflow.python.keras.engine import training as training_lib
-from tensorflow.python.keras.layers import convolutional, core
+from tensorflow.python.keras.layers import convolutional
+from tensorflow.python.keras.layers import core
 from tensorflow.python.keras.optimizer_v2 import adam
 from tensorflow.python.lib.io import file_io
 from tensorflow.python.module import module
-from tensorflow.python.ops import (array_ops, cond_v2, control_flow_ops,
-                                   lookup_ops, math_ops, resource_variable_ops,
-                                   variable_scope, variables)
-from tensorflow.python.ops.ragged import ragged_factory_ops, ragged_tensor
-from tensorflow.python.saved_model import load, save, tag_constants
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import cond_v2
+from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import lookup_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.ops import variable_scope
+from tensorflow.python.ops import variables
+from tensorflow.python.ops.ragged import ragged_factory_ops
+from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.saved_model import load
+from tensorflow.python.saved_model import save
+from tensorflow.python.saved_model import tag_constants
 from tensorflow.python.training import monitored_session
-from tensorflow.python.training.tracking import tracking, util
+from tensorflow.python.training.tracking import tracking
+from tensorflow.python.training.tracking import util
 from tensorflow.python.util import tf_inspect
 
 
