@@ -74,12 +74,12 @@ class Wrapper(Layer):
     @classmethod
     def from_config(cls, config, custom_objects=None):
         from tensorflow.python.keras.layers import (
-            deserialize as deserialize_layer,
-        )  # pylint: disable=g-import-not-at-top
+            deserialize as deserialize_layer, )  # pylint: disable=g-import-not-at-top
 
         # Avoid mutating the input dict
         config = copy.deepcopy(config)
-        layer = deserialize_layer(config.pop("layer"), custom_objects=custom_objects)
+        layer = deserialize_layer(config.pop("layer"),
+                                  custom_objects=custom_objects)
         return cls(layer, **config)
 
 
@@ -124,17 +124,14 @@ class TimeDistributed(Wrapper):
             raise ValueError(
                 "Please initialize `TimeDistributed` layer with a "
                 "`tf.keras.layers.Layer` instance. You passed: {input}".format(
-                    input=layer
-                )
-            )
+                    input=layer))
         super(TimeDistributed, self).__init__(layer, **kwargs)
         self.supports_masking = True
 
         # It is safe to use the fast, reshape-based approach with all of our
         # built-in Layers.
-        self._always_use_reshape = layer_utils.is_builtin_layer(layer) and not getattr(
-            layer, "stateful", False
-        )
+        self._always_use_reshape = layer_utils.is_builtin_layer(
+            layer) and not getattr(layer, "stateful", False)
 
     def _get_shape_tuple(self, init_tuple, tensor, start_idx, int_shape=None):
         """Finds non-specific dimensions in the static shapes.
@@ -174,8 +171,7 @@ class TimeDistributed(Wrapper):
         if len(input_shape) < 3:
             raise ValueError(
                 "`TimeDistributed` Layer should be passed an `input_shape ` "
-                "with at least 3 dimensions, received: " + str(input_shape)
-            )
+                "with at least 3 dimensions, received: " + str(input_shape))
         # Don't enforce the batch or time dimension.
         self.input_spec = InputSpec(shape=[None, None] + input_shape[2:])
         child_input_shape = [input_shape[0]] + input_shape[2:]
@@ -184,15 +180,15 @@ class TimeDistributed(Wrapper):
 
     def compute_output_shape(self, input_shape):
         input_shape = tensor_shape.TensorShape(input_shape).as_list()
-        child_input_shape = tensor_shape.TensorShape([input_shape[0]] + input_shape[2:])
+        child_input_shape = tensor_shape.TensorShape([input_shape[0]] +
+                                                     input_shape[2:])
         child_output_shape = self.layer.compute_output_shape(child_input_shape)
         if not isinstance(child_output_shape, tensor_shape.TensorShape):
             child_output_shape = tensor_shape.TensorShape(child_output_shape)
         child_output_shape = child_output_shape.as_list()
         timesteps = input_shape[1]
-        return tensor_shape.TensorShape(
-            [child_output_shape[0], timesteps] + child_output_shape[1:]
-        )
+        return tensor_shape.TensorShape([child_output_shape[0], timesteps] +
+                                        child_output_shape[1:])
 
     def call(self, inputs, training=None, mask=None):
         kwargs = {}
@@ -213,11 +209,13 @@ class TimeDistributed(Wrapper):
                 step,
                 inputs,
                 initial_states=[],
-                input_length=row_lengths[0] if is_ragged_input else input_shape[1],
+                input_length=row_lengths[0]
+                if is_ragged_input else input_shape[1],
                 mask=mask,
                 unroll=False,
             )
-            y = K.maybe_convert_to_ragged(is_ragged_input, outputs, row_lengths)
+            y = K.maybe_convert_to_ragged(is_ragged_input, outputs,
+                                          row_lengths)
         else:
             # No batch size specified, therefore the layer will be able
             # to process batches of any size.
@@ -225,28 +223,28 @@ class TimeDistributed(Wrapper):
             if isinstance(inputs, ragged_tensor.RaggedTensor):
                 y = self.layer(inputs.values, **kwargs)
                 y = ragged_tensor.RaggedTensor.from_row_lengths(
-                    y, inputs.nested_row_lengths()[0]
-                )
+                    y,
+                    inputs.nested_row_lengths()[0])
             else:
                 input_length = input_shape[1]
                 if not input_length:
                     input_length = array_ops.shape(inputs)[1]
-                inner_input_shape = self._get_shape_tuple((-1,), inputs, 2)
+                inner_input_shape = self._get_shape_tuple((-1, ), inputs, 2)
                 # Shape: (num_samples * timesteps, ...). And track the
                 # transformation in self._input_map.
                 inputs = array_ops.reshape(inputs, inner_input_shape)
                 # (num_samples * timesteps, ...)
-                if generic_utils.has_arg(self.layer.call, "mask") and mask is not None:
-                    inner_mask_shape = self._get_shape_tuple((-1,), mask, 2)
+                if generic_utils.has_arg(self.layer.call,
+                                         "mask") and mask is not None:
+                    inner_mask_shape = self._get_shape_tuple((-1, ), mask, 2)
                     kwargs["mask"] = K.reshape(mask, inner_mask_shape)
 
                 y = self.layer(inputs, **kwargs)
 
                 # Shape: (num_samples, timesteps, ...)
                 output_shape = self.compute_output_shape(input_shape).as_list()
-                output_shape = self._get_shape_tuple(
-                    (-1, input_length), y, 1, output_shape[2:]
-                )
+                output_shape = self._get_shape_tuple((-1, input_length), y, 1,
+                                                     output_shape[2:])
                 y = array_ops.reshape(y, output_shape)
 
         return y
@@ -289,19 +287,16 @@ class TimeDistributed(Wrapper):
         # cases need to call the layer.compute_mask when input_mask is None:
         # Masking layer and Embedding layer with mask_zero
         input_shape = K.int_shape(inputs)
-        if (
-            input_shape[0]
-            and not self._always_use_reshape
-            or isinstance(inputs, ragged_tensor.RaggedTensor)
-        ):
+        if (input_shape[0] and not self._always_use_reshape
+                or isinstance(inputs, ragged_tensor.RaggedTensor)):
             # batch size matters, we currently do not handle mask explicitly, or if
             # the layer always uses reshape approach, or the input is a ragged tensor.
             return mask
         inner_mask = mask
         if inner_mask is not None:
-            inner_mask_shape = self._get_shape_tuple((-1,), mask, 2)
+            inner_mask_shape = self._get_shape_tuple((-1, ), mask, 2)
             inner_mask = K.reshape(inner_mask, inner_mask_shape)
-        inner_input_shape = self._get_shape_tuple((-1,), inputs, 2)
+        inner_input_shape = self._get_shape_tuple((-1, ), inputs, 2)
         inner_inputs = array_ops.reshape(inputs, inner_input_shape)
         output_mask = self.layer.compute_mask(inner_inputs, inner_mask)
         if output_mask is None:
@@ -324,10 +319,10 @@ class TimeDistributed(Wrapper):
                 if mask is not None:
                     output_mask_int_shape = K.int_shape(mask)
                 else:
-                    output_mask_int_shape = K.compute_output_shape(input_shape)[:-1]
+                    output_mask_int_shape = K.compute_output_shape(
+                        input_shape)[:-1]
             output_mask_shape = self._get_shape_tuple(
-                (-1, input_length), output_mask, 1, output_mask_int_shape[1:]
-            )
+                (-1, input_length), output_mask, 1, output_mask_int_shape[1:])
             output_mask = K.reshape(output_mask, output_mask_shape)
         return output_mask
 
@@ -396,25 +391,25 @@ class Bidirectional(Wrapper):
     ```
     """
 
-    def __init__(
-        self, layer, merge_mode="concat", weights=None, backward_layer=None, **kwargs
-    ):
+    def __init__(self,
+                 layer,
+                 merge_mode="concat",
+                 weights=None,
+                 backward_layer=None,
+                 **kwargs):
         if not isinstance(layer, Layer):
             raise ValueError(
                 "Please initialize `Bidirectional` layer with a "
-                "`Layer` instance. You passed: {input}".format(input=layer)
-            )
-        if backward_layer is not None and not isinstance(backward_layer, Layer):
+                "`Layer` instance. You passed: {input}".format(input=layer))
+        if backward_layer is not None and not isinstance(
+                backward_layer, Layer):
             raise ValueError(
                 "`backward_layer` need to be a `Layer` instance. "
-                "You passed: {input}".format(input=backward_layer)
-            )
+                "You passed: {input}".format(input=backward_layer))
         if merge_mode not in ["sum", "mul", "ave", "concat", None]:
-            raise ValueError(
-                "Invalid merge mode. "
-                "Merge mode should be one of "
-                '{"sum", "mul", "ave", "concat", None}'
-            )
+            raise ValueError("Invalid merge mode. "
+                             "Merge mode should be one of "
+                             '{"sum", "mul", "ave", "concat", None}')
         # We don't want to track `layer` since we're already tracking the two copies
         # of it we actually run.
         self._setattr_tracking = False
@@ -427,16 +422,14 @@ class Bidirectional(Wrapper):
 
         if backward_layer is None:
             self.backward_layer = self._recreate_layer_from_config(
-                layer, go_backwards=True
-            )
+                layer, go_backwards=True)
         else:
             self.backward_layer = backward_layer
             # Keep the custom backward layer config, so that we can save it later. The
             # layer's name might be updated below with prefix 'backward_', and we want
             # to preserve the original config.
             self._backward_layer_config = generic_utils.serialize_keras_object(
-                backward_layer
-            )
+                backward_layer)
 
         self.forward_layer._name = "forward_" + self.forward_layer.name
         self.backward_layer._name = "backward_" + self.backward_layer.name
@@ -454,8 +447,8 @@ class Bidirectional(Wrapper):
         self.merge_mode = merge_mode
         if weights:
             nw = len(weights)
-            self.forward_layer.initial_weights = weights[: nw // 2]
-            self.backward_layer.initial_weights = weights[nw // 2 :]
+            self.forward_layer.initial_weights = weights[:nw // 2]
+            self.backward_layer.initial_weights = weights[nw // 2:]
         self.stateful = layer.stateful
         self.return_sequences = layer.return_sequences
         self.return_state = layer.return_state
@@ -469,8 +462,7 @@ class Bidirectional(Wrapper):
         if self.forward_layer.go_backwards == self.backward_layer.go_backwards:
             raise ValueError(
                 "Forward layer and backward layer should have different "
-                "`go_backwards` value."
-            )
+                "`go_backwards` value.")
 
         common_attributes = ("stateful", "return_sequences", "return_state")
         for a in common_attributes:
@@ -479,10 +471,10 @@ class Bidirectional(Wrapper):
             if forward_value != backward_value:
                 raise ValueError(
                     "Forward layer and backward layer are expected to have the same "
-                    "value for attribute {attr}, got {forward} and {backward}".format(
-                        attr=a, forward=forward_value, backward=backward_value
-                    )
-                )
+                    "value for attribute {attr}, got {forward} and {backward}".
+                    format(attr=a,
+                           forward=forward_value,
+                           backward=backward_value))
 
     def _recreate_layer_from_config(self, layer, go_backwards=False):
         # When recreating the layer from its config, it is possible that the layer
@@ -493,10 +485,8 @@ class Bidirectional(Wrapper):
         config = layer.get_config()
         if go_backwards:
             config["go_backwards"] = not config["go_backwards"]
-        if (
-            "custom_objects"
-            in tf_inspect.getfullargspec(layer.__class__.from_config).args
-        ):
+        if ("custom_objects" in tf_inspect.getfullargspec(
+                layer.__class__.from_config).args):
             custom_objects = {}
             cell = getattr(layer, "cell", None)
             if cell is not None:
@@ -505,7 +495,8 @@ class Bidirectional(Wrapper):
                 stacked_cells = getattr(cell, "cells", [])
                 for c in stacked_cells:
                     custom_objects[c.__class__.__name__] = c.__class__
-            return layer.__class__.from_config(config, custom_objects=custom_objects)
+            return layer.__class__.from_config(config,
+                                               custom_objects=custom_objects)
         else:
             return layer.__class__.from_config(config)
 
@@ -535,8 +526,7 @@ class Bidirectional(Wrapper):
     def __call__(self, inputs, initial_state=None, constants=None, **kwargs):
         """`Bidirectional.__call__` implements the same API as the wrapped `RNN`."""
         inputs, initial_state, constants = _standardize_args(
-            inputs, initial_state, constants, self._num_constants
-        )
+            inputs, initial_state, constants, self._num_constants)
 
         if isinstance(inputs, list):
             if len(inputs) > 1:
@@ -557,22 +547,22 @@ class Bidirectional(Wrapper):
                     "When passing `initial_state` to a Bidirectional RNN, "
                     "the state should be a list containing the states of "
                     "the underlying RNNs. "
-                    "Found: " + str(initial_state)
-                )
+                    "Found: " + str(initial_state))
 
             kwargs["initial_state"] = initial_state
             additional_inputs += initial_state
             state_specs = [
                 InputSpec(shape=K.int_shape(state)) for state in initial_state
             ]
-            self.forward_layer.state_spec = state_specs[: num_states // 2]
-            self.backward_layer.state_spec = state_specs[num_states // 2 :]
+            self.forward_layer.state_spec = state_specs[:num_states // 2]
+            self.backward_layer.state_spec = state_specs[num_states // 2:]
             additional_specs += state_specs
         if constants is not None:
             kwargs["constants"] = constants
             additional_inputs += constants
             constants_spec = [
-                InputSpec(shape=K.int_shape(constant)) for constant in constants
+                InputSpec(shape=K.int_shape(constant))
+                for constant in constants
             ]
             self.forward_layer.constants_spec = constants_spec
             self.backward_layer.constants_spec = constants_spec
@@ -585,22 +575,19 @@ class Bidirectional(Wrapper):
         is_keras_tensor = K.is_keras_tensor(additional_inputs[0])
         for tensor in additional_inputs:
             if K.is_keras_tensor(tensor) != is_keras_tensor:
-                raise ValueError(
-                    "The initial state of a Bidirectional"
-                    " layer cannot be specified with a mix of"
-                    " Keras tensors and non-Keras tensors"
-                    ' (a "Keras tensor" is a tensor that was'
-                    " returned by a Keras layer, or by `Input`)"
-                )
+                raise ValueError("The initial state of a Bidirectional"
+                                 " layer cannot be specified with a mix of"
+                                 " Keras tensors and non-Keras tensors"
+                                 ' (a "Keras tensor" is a tensor that was'
+                                 " returned by a Keras layer, or by `Input`)")
 
         if is_keras_tensor:
             # Compute the full input spec, including state
             full_input = [inputs] + additional_inputs
             # The original input_spec is None since there could be a nested tensor
             # input. Update the input_spec to match the inputs.
-            full_input_spec = [
-                None for _ in range(len(nest.flatten(inputs)))
-            ] + additional_specs
+            full_input_spec = [None for _ in range(len(nest.flatten(inputs)))
+                               ] + additional_specs
             # Removing kwargs since the value are passed with input list.
             kwargs["initial_state"] = None
             kwargs["constants"] = None
@@ -614,9 +601,12 @@ class Bidirectional(Wrapper):
         else:
             return super(Bidirectional, self).__call__(inputs, **kwargs)
 
-    def call(
-        self, inputs, training=None, mask=None, initial_state=None, constants=None
-    ):
+    def call(self,
+             inputs,
+             training=None,
+             mask=None,
+             initial_state=None,
+             constants=None):
         """`Bidirectional.call` implements the same API as the wrapped `RNN`."""
         kwargs = {}
         if generic_utils.has_arg(self.layer.call, "training"):
@@ -641,10 +631,10 @@ class Bidirectional(Wrapper):
                     backward_inputs += inputs[pivot:]
                 else:
                     # add backward initial state
-                    backward_inputs += inputs[pivot : -self._num_constants]
+                    backward_inputs += inputs[pivot:-self._num_constants]
                     # add constants for forward and backward layers
-                    forward_inputs += inputs[-self._num_constants :]
-                    backward_inputs += inputs[-self._num_constants :]
+                    forward_inputs += inputs[-self._num_constants:]
+                    backward_inputs += inputs[-self._num_constants:]
                 forward_state, backward_state = None, None
                 if "constants" in kwargs:
                     kwargs["constants"] = None
@@ -660,12 +650,12 @@ class Bidirectional(Wrapper):
                 forward_inputs, backward_inputs = inputs, inputs
                 forward_state, backward_state = None, None
 
-            y = self.forward_layer(
-                forward_inputs, initial_state=forward_state, **kwargs
-            )
-            y_rev = self.backward_layer(
-                backward_inputs, initial_state=backward_state, **kwargs
-            )
+            y = self.forward_layer(forward_inputs,
+                                   initial_state=forward_state,
+                                   **kwargs)
+            y_rev = self.backward_layer(backward_inputs,
+                                        initial_state=backward_state,
+                                        **kwargs)
         else:
             y = self.forward_layer(inputs, **kwargs)
             y_rev = self.backward_layer(inputs, **kwargs)
@@ -676,7 +666,8 @@ class Bidirectional(Wrapper):
             y_rev = y_rev[0]
 
         if self.return_sequences:
-            time_dim = 0 if getattr(self.forward_layer, "time_major", False) else 1
+            time_dim = 0 if getattr(self.forward_layer, "time_major",
+                                    False) else 1
             y_rev = K.reverse(y_rev, time_dim)
         if self.merge_mode == "concat":
             output = K.concatenate([y, y_rev])
@@ -689,9 +680,8 @@ class Bidirectional(Wrapper):
         elif self.merge_mode is None:
             output = [y, y_rev]
         else:
-            raise ValueError(
-                "Unrecognized value for `merge_mode`: %s" % (self.merge_mode)
-            )
+            raise ValueError("Unrecognized value for `merge_mode`: %s" %
+                             (self.merge_mode))
 
         if self.return_state:
             if self.merge_mode is None:
@@ -754,18 +744,15 @@ class Bidirectional(Wrapper):
         num_constants = config.pop("num_constants", 0)
         # Handle forward layer instantiation (as would parent class).
         from tensorflow.python.keras.layers import (
-            deserialize as deserialize_layer,
-        )  # pylint: disable=g-import-not-at-top
+            deserialize as deserialize_layer, )  # pylint: disable=g-import-not-at-top
 
-        config["layer"] = deserialize_layer(
-            config["layer"], custom_objects=custom_objects
-        )
+        config["layer"] = deserialize_layer(config["layer"],
+                                            custom_objects=custom_objects)
         # Handle (optional) backward layer instantiation.
         backward_layer_config = config.pop("backward_layer", None)
         if backward_layer_config is not None:
-            backward_layer = deserialize_layer(
-                backward_layer_config, custom_objects=custom_objects
-            )
+            backward_layer = deserialize_layer(backward_layer_config,
+                                               custom_objects=custom_objects)
             config["backward_layer"] = backward_layer
         # Instantiate the wrapper, adjust it and return it.
         layer = cls(**config)

@@ -82,13 +82,13 @@ class Hashing(Layer):
 
     def __init__(self, num_bins, salt=None, name=None, **kwargs):
         if num_bins is None or num_bins <= 0:
-            raise ValueError("`num_bins` cannot be `None` or non-positive values.")
+            raise ValueError(
+                "`num_bins` cannot be `None` or non-positive values.")
         if salt is not None:
             if not isinstance(salt, (tuple, list)) or len(salt) != 2:
                 raise ValueError(
                     "`salt` must be a tuple or list of 2 unsigned "
-                    "integer numbers, got {}".format(salt)
-                )
+                    "integer numbers, got {}".format(salt))
         super(Hashing, self).__init__(name=name, **kwargs)
         self.num_bins = num_bins
         self.salt = salt
@@ -107,13 +107,15 @@ class Hashing(Layer):
         str_to_hash_bucket = self._get_string_to_hash_bucket_fn()
         if ragged_tensor.is_ragged(inputs):
             return ragged_functional_ops.map_flat_values(
-                str_to_hash_bucket, inputs, num_buckets=self.num_bins, name="hash"
-            )
+                str_to_hash_bucket,
+                inputs,
+                num_buckets=self.num_bins,
+                name="hash")
         elif isinstance(inputs, sparse_tensor.SparseTensor):
             sparse_values = inputs.values
-            sparse_hashed_values = str_to_hash_bucket(
-                sparse_values, self.num_bins, name="hash"
-            )
+            sparse_hashed_values = str_to_hash_bucket(sparse_values,
+                                                      self.num_bins,
+                                                      name="hash")
             return sparse_tensor.SparseTensor(
                 indices=inputs.indices,
                 values=sparse_hashed_values,
@@ -129,9 +131,8 @@ class Hashing(Layer):
             return string_ops.string_to_hash_bucket_fast
         # string_to_hash_bucket_strong uses SipHash64 as hash function.
         else:
-            return functools.partial(
-                string_ops.string_to_hash_bucket_strong, key=self.salt
-            )
+            return functools.partial(string_ops.string_to_hash_bucket_strong,
+                                     key=self.salt)
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -140,11 +141,11 @@ class Hashing(Layer):
         output_shape = self.compute_output_shape(input_spec.shape.as_list())
         output_dtype = dtypes.int64
         if isinstance(input_spec, sparse_tensor.SparseTensorSpec):
-            return sparse_tensor.SparseTensorSpec(
-                shape=output_shape, dtype=output_dtype
-            )
+            return sparse_tensor.SparseTensorSpec(shape=output_shape,
+                                                  dtype=output_dtype)
         else:
-            return tensor_spec.TensorSpec(shape=output_shape, dtype=output_dtype)
+            return tensor_spec.TensorSpec(shape=output_shape,
+                                          dtype=output_dtype)
 
     def get_config(self):
         config = {"num_bins": self.num_bins, "salt": self.salt}

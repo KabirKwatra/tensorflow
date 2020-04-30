@@ -38,8 +38,8 @@ def get_reduce_op(reduction_str):
         return math_ops.reduce_sum
     else:
         raise ValueError(
-            "Reduction %s is not supported for unweighted inputs." % reduction_str
-        )
+            "Reduction %s is not supported for unweighted inputs." %
+            reduction_str)
 
 
 class Reduction(Layer):
@@ -93,7 +93,8 @@ class Reduction(Layer):
         # Weighted sum and prod can be expressed as reductions over the weighted
         # values, as can min and max.
         if self.reduction in ("sum", "prod", "min", "max"):
-            return get_reduce_op(self.reduction)(weighted_inputs, axis=self.axis)
+            return get_reduce_op(self.reduction)(weighted_inputs,
+                                                 axis=self.axis)
 
         # Weighted mean is a bit more complicated: we have to do a sum of the
         # weighted values and divide by the sum of the weights.
@@ -108,12 +109,13 @@ class Reduction(Layer):
             logging.warning(
                 "Reduction `sqrtn` is deprecated and will be removed "
                 "2021-01-01. Please use the `sum` reduction and divide "
-                "the output by the normalized weights instead."
-            )
+                "the output by the normalized weights instead.")
             input_sum = math_ops.reduce_sum(weighted_inputs, axis=self.axis)
             squared_weights = math_ops.pow(weights, 2)
-            squared_weights_sum = math_ops.reduce_sum(squared_weights, axis=self.axis)
+            squared_weights_sum = math_ops.reduce_sum(squared_weights,
+                                                      axis=self.axis)
             sqrt_weights_sum = math_ops.sqrt(squared_weights_sum)
             return math_ops.divide(input_sum, sqrt_weights_sum)
 
-        raise ValueError("%s is not a supported weighted reduction." % self.reduction)
+        raise ValueError("%s is not a supported weighted reduction." %
+                         self.reduction)
