@@ -18,28 +18,20 @@ NOTE: At this time, functions are experimental and subject to change!. Proceed
 with caution.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import hashlib
 
-from tensorflow.core.framework import attr_value_pb2
-from tensorflow.core.framework import function_pb2
+from tensorflow.core.framework import attr_value_pb2, function_pb2
 from tensorflow.python.client import pywrap_tf_session as c_api
 from tensorflow.python.eager import context
-from tensorflow.python.framework import c_api_util
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import graph_to_function_def
-from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import resource_variable_ops
+from tensorflow.python.framework import (c_api_util, dtypes,
+                                         graph_to_function_def, ops)
+from tensorflow.python.ops import array_ops, resource_variable_ops
 from tensorflow.python.ops import variable_scope as vs
-from tensorflow.python.util import compat
-from tensorflow.python.util import function_utils
-from tensorflow.python.util import tf_contextlib
-from tensorflow.python.util import tf_inspect
+from tensorflow.python.util import (compat, function_utils, tf_contextlib,
+                                    tf_inspect)
 
 
 class Defun(object):
