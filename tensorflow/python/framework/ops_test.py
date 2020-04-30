@@ -14,51 +14,33 @@
 # ==============================================================================
 """Tests for tensorflow.python.framework.ops."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-from absl.testing import parameterized
 import gc
-import numpy as np
 import os
 import threading
 import weakref
 
+import numpy as np
+import tensorflow.python.ops.gradients  # pylint: disable=unused-import
+from absl.testing import parameterized
 from tensorflow.core.framework import attr_value_pb2
 from tensorflow.core.protobuf import config_pb2
 from tensorflow.python.autograph.core import ag_ctx
 from tensorflow.python.client import session
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
+from tensorflow.python.eager import backprop, context, def_function
 from tensorflow.python.eager import function as eager_function
 from tensorflow.python.eager import wrap_function
-from tensorflow.python.framework import composite_tensor
-from tensorflow.python.framework import constant_op
+from tensorflow.python.framework import composite_tensor, constant_op
 from tensorflow.python.framework import device as pydev
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors
-from tensorflow.python.framework import function
-from tensorflow.python.framework import indexed_slices
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.framework import tensor_util
-from tensorflow.python.framework import test_ops
-from tensorflow.python.framework import test_util
-from tensorflow.python.framework import type_spec
-from tensorflow.python.framework import versions
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.ops import resources
-from tensorflow.python.ops import special_math_ops
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops import variables
-import tensorflow.python.ops.gradients  # pylint: disable=unused-import
+from tensorflow.python.framework import (dtypes, errors, function,
+                                         indexed_slices, ops, sparse_tensor,
+                                         tensor_shape, tensor_spec,
+                                         tensor_util, test_ops, test_util,
+                                         type_spec, versions)
+from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
+                                   resource_variable_ops, resources,
+                                   special_math_ops, variable_scope, variables)
 from tensorflow.python.platform import googletest
 from tensorflow.python.util import compat
 
