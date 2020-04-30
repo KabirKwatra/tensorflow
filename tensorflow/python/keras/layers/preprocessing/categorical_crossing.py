@@ -14,18 +14,13 @@
 # ==============================================================================
 """Keras categorical preprocessing layers."""
 # pylint: disable=g-classes-have-attributes
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import itertools
 
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import dtypes, sparse_tensor, tensor_shape
 from tensorflow.python.keras.engine.base_layer import Layer
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import sparse_ops
+from tensorflow.python.ops import array_ops, sparse_ops
 from tensorflow.python.ops.ragged import ragged_tensor
 
 

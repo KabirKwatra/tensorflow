@@ -15,13 +15,10 @@
 """Keras categorical preprocessing layers."""
 # pylint: disable=g-classes-have-attributes
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from tensorflow.python.keras.engine.base_layer import Layer
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import array_ops, math_ops
 from tensorflow.python.platform import tf_logging as logging
 
 

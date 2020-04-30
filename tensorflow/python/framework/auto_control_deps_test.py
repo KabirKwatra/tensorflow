@@ -13,30 +13,18 @@
 # limitations under the License.
 # ==============================================================================
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import itertools
 
-from tensorflow.python.eager import backprop
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.eager import function
+from tensorflow.python.eager import backprop, context, def_function, function
 from tensorflow.python.framework import auto_control_deps as acd
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import test_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import gen_resource_variable_ops
-from tensorflow.python.ops import gen_sendrecv_ops
-from tensorflow.python.ops import resource_variable_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.framework import constant_op, dtypes, ops, test_util
+from tensorflow.python.ops import (array_ops, control_flow_ops,
+                                   gen_resource_variable_ops, gen_sendrecv_ops,
+                                   resource_variable_ops, variables)
 from tensorflow.python.platform import test
-from tensorflow.python.training import adam
-from tensorflow.python.training import momentum
+from tensorflow.python.training import adam, momentum
 
 
 class AutomaticControlDependenciesTest(test.TestCase):

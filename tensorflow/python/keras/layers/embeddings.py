@@ -14,20 +14,15 @@
 # ==============================================================================
 """Embedding layer.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 from tensorflow.python.eager import context
 from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import constraints
-from tensorflow.python.keras import initializers
-from tensorflow.python.keras import regularizers
+from tensorflow.python.keras import constraints, initializers, regularizers
 from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow.python.keras.utils import tf_utils
-from tensorflow.python.ops import embedding_ops
-from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import embedding_ops, math_ops
 from tensorflow.python.util.tf_export import keras_export
 
 

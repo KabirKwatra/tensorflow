@@ -14,9 +14,7 @@
 # ==============================================================================
 """Tests for TensorFlow 2.0 layer behavior."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 import os
@@ -24,40 +22,23 @@ import sys
 import traceback
 
 import numpy as np
-
-from tensorflow.python.eager import context
-from tensorflow.python.eager import def_function
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import errors_impl
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import sparse_tensor
-from tensorflow.python.framework import tensor_spec
-from tensorflow.python.keras import backend
-from tensorflow.python.keras import combinations
-from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras import layers
-from tensorflow.python.keras import regularizers
-from tensorflow.python.keras import testing_utils
-from tensorflow.python.keras.engine import base_layer
-from tensorflow.python.keras.engine import input_layer
-from tensorflow.python.keras.engine import sequential
+from tensorflow.python.eager import context, def_function
+from tensorflow.python.framework import (constant_op, dtypes, errors_impl, ops,
+                                         sparse_tensor, tensor_spec)
+from tensorflow.python.keras import (backend, combinations,
+                                     keras_parameterized, layers, regularizers,
+                                     testing_utils)
+from tensorflow.python.keras.engine import base_layer, input_layer, sequential
 from tensorflow.python.keras.engine import training as training_lib
 from tensorflow.python.keras.mixed_precision.experimental import policy
 from tensorflow.python.keras.optimizer_v2 import rmsprop
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.layers import core as legacy_core
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import state_ops
-from tensorflow.python.ops import summary_ops_v2
-from tensorflow.python.ops import tensor_array_ops
-from tensorflow.python.ops import variables
+from tensorflow.python.ops import (array_ops, control_flow_ops, math_ops,
+                                   state_ops, summary_ops_v2, tensor_array_ops,
+                                   variables)
 from tensorflow.python.ops.ragged import ragged_tensor
-from tensorflow.python.platform import gfile
-from tensorflow.python.platform import test
-from tensorflow.python.platform import tf_logging
+from tensorflow.python.platform import gfile, test, tf_logging
 from tensorflow.python.summary import summary_iterator
 from tensorflow.python.util import nest
 

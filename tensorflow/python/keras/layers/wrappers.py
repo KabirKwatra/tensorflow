@@ -15,9 +15,7 @@
 # pylint: disable=protected-access
 """Wrapper layers: layers that augment the functionality of another layer.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 
@@ -26,13 +24,10 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow.python.keras.engine.input_spec import InputSpec
 from tensorflow.python.keras.layers.recurrent import _standardize_args
-from tensorflow.python.keras.utils import generic_utils
-from tensorflow.python.keras.utils import layer_utils
-from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.keras.utils import generic_utils, layer_utils, tf_utils
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops.ragged import ragged_tensor
-from tensorflow.python.util import nest
-from tensorflow.python.util import tf_inspect
+from tensorflow.python.util import nest, tf_inspect
 from tensorflow.python.util.tf_export import keras_export
 
 
