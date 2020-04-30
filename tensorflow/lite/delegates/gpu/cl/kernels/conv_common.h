@@ -21,13 +21,13 @@ namespace gpu {
 namespace cl {
 
 enum class ConvWeightsLayout {
-  kUnknown,
-  kOHWIOGroupI4O4,
+    kUnknown,
+    kOHWIOGroupI4O4,
 };
 
 struct ConvWeightsDescription {
-  ConvWeightsLayout layout;
-  int output_group_size;
+    ConvWeightsLayout layout;
+    int output_group_size;
 };
 
 }  // namespace cl

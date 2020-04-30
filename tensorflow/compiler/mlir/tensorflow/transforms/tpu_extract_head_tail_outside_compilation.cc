@@ -32,30 +32,30 @@ constexpr char kXlaOutsideCompilationAttr[] = "_xla_outside_compilation";
 
 struct TPUExtractHeadTailOutsideCompilation
     : public PassWrapper<TPUExtractHeadTailOutsideCompilation, FunctionPass> {
-  void runOnFunction() override;
+    void runOnFunction() override;
 };
 
 void TPUExtractHeadTailOutsideCompilation::runOnFunction() {
-  getFunction().walk([&](tf_device::LaunchOp launch) {
-    Block& launch_block = launch.GetBody();
-    for (auto& op : llvm::make_early_inc_range(launch_block.getOperations())) {
-      // TODO(b/155115766): Handle outputs that should be inputs to TPU
-      // LaunchOp.
-      if (auto attr =
-              op.getAttrOfType<StringAttr>(kXlaOutsideCompilationAttr)) {
-        op.moveBefore(launch);
-      } else {
-        break;
-      }
-    }
-  });
+    getFunction().walk([&](tf_device::LaunchOp launch) {
+        Block& launch_block = launch.GetBody();
+        for (auto& op : llvm::make_early_inc_range(launch_block.getOperations())) {
+            // TODO(b/155115766): Handle outputs that should be inputs to TPU
+            // LaunchOp.
+            if (auto attr =
+                        op.getAttrOfType<StringAttr>(kXlaOutsideCompilationAttr)) {
+                op.moveBefore(launch);
+            } else {
+                break;
+            }
+        }
+    });
 }
 
 }  // anonymous namespace
 
 std::unique_ptr<OperationPass<FuncOp>>
 CreateTPUExtractHeadTailOutsideCompilationPass() {
-  return std::make_unique<TPUExtractHeadTailOutsideCompilation>();
+    return std::make_unique<TPUExtractHeadTailOutsideCompilation>();
 }
 
 static PassRegistration<TPUExtractHeadTailOutsideCompilation> pass(
